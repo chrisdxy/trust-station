@@ -27,30 +27,37 @@ jobs:
             cd /root/zhengdao
 
             # 1. 从 GitHub 拉取最新代码
-            echo "[1/6] 拉取最新代码..."
+            echo "[1/7] 拉取最新代码..."
             git fetch origin main
             git reset --hard origin/main
 
             # 2. 清理旧缓存
-            echo "[2/6] 清理旧缓存..."
+            echo "[2/7] 清理旧缓存..."
             rm -rf .next node_modules
 
             # 3. 安装依赖
-            echo "[3/6] 安装依赖..."
+            echo "[3/7] 安装依赖..."
             npm install --omit=dev
 
             # 4. 构建
-            echo "[4/6] 构建项目..."
+            echo "[4/7] 构建项目..."
             npm run build
 
-            # 5. 建立软链接
-            echo "[5/6] 建立软链接..."
+            # 5. 复制静态文件
+            echo "[5/7] 复制静态文件..."
+            mkdir -p /root/zhengdao/.next/standalone/.next
+            cp -r /root/zhengdao/.next/static /root/zhengdao/.next/standalone/.next/static
+
+            # 6. 建立软链接
+            echo "[6/7] 建立软链接..."
             rm -f /root/zhengdao/standalone
             ln -sf /root/zhengdao/.next/standalone /root/zhengdao/standalone
-            cp -r /root/zhengdao/public /root/zhengdao/.next/standalone/
+            cp -r /root/zhengdao/public/* /root/zhengdao/.next/standalone/public/
 
-            # 6. 重启服务（密码通过 PM2 环境变量传入）
-            echo "[6/6] 重启服务..."
-            DB_PASSWORD='${{ secrets.DB_PASSWORD }}' pm2 restart zhengdao
+            # 7. 重启服务
+            echo "[7/7] 重启服务..."
+            DB_PASSWORD='${{ secrets.DB_PASSWORD }}' pm2 kill
+            sleep 2
+            DB_PASSWORD='${{ secrets.DB_PASSWORD }}' pm2 start /root/zhengdao/ecosystem.config.js
 
             echo "========== ✅ 部署完成 =========="
