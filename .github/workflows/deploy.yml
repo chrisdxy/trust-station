@@ -1,0 +1,56 @@
+name: 🚀 Auto Deploy to Server
+
+on:
+  workflow_dispatch:          # GitHub 页面手动点按钮部署
+    branches: [ main ]
+  push:
+    branches: [ main ]        # 或 push 到 main 自动部署
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_SSH_PORT || '22022' }}
+          script: |
+            echo "========== 开始部署 =========="
+            cd /root/zhengdao
+
+            # 1. 从 GitHub 拉取最新代码
+            echo "[1/6] 拉取最新代码..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            # 2. 清理旧缓存
+            echo "[2/6] 清理旧缓存..."
+            rm -rf .next node_modules
+
+            # 3. 安装依赖
+            echo "[3/6] 安装依赖..."
+            npm install --omit=dev
+
+            # 4. 构建
+            echo "[4/6] 构建项目..."
+            npm run build
+
+            # 5. 建立软链接
+            echo "[5/6] 建立软链接..."
+            rm -f /root/zhengdao/standalone
+            ln -sf /root/zhengdao/.next/standalone /root/zhengdao/standalone
+            cp -r /root/zhengdao/public /root/zhengdao/.next/standalone/
+
+            # 6. 重启服务（密码通过 PM2 环境变量传入）
+            echo "[6/6] 重启服务..."
+            DB_PASSWORD='${{ secrets.DB_PASSWORD }}' pm2 restart zhengdao
+
+            echo "========== ✅ 部署完成 =========="
