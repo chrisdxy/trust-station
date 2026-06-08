@@ -57,7 +57,7 @@ function OverviewContent() {
         <div className="flex gap-2 mb-6 border-b border-slate-200 dark:border-slate-700">
           {([
             { id: 'navigation', label: '使用指引', icon: Globe },
-            { id: 'consensus', label: '六项共识', icon: Shield },
+            { id: 'consensus', label: '六项共识', icon: Shield }
           ] as { id: 'consensus' | 'navigation'; label: string; icon: any }[]).map(tab => {
             const Icon = tab.icon;
             return (
@@ -91,7 +91,7 @@ function OverviewContent() {
                   Brain,
                   Fingerprint,
                   Users,
-                  Database,
+                  Database
                 };
                 const Icon = iconMap[item.icon] || Shield;
                 return (

@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
         record.record_type || '',
         record.title || '',
         record.content || '',
-        description || null,
+        description || null
       ]);
     }
 

@@ -56,11 +56,11 @@ export default function CooperationPage() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    goals_and_principles: '',
+    goals_and_principles: ''
   });
   const [intentedFormData, setIntentedFormData] = useState({
     title: '',
-    description: '',
+    description: ''
   });
   const [selectedIntendedPartners, setSelectedIntendedPartners] = useState<UserSearchResult[]>([]);
   const [createdRelationshipId, setCreatedRelationshipId] = useState<string | null>(null);
@@ -72,7 +72,7 @@ export default function CooperationPage() {
     description: '',
     goals_and_principles: '',
     cooperation_level: '',
-    status: '',
+    status: ''
   });
   const [selectedArchive, setSelectedArchive] = useState<Archive | null>(null);
   const [selectedArchiveRelId, setSelectedArchiveRelId] = useState<string | null>(null);
@@ -151,8 +151,8 @@ export default function CooperationPage() {
           goals_and_principles: formData.goals_and_principles,
           partner_id: selectedPartners.map(p => p.id).join(','),
           partner_name: selectedPartners.map(p => p.real_name || p.display_name || '').join(','),
-          type: 'relationship',
-        }),
+          type: 'relationship'
+        })
       });
       const data = await response.json();
       if (data.success) {
@@ -187,8 +187,8 @@ export default function CooperationPage() {
           description: intentedFormData.description,
           type: 'intended',
           partner_id: selectedIntendedPartners.map(p => p.id).join(','),
-          partner_name: selectedIntendedPartners.map(p => p.real_name || p.display_name || '').join(','),
-        }),
+          partner_name: selectedIntendedPartners.map(p => p.real_name || p.display_name || '').join(',')
+        })
       });
       const data = await response.json();
       if (data.success) {
@@ -221,8 +221,8 @@ export default function CooperationPage() {
           description: editFormData.description,
           goals_and_principles: editFormData.goals_and_principles,
           cooperation_level: editFormData.cooperation_level,
-          status: editFormData.status,
-        }),
+          status: editFormData.status
+        })
       });
       const data = await response.json();
       if (data.success) {
@@ -246,7 +246,7 @@ export default function CooperationPage() {
       description: rel.description || '',
       goals_and_principles: rel.goals_and_principles || '',
       cooperation_level: rel.cooperation_level || 'relationship',
-      status: rel.status || 'pending',
+      status: rel.status || 'pending'
     });
     setShowEditModal(true);
   };
@@ -273,7 +273,7 @@ export default function CooperationPage() {
     { key: 'all' as const, label: '全部', icon: <FileText className="w-4 h-4" /> },
     { key: 'intended' as const, label: '意向合作', icon: <Users className="w-4 h-4" /> },
     { key: 'relationship' as const, label: '正式合作', icon: <Users className="w-4 h-4" /> },
-    { key: 'archived' as const, label: '已存档', icon: <Archive className="w-4 h-4" /> },
+    { key: 'archived' as const, label: '已存档', icon: <Archive className="w-4 h-4" /> }
   ];
 
   return (
@@ -369,7 +369,7 @@ export default function CooperationPage() {
                 type="text"
                 placeholder={activeTab === 'intended' ? '搜索意向合作...' : activeTab === 'relationship' ? '搜索正式合作...' : '搜索全部合作...'}
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800"
               />
             </div>
@@ -396,7 +396,7 @@ export default function CooperationPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredRelationships.map((rel) => (
+                {filteredRelationships.map(rel => (
                   <div
                     key={rel.id}
                     className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 hover:shadow-md transition-shadow"
@@ -408,7 +408,7 @@ export default function CooperationPage() {
                       >
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <span className="px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 cursor-pointer hover:bg-amber-200 transition-colors"
-                            onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(getShortRelationshipId(rel.id)).then(() => alert('ID已复制: ' + getShortRelationshipId(rel.id))); }}
+                            onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(getShortRelationshipId(rel.id)).then(() => alert('ID已复制: ' + getShortRelationshipId(rel.id))); }}
                             title="点击复制合作ID">
                             合作ID: {getShortRelationshipId(rel.id)}
                           </span>
@@ -451,7 +451,7 @@ export default function CooperationPage() {
                       <div className="flex items-center gap-1 ml-3">
                         {isParty(rel) && (
                           <button
-                            onClick={(e) => { e.stopPropagation(); openEditModal(rel); }}
+                            onClick={e => { e.stopPropagation(); openEditModal(rel); }}
                             className="p-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
                             title="编辑"
                           >
@@ -482,7 +482,7 @@ export default function CooperationPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {archives.map((archive) => (
+                {archives.map(archive => (
                   <div
                     key={archive.id}
                     onClick={() => { setSelectedArchive(archive); setShowArchiveDetailModal(true); }}
@@ -676,7 +676,7 @@ export default function CooperationPage() {
                   <input
                     type="text"
                     value={editFormData.title}
-                    onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                    onChange={e => setEditFormData({ ...editFormData, title: e.target.value })}
                     className="w-full px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
                   />
                 </div>
@@ -686,7 +686,7 @@ export default function CooperationPage() {
                   </label>
                   <select
                     value={editFormData.cooperation_level}
-                    onChange={(e) => setEditFormData({ ...editFormData, cooperation_level: e.target.value })}
+                    onChange={e => setEditFormData({ ...editFormData, cooperation_level: e.target.value })}
                     className="w-full px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
                   >
                     <option value="intended">意向合作</option>
@@ -699,7 +699,7 @@ export default function CooperationPage() {
                   </label>
                   <select
                     value={editFormData.status}
-                    onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
+                    onChange={e => setEditFormData({ ...editFormData, status: e.target.value })}
                     className="w-full px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
                   >
                     <option value="pending">待确认</option>
@@ -714,7 +714,7 @@ export default function CooperationPage() {
                     </label>
                     <textarea
                       value={editFormData.goals_and_principles}
-                      onChange={(e) => setEditFormData({ ...editFormData, goals_and_principles: e.target.value })}
+                      onChange={e => setEditFormData({ ...editFormData, goals_and_principles: e.target.value })}
                       rows={3}
                       className="w-full px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 resize-none"
                     />
@@ -726,7 +726,7 @@ export default function CooperationPage() {
                   </label>
                   <RichTextEditor
                     value={editFormData.description}
-                    onChange={(val) => setEditFormData({ ...editFormData, description: val })}
+                    onChange={val => setEditFormData({ ...editFormData, description: val })}
                     placeholder="请输入合作详情（支持链接、图片）"
                   />
                 </div>
@@ -753,7 +753,7 @@ export default function CooperationPage() {
         {/* 添加弹窗 - 正式合作 */}
         {showAddModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowAddModal(false)}>
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">添加正式合作</h3>
                 <button onClick={() => setShowAddModal(false)}>
@@ -768,7 +768,7 @@ export default function CooperationPage() {
                   <input
                     type="text"
                     value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    onChange={e => setFormData({ ...formData, title: e.target.value })}
                     placeholder="请输入合作标题"
                     className="w-full px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
                   />
@@ -778,7 +778,7 @@ export default function CooperationPage() {
                     合作方
                   </label>
                   <UserSelect
-                    onSelect={(user) => {
+                    onSelect={user => {
                       setSelectedPartners(prev => {
                         const exists = prev.find(p => p.id === user.id);
                         if (exists) return prev.filter(p => p.id !== user.id);
@@ -795,7 +795,7 @@ export default function CooperationPage() {
                   </label>
                   <textarea
                     value={formData.goals_and_principles}
-                    onChange={(e) => setFormData({ ...formData, goals_and_principles: e.target.value })}
+                    onChange={e => setFormData({ ...formData, goals_and_principles: e.target.value })}
                     placeholder="请输入合作目标与原则"
                     rows={3}
                     className="w-full px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 resize-none"
@@ -807,7 +807,7 @@ export default function CooperationPage() {
                   </label>
                   <RichTextEditor
                     value={formData.description}
-                    onChange={(val) => setFormData({ ...formData, description: val })}
+                    onChange={val => setFormData({ ...formData, description: val })}
                     placeholder="请输入合作详情（支持链接、图片）"
                   />
                   <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
@@ -841,7 +841,7 @@ export default function CooperationPage() {
                 exit={{ scale: 0.8, opacity: 0 }}
                 transition={{ type: 'spring', duration: 0.5 }}
                 className="bg-white dark:bg-slate-800 rounded-2xl p-8 w-full max-w-sm text-center"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 <motion.div
                   initial={{ scale: 0 }}
@@ -882,7 +882,7 @@ export default function CooperationPage() {
         {/* 添加意向合作弹窗 */}
         {showAddIntendedModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowAddIntendedModal(false)}>
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">添加意向合作</h3>
                 <button onClick={() => setShowAddIntendedModal(false)}>
@@ -897,7 +897,7 @@ export default function CooperationPage() {
                   <input
                     type="text"
                     value={intentedFormData.title}
-                    onChange={(e) => setIntentedFormData({ ...intentedFormData, title: e.target.value })}
+                    onChange={e => setIntentedFormData({ ...intentedFormData, title: e.target.value })}
                     placeholder="请输入意向合作标题"
                     className="w-full px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
                   />
@@ -907,7 +907,7 @@ export default function CooperationPage() {
                     意向方
                   </label>
                   <UserSelect
-                    onSelect={(user) => {
+                    onSelect={user => {
                       setSelectedIntendedPartners(prev => {
                         const exists = prev.find(p => p.id === user.id);
                         if (exists) return prev.filter(p => p.id !== user.id);
@@ -924,7 +924,7 @@ export default function CooperationPage() {
                   </label>
                   <RichTextEditor
                     value={intentedFormData.description}
-                    onChange={(val) => setIntentedFormData({ ...intentedFormData, description: val })}
+                    onChange={val => setIntentedFormData({ ...intentedFormData, description: val })}
                     placeholder="（1）意向合作交易要点；（2）是否要了解意向合作方过往哪个类型的记录。"
                   />
                 </div>

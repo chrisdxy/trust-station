@@ -95,7 +95,7 @@ export default function MediationPage() {
         id: m.id, title: m.title || '未命名', caseNumber: m.id?.slice(0, 8).toUpperCase(), type: m.dispute_type || 'coordination', description: m.description || '',
         status: m.status || 'unassigned', parties: [m.applicant_name, m.respondent_name].filter(Boolean),
         assignedTo: m.assigned_to || '', assignmentStatus: m.assignment_status || '', relationship: m.relationship || '',
-        createdAt: m.created_at || '', applicationDate: m.created_at || '', priority: 'medium' as const,
+        createdAt: m.created_at || '', applicationDate: m.created_at || '', priority: 'medium' as const
       })));
     } catch {} setLoadingCases(false);
   };
@@ -107,7 +107,7 @@ export default function MediationPage() {
       if (d.success) setExperts((d.mediators || []).map((m: any) => ({
         id: m.id, name: m.name || (m.user_id || '').slice(0, 8), phone: m.phone || '', email: m.email || '', type: m.type || '',
         expertise: typeof m.expertise === 'string' ? JSON.parse(m.expertise) : (m.expertise || []),
-        status: m.status || 'pending', caseCount: m.case_count || 0, successRate: m.success_rate || 0, registeredAt: m.created_at || '', description: m.description || '',
+        status: m.status || 'pending', caseCount: m.case_count || 0, successRate: m.success_rate || 0, registeredAt: m.created_at || '', description: m.description || ''
       })));
     } catch {} setLoadingExperts(false);
   };
@@ -124,27 +124,27 @@ export default function MediationPage() {
     archived: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
     approved: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
     suspended: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-    rejected: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    rejected: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
   };
   const statusLabels: Record<string, string> = {
     unassigned: '待分配', pending: '待调解', ongoing: '调解中', resolved: '调解结束', archived: '已存档',
-    approved: '已认证', suspended: '已暂停', rejected: '已拒绝',
+    approved: '已认证', suspended: '已暂停', rejected: '已拒绝'
   };
 
   const priorityColors: Record<string, string> = {
     high: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
     medium: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-    low: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    low: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
   };
 
-  const filteredCases = cases.filter((m) => {
+  const filteredCases = cases.filter(m => {
     const matchesSearch = m.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           m.parties.some(p => p.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = filterStatus === 'all' || m.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
 
-  const filteredExperts = experts.filter((e) => {
+  const filteredExperts = experts.filter(e => {
     const matchesSearch = e.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           e.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           e.type.toLowerCase().includes(searchTerm.toLowerCase());
@@ -240,11 +240,11 @@ export default function MediationPage() {
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+              <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
                 placeholder={activeTab === 'experts' ? "搜索专家姓名或邮箱..." : "搜索案件标题或当事人..."}
                 className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white" />
             </div>
-            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
+            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
               <option value="all">全部状态</option>
               {activeTab === 'experts' ? (<>
                 <option value="pending">待审核</option><option value="approved">已认证</option>
@@ -273,7 +273,7 @@ export default function MediationPage() {
                 { label: '待调解', count: cases.filter(m => m.status === 'pending').length, color: 'bg-amber-500', icon: AlertTriangle },
                 { label: '调解中', count: cases.filter(m => m.status === 'ongoing').length, color: 'bg-blue-500', icon: Scale },
                 { label: '调解结束', count: cases.filter(m => m.status === 'resolved').length, color: 'bg-green-500', icon: CheckCircle },
-                { label: '已存档', count: cases.filter(m => m.status === 'archived').length, color: 'bg-purple-500', icon: FileText },
+                { label: '已存档', count: cases.filter(m => m.status === 'archived').length, color: 'bg-purple-500', icon: FileText }
               ].map((stat, idx) => (
                 <motion.div
                   key={stat.label}
@@ -311,7 +311,7 @@ export default function MediationPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-                    {filteredCases.map((c) => (
+                    {filteredCases.map(c => (
                       <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
                         <td className="px-4 py-3">
                           <p className="font-medium text-slate-900 dark:text-white">{c.title}</p>
@@ -355,15 +355,15 @@ export default function MediationPage() {
                               <button onClick={() => setAssigningCase(c)} className="px-3 py-1 text-xs bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors">分配</button>
                             )}
                             {activeTab === ('progress' as any) && c.status === 'pending' && (
-                              <button onClick={async () => { await fetch('/api/mediations', { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({id:c.id,status:'ongoing'}) }); saveCases(cases.map(x => x.id===c.id ? {...x,status:'ongoing'}:x)); }}
+                              <button onClick={async () => { await fetch('/api/mediations', { method: 'PUT', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ id:c.id,status:'ongoing' }) }); saveCases(cases.map(x => x.id===c.id ? { ...x,status:'ongoing' }:x)); }}
                                 className="px-3 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors">开始调解</button>
                             )}
                             {activeTab === ('progress' as any) && c.status === 'ongoing' && (
-                              <button onClick={async () => { await fetch('/api/mediations', { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({id:c.id,status:'resolved'}) }); saveCases(cases.map(x => x.id===c.id ? {...x,status:'resolved'}:x)); }}
+                              <button onClick={async () => { await fetch('/api/mediations', { method: 'PUT', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ id:c.id,status:'resolved' }) }); saveCases(cases.map(x => x.id===c.id ? { ...x,status:'resolved' }:x)); }}
                                 className="px-3 py-1 text-xs bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors">结束调解</button>
                             )}
                             {activeTab === ('progress' as any) && c.status === 'resolved' && (
-                              <button onClick={async () => { await fetch('/api/mediations', { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({id:c.id,status:'archived'}) }); saveCases(cases.map(x => x.id===c.id ? {...x,status:'archived'}:x)); }}
+                              <button onClick={async () => { await fetch('/api/mediations', { method: 'PUT', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ id:c.id,status:'archived' }) }); saveCases(cases.map(x => x.id===c.id ? { ...x,status:'archived' }:x)); }}
                                 className="px-3 py-1 text-xs bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors">存档</button>
                             )}
                             <button className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"><Eye className="w-4 h-4" /></button>
@@ -457,7 +457,7 @@ export default function MediationPage() {
                 { label: '待审核', count: experts.filter(e => e.status === 'pending').length, color: 'bg-amber-500' },
                 { label: '已认证', count: experts.filter(e => e.status === 'approved').length, color: 'bg-green-500' },
                 { label: '已暂停', count: experts.filter(e => e.status === 'suspended').length, color: 'bg-orange-500' },
-                { label: '已拒绝', count: experts.filter(e => e.status === 'rejected').length, color: 'bg-red-500' },
+                { label: '已拒绝', count: experts.filter(e => e.status === 'rejected').length, color: 'bg-red-500' }
               ].map((stat, idx) => (
                 <motion.div
                   key={stat.label}
@@ -484,7 +484,7 @@ export default function MediationPage() {
 
             {/* Experts Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredExperts.map((expert) => (
+              {filteredExperts.map(expert => (
                 <motion.div
                   key={expert.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -701,7 +701,7 @@ export default function MediationPage() {
                     <input
                       type="text"
                       value={expertSearchQuery}
-                      onChange={(e) => setExpertSearchQuery(e.target.value)}
+                      onChange={e => setExpertSearchQuery(e.target.value)}
                       placeholder="搜索协调专家姓名..."
                       className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400"
                     />
@@ -713,7 +713,7 @@ export default function MediationPage() {
                     选择协调专家 {approvedExperts.length > 0 && `(${filteredExpertsForAssign.length} 位可选)`}
                   </label>
                   <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {filteredExpertsForAssign.map((expert) => (
+                    {filteredExpertsForAssign.map(expert => (
                       <button
                         key={expert.id}
                         onClick={() => setSelectedExpert(expert.id)}

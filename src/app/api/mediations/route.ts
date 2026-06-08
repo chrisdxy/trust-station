@@ -56,8 +56,8 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit),
-      },
+        totalPages: Math.ceil(total / limit)
+      }
     });
   } catch (error) {
     console.error('获取协调记录错误:', error);
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: '申请已提交',
-      id,
+      id
     });
   } catch (error) {
     console.error('创建协调申请错误:', error);

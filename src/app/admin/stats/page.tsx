@@ -11,19 +11,19 @@ export default function StatsPage() {
     { month: '3月', users: 180, relationships: 520, mediations: 22 },
     { month: '4月', users: 210, relationships: 610, mediations: 25 },
     { month: '5月', users: 250, relationships: 720, mediations: 28 },
-    { month: '6月', users: 280, relationships: 850, mediations: 32 },
+    { month: '6月', users: 280, relationships: 850, mediations: 32 }
   ];
 
   const userTypeStats = [
     { type: '个人用户', count: 892, percentage: 71 },
-    { type: '企业用户', count: 366, percentage: 29 },
+    { type: '企业用户', count: 366, percentage: 29 }
   ];
 
   const relationshipTypeStats = [
     { type: '商业交易', count: 1520, percentage: 44 },
     { type: '投资', count: 820, percentage: 24 },
     { type: '合伙', count: 680, percentage: 20 },
-    { type: '雇佣', count: 436, percentage: 12 },
+    { type: '雇佣', count: 436, percentage: 12 }
   ];
 
   const topUsers = [
@@ -31,7 +31,7 @@ export default function StatsPage() {
     { name: '刘强', relationships: 25 },
     { name: '李华', relationships: 22 },
     { name: '王芳', relationships: 20 },
-    { name: '陈思', relationships: 18 },
+    { name: '陈思', relationships: 18 }
   ];
 
   return (
@@ -57,7 +57,7 @@ export default function StatsPage() {
             { label: '总用户数', value: '1,258', change: '+18%', icon: Users, color: 'bg-blue-500' },
             { label: '合作关系', value: '3,456', change: '+12%', icon: FileText, color: 'bg-green-500' },
             { label: '协调申请', value: '89', change: '-5%', icon: Scale, color: 'bg-amber-500' },
-            { label: '本月增长', value: '+156', change: '+22%', icon: TrendingUp, color: 'bg-purple-500' },
+            { label: '本月增长', value: '+156', change: '+22%', icon: TrendingUp, color: 'bg-purple-500' }
           ].map((stat, idx) => (
             <motion.div
               key={stat.label}

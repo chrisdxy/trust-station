@@ -28,7 +28,7 @@ async function main() {
     }
   });
 
-  server.once('error', (err) => {
+  server.once('error', err => {
     console.error(err);
     process.exit(1);
   });
@@ -37,7 +37,7 @@ async function main() {
     console.log(
       `> Server listening at http://${hostname}:${port} as ${
         dev ? 'development' : process.env.NODE_ENV
-      }`,
+      }`
     );
   });
 }

@@ -34,7 +34,7 @@ const statusConfig: Record<string, { icon: React.ReactNode; color: string; bg: s
   pending: { icon: <AlertTriangle className="w-4 h-4" />, color: 'text-amber-600', bg: 'bg-amber-100 dark:bg-amber-900/30', label: '待调解' },
   ongoing: { icon: <Users className="w-4 h-4" />, color: 'text-blue-600', bg: 'bg-blue-100 dark:bg-blue-900/30', label: '调解中' },
   resolved: { icon: <CheckCircle className="w-4 h-4" />, color: 'text-green-600', bg: 'bg-green-100 dark:bg-green-900/30', label: '调解结束' },
-  archived: { icon: <FileText className="w-4 h-4" />, color: 'text-purple-600', bg: 'bg-purple-100 dark:bg-purple-900/30', label: '已存档' },
+  archived: { icon: <FileText className="w-4 h-4" />, color: 'text-purple-600', bg: 'bg-purple-100 dark:bg-purple-900/30', label: '已存档' }
 };
 
 export default function MediationPage() {
@@ -53,7 +53,7 @@ export default function MediationPage() {
     reason: '',
     evidence: '',
     expectedResult: '',
-    relationshipId: '',
+    relationshipId: ''
   });
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
@@ -119,7 +119,7 @@ export default function MediationPage() {
         users = [
           { id: 'mock-1', phone: '13800001111', display_name: '张三', real_name: '张明', user_type: 'individual' },
           { id: 'mock-2', phone: '13900002222', display_name: '李四', real_name: '李华', user_type: 'expert' },
-          { id: 'mock-3', phone: '13700003333', display_name: '王五', real_name: '王强', user_type: 'enterprise' },
+          { id: 'mock-3', phone: '13700003333', display_name: '王五', real_name: '王强', user_type: 'enterprise' }
         ].filter(u => 
           u.real_name?.includes(term) || 
           u.display_name?.includes(term) || 
@@ -199,8 +199,8 @@ export default function MediationPage() {
           disputeType: 'coordination',
           description: formData.reason,
           evidence: formData.evidence,
-          expectedResult: formData.expectedResult,
-        }),
+          expectedResult: formData.expectedResult
+        })
       });
       const data = await response.json();
       if (data.success) {
@@ -393,7 +393,7 @@ export default function MediationPage() {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
                 className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white">申请协调</h3>
@@ -411,7 +411,7 @@ export default function MediationPage() {
                       <input
                         type="text"
                         value={recordSearchTerm}
-                        onChange={(e) => searchRecords(e.target.value)}
+                        onChange={e => searchRecords(e.target.value)}
                         onFocus={() => { if (recordSearchResults.length > 0) setShowRecordDropdown(true); }}
                         className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 pr-10"
                         placeholder="输入认知留痕记录ID或关键字..."
@@ -453,7 +453,7 @@ export default function MediationPage() {
                       <input
                         type="text"
                         value={formData.title}
-                        onChange={(e) => setFormData(f => ({ ...f, title: e.target.value }))}
+                        onChange={e => setFormData(f => ({ ...f, title: e.target.value }))}
                         className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 text-sm"
                         placeholder="可手动修改"
                       />
@@ -466,7 +466,7 @@ export default function MediationPage() {
                       被协调人 <span className="text-red-500">*</span>
                     </label>
                     <UserSelect
-                      onSelect={(user) => {
+                      onSelect={user => {
                         // 如果已选中则取消，否则选中
                         if (selectedRespondent.find(u => u.id === user.id)) {
                           setSelectedRespondent([]);
@@ -486,7 +486,7 @@ export default function MediationPage() {
                     </label>
                     <textarea
                       value={formData.reason}
-                      onChange={(e) => setFormData(f => ({ ...f, reason: e.target.value }))}
+                      onChange={e => setFormData(f => ({ ...f, reason: e.target.value }))}
                       className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900"
                       rows={3}
                       placeholder="详细描述协调原因..."
@@ -502,7 +502,7 @@ export default function MediationPage() {
                         type="file"
                         accept="image/*,.pdf,.doc,.docx,.txt,.zip"
                         multiple
-                        onChange={(e) => {
+                        onChange={e => {
                           const files = Array.from(e.target.files || []);
                           if (files.length > 0) {
                             setEvidenceFiles(prev => [...prev, ...files]);
@@ -533,7 +533,7 @@ export default function MediationPage() {
                     )}
                     <textarea
                       value={formData.evidence}
-                      onChange={(e) => setFormData(f => ({ ...f, evidence: e.target.value }))}
+                      onChange={e => setFormData(f => ({ ...f, evidence: e.target.value }))}
                       className="w-full mt-3 px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900"
                       rows={2}
                       placeholder="补充说明相关证据..."
@@ -545,7 +545,7 @@ export default function MediationPage() {
                     </label>
                     <textarea
                       value={formData.expectedResult}
-                      onChange={(e) => setFormData(f => ({ ...f, expectedResult: e.target.value }))}
+                      onChange={e => setFormData(f => ({ ...f, expectedResult: e.target.value }))}
                       className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900"
                       rows={2}
                       placeholder="期望的协调结果..."
@@ -587,7 +587,7 @@ export default function MediationPage() {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
                 className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">

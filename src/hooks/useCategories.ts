@@ -32,7 +32,7 @@ const ALL_TYPES: CategoryType[] = [
   'record',
   'mediator_type',
   'expertise_area',
-  'partner_level',
+  'partner_level'
 ];
 
 // 从 API 获取单个类型的分类
@@ -46,7 +46,7 @@ async function fetchCategoryFromAPI(
       return data.categories.map((c: any) => ({
         id: String(c.id),
         name: c.name,
-        description: c.description,
+        description: c.description
       }));
     }
   } catch (e) {
@@ -86,7 +86,7 @@ export function useCategories() {
     () => {
       const cached = loadCache();
       const init = {} as Record<CategoryType, Category[]>;
-      ALL_TYPES.forEach((t) => {
+      ALL_TYPES.forEach(t => {
         init[t] = cached[t] || [];
       });
       return init;
@@ -96,7 +96,7 @@ export function useCategories() {
   // 从 API 刷新所有分类
   const refresh = useCallback(async () => {
     const results = await Promise.all(
-      ALL_TYPES.map((t) => fetchCategoryFromAPI(t))
+      ALL_TYPES.map(t => fetchCategoryFromAPI(t))
     );
 
     const next = {} as Record<CategoryType, Category[]>;
@@ -141,7 +141,7 @@ export function useCategories() {
 /** 供外部调用：强制所有 useCategories 消费者重新从 API 获取 */
 export function refreshAllCategories() {
   globalRefreshKey++;
-  refreshListeners.forEach((fn) => {
+  refreshListeners.forEach(fn => {
     try { fn(); } catch (_) {}
   });
 }
@@ -155,9 +155,9 @@ export function useCategoryByType(type: CategoryType) {
 /** 获取分类选项（用于下拉框） */
 export function useCategoryOptions(type: CategoryType) {
   const list = useCategoryByType(type);
-  return list.map((cat) => ({
+  return list.map(cat => ({
     value: cat.id,
-    label: cat.name,
+    label: cat.name
   }));
 }
 
@@ -168,7 +168,7 @@ export function getCategoryLabel(
   categoryId: string
 ): string {
   const list = categories[type] || [];
-  const found = list.find((c) => c.id === categoryId);
+  const found = list.find(c => c.id === categoryId);
   return found?.name || categoryId;
 }
 
@@ -183,7 +183,7 @@ export function useCategoriesRefresh() {
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
       if (e.key === CACHE_KEY) {
-        setRefreshKey((k) => k + 1);
+        setRefreshKey(k => k + 1);
       }
     };
     window.addEventListener('storage', handleStorage);

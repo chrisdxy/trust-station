@@ -34,8 +34,8 @@ export async function GET(
         ...row,
         tags: row.tags || '',
         related_items,
-        related_parties,
-      },
+        related_parties
+      }
     });
   } catch (error) {
     console.error('获取记录详情错误:', error);
@@ -104,7 +104,7 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
-      message: '更新成功',
+      message: '更新成功'
     });
   } catch (error) {
     console.error('更新记录错误:', error);
@@ -130,7 +130,7 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: '删除成功',
+      message: '删除成功'
     });
   } catch (error) {
     console.error('删除记录错误:', error);

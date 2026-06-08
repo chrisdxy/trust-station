@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      categories: rows || [],
+      categories: rows || []
     });
   } catch (error: any) {
     console.error('获取分类列表错误:', error.message);

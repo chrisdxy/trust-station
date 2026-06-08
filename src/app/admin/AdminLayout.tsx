@@ -29,7 +29,7 @@ const superAdminNavItems = [
   { path: '/admin/feedbacks', label: '投诉与建议', icon: MessageSquare },
   { path: '/admin/ai-tools', label: 'AI工具管理', icon: Sparkles },
   { path: '/admin/stats', label: '数据统计', icon: BarChart3 },
-  { path: '/admin/settings', label: '系统设置', icon: Settings },
+  { path: '/admin/settings', label: '系统设置', icon: Settings }
 ];
 
 // 管理员菜单
@@ -43,7 +43,7 @@ const adminNavItems = [
   { path: '/admin/feedbacks', label: '投诉与建议', icon: MessageSquare },
   { path: '/admin/ai-tools', label: 'AI工具管理', icon: Sparkles },
   { path: '/admin/stats', label: '数据统计', icon: BarChart3 },
-  { path: '/admin/settings', label: '系统设置', icon: Settings },
+  { path: '/admin/settings', label: '系统设置', icon: Settings }
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -199,7 +199,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <span className="font-medium">回首页</span>
             </Link>
             
-            {currentNavItems.map((item) => {
+            {currentNavItems.map(item => {
               const Icon = item.icon;
               const isActive = typeof window !== 'undefined' && window.location.pathname === item.path;
               const showBadge = item.path === '/admin/feedbacks' && feedbackUnread > 0;

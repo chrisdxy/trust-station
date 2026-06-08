@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         message: '加入成功',
-        id,
+        id
       });
       
     } else if (action === 'leave') {
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        message: '已退出社区',
+        message: '已退出社区'
       });
     }
 

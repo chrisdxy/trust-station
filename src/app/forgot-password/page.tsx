@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
       const response = await fetch('/api/auth/send-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, type: 'reset' }),
+        body: JSON.stringify({ phone, type: 'reset' })
       });
       
       const data = await response.json();
@@ -78,7 +78,7 @@ export default function ForgotPasswordPage() {
       const response = await fetch('/api/auth/verify-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, verifyCode, type: 'reset' }),
+        body: JSON.stringify({ phone, verifyCode, type: 'reset' })
       });
       
       const data = await response.json();
@@ -118,9 +118,9 @@ export default function ForgotPasswordPage() {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${resetToken}`,
+          'Authorization': `Bearer ${resetToken}`
         },
-        body: JSON.stringify({ phone, password: newPassword }),
+        body: JSON.stringify({ phone, password: newPassword })
       });
       
       const data = await response.json();
@@ -227,7 +227,7 @@ export default function ForgotPasswordPage() {
                         <input
                           type="tel"
                           value={phone}
-                          onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
+                          onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
                           className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-400 focus:border-transparent"
                           placeholder="请输入11位手机号"
                         />
@@ -266,7 +266,7 @@ export default function ForgotPasswordPage() {
                           <input
                             type="text"
                             value={verifyCode}
-                            onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                            onChange={e => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                             className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-400 focus:border-transparent"
                             placeholder="6位验证码"
                           />
@@ -318,7 +318,7 @@ export default function ForgotPasswordPage() {
                         <input
                           type="password"
                           value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
+                          onChange={e => setNewPassword(e.target.value)}
                           className="w-full pl-4 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-400 focus:border-transparent"
                           placeholder="至少6位字符"
                           required
@@ -335,7 +335,7 @@ export default function ForgotPasswordPage() {
                         <input
                           type="password"
                           value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          onChange={e => setConfirmPassword(e.target.value)}
                           className="w-full pl-4 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-400 focus:border-transparent"
                           placeholder="再次输入密码"
                           required

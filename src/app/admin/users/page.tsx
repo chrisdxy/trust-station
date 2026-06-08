@@ -30,23 +30,23 @@ export default function UsersPage() {
     all: '',
     admin: '',
     coordinator: '',
-    partner: '',
+    partner: ''
   });
   const [statusFilters, setStatusFilters] = useState<Record<string, string>>({
     coordinator: 'pending',
-    partner: '',
+    partner: ''
   });
   const [usersData, setUsersData] = useState<Record<string, User[]>>({
     all: [],
     admin: [],
     coordinator: [],
-    partner: [],
+    partner: []
   });
   const [paginationData, setPaginationData] = useState<Record<string, Pagination>>({
     all: { page: 1, limit: 20, total: 0, totalPages: 0 },
     admin: { page: 1, limit: 20, total: 0, totalPages: 0 },
     coordinator: { page: 1, limit: 20, total: 0, totalPages: 0 },
-    partner: { page: 1, limit: 20, total: 0, totalPages: 0 },
+    partner: { page: 1, limit: 20, total: 0, totalPages: 0 }
   });
   const [loading, setLoading] = useState(false);
   const [showPermissionsPanel, setShowPermissionsPanel] = useState(false);
@@ -60,7 +60,7 @@ export default function UsersPage() {
         page: paginationData[type].page.toString(),
         limit: '20',
         search: searchTerms[type] || '',
-        userType: type,
+        userType: type
       });
       
       // 对于协调专家和合伙人，添加状态筛选
@@ -137,7 +137,7 @@ export default function UsersPage() {
       user: '普通用户',
       coordinator: '协调专家',
       coach: '陪跑专家',
-      partner: '合伙人',
+      partner: '合伙人'
     };
     return labels[type] || type;
   };
@@ -150,7 +150,7 @@ export default function UsersPage() {
       user: { active: 'bg-gray-500 text-white', inactive: 'bg-gray-100 text-gray-700 hover:bg-gray-200' },
       coordinator: { active: 'bg-green-500 text-white', inactive: 'bg-green-100 text-green-700 hover:bg-green-200' },
       coach: { active: 'bg-amber-500 text-white', inactive: 'bg-amber-100 text-amber-700 hover:bg-amber-200' },
-      partner: { active: 'bg-cyan-500 text-white', inactive: 'bg-cyan-100 text-cyan-700 hover:bg-cyan-200' },
+      partner: { active: 'bg-cyan-500 text-white', inactive: 'bg-cyan-100 text-cyan-700 hover:bg-cyan-200' }
     };
     return colors[type] || { active: 'bg-blue-500 text-white', inactive: 'bg-slate-100 text-slate-700 hover:bg-slate-200' };
   };
@@ -163,7 +163,7 @@ export default function UsersPage() {
           const res = await fetch(`/api/admin/users`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: user.id, updates: { user_type: 'admin' } }),
+            body: JSON.stringify({ userId: user.id, updates: { user_type: 'admin' } })
           });
           const data = await res.json();
           if (data.success) {
@@ -198,7 +198,7 @@ export default function UsersPage() {
         const resApprove = await fetch(`/api/admin/users`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user.id, appType: activeTab, updates: { user_type: targetType } }),
+          body: JSON.stringify({ userId: user.id, appType: activeTab, updates: { user_type: targetType } })
         });
         const dataApprove = await resApprove.json();
         if (dataApprove.success) {
@@ -213,7 +213,7 @@ export default function UsersPage() {
           const resReject = await fetch(`/api/admin/users`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: user.id, updates: { user_type: 'rejected' } }),
+            body: JSON.stringify({ userId: user.id, updates: { user_type: 'rejected' } })
           });
           const dataReject = await resReject.json();
           if (dataReject.success) {
@@ -292,7 +292,7 @@ export default function UsersPage() {
 
         {/* 用户类型标签切换 */}
         <div className="flex flex-wrap gap-2">
-          {['all', 'admin', 'coach', 'partner'].map((type) => {
+          {['all', 'admin', 'coach', 'partner'].map(type => {
             const colors = getTabColor(type);
             const isActive = activeTab === type;
             const total = paginationData[type]?.total || 0;
@@ -374,8 +374,8 @@ export default function UsersPage() {
                   type="text"
                   placeholder={`搜索${getUserTypeLabel(activeTab)}（手机号、姓名、公司）...`}
                   value={currentSearch}
-                  onChange={(e) => handleSearch(activeTab, e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit(activeTab)}
+                  onChange={e => handleSearch(activeTab, e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSearchSubmit(activeTab)}
                   className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>

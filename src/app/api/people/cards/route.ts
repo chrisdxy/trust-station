@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
         experience: (cardFields as any).experience || '',
         education: (cardFields as any).education || '',
         address: (cardFields as any).address || '',
-        cardFields,
+        cardFields
       };
     });
 

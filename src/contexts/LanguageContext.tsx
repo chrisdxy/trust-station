@@ -195,7 +195,7 @@ const translations: Record<Language, Record<string, string>> = {
     'authorization.granted': '已授权',
     'authorization.pending': '待确认',
     'authorization.expired': '已过期',
-    'authorization.revoked': '已撤销',
+    'authorization.revoked': '已撤销'
   },
   en: {
     'app.name': 'Trust Station',
@@ -380,8 +380,8 @@ const translations: Record<Language, Record<string, string>> = {
     'authorization.granted': 'Granted',
     'authorization.pending': 'Pending',
     'authorization.expired': 'Expired',
-    'authorization.revoked': 'Revoked',
-  },
+    'authorization.revoked': 'Revoked'
+  }
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);

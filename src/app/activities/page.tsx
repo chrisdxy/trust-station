@@ -211,7 +211,7 @@ export default function ActivitiesPage() {
       location: activity.location || '',
       start_time: fmt(activity.start_time),
       end_time: fmt(activity.end_time),
-      max_participants: activity.max_participants?.toString() || '50',
+      max_participants: activity.max_participants?.toString() || '50'
     });
     setCoverImage(activity.cover_image || '');
     setCoverImagePreview(activity.cover_image || '');
@@ -238,7 +238,7 @@ export default function ActivitiesPage() {
           max_participants: parseInt(editForm.max_participants) || null,
           cover_image: coverImage || null,
           is_paid: isPaid,
-          price: isPaid ? (parseFloat(price) || 0) : null,
+          price: isPaid ? (parseFloat(price) || 0) : null
         })
       });
       const data = await res.json();
@@ -271,7 +271,7 @@ export default function ActivitiesPage() {
 
     // 预览本地图片
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = ev => {
       setCoverImagePreview(ev.target?.result as string);
     };
     reader.readAsDataURL(file);
@@ -283,7 +283,7 @@ export default function ActivitiesPage() {
     try {
       const res = await fetch('/api/upload', {
         method: 'POST',
-        body: formData,
+        body: formData
       });
       const data = await res.json();
       if (data.success && data.url) {
@@ -355,7 +355,7 @@ export default function ActivitiesPage() {
 
   const getStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
-      upcoming: '即将开始', ongoing: '进行中', completed: '已结束', cancelled: '已取消',
+      upcoming: '即将开始', ongoing: '进行中', completed: '已结束', cancelled: '已取消'
     };
     return labels[status] || status;
   };
@@ -363,7 +363,7 @@ export default function ActivitiesPage() {
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       upcoming: 'bg-blue-100 text-blue-700', ongoing: 'bg-green-100 text-green-700',
-      completed: 'bg-gray-100 text-gray-600', cancelled: 'bg-red-100 text-red-700',
+      completed: 'bg-gray-100 text-gray-600', cancelled: 'bg-red-100 text-red-700'
     };
     return colors[status] || 'bg-gray-100 text-gray-600';
   };
@@ -407,7 +407,7 @@ export default function ActivitiesPage() {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm p-6"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 <div className="text-center mb-6">
                   <div className="w-14 h-14 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -458,7 +458,7 @@ export default function ActivitiesPage() {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-md w-full text-center shadow-2xl"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle className="w-10 h-10 text-green-500" />
@@ -523,7 +523,7 @@ export default function ActivitiesPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input type="text" placeholder="搜索活动..." className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800" />
             </div>
-            <select value={filter} onChange={(e) => { setFilter(e.target.value); fetchActivities(); }}
+            <select value={filter} onChange={e => { setFilter(e.target.value); fetchActivities(); }}
               className="px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800">
               <option value="">全部状态</option>
               <option value="upcoming">即将开始</option>
@@ -548,7 +548,7 @@ export default function ActivitiesPage() {
                   {v === 'all' && showPaidDropdown && (
                     <div className="absolute top-full left-0 mt-0 bg-white dark:bg-slate-800 rounded-b-lg shadow-lg border border-slate-200 dark:border-slate-700 py-1 z-10 min-w-[100px]">
                       {[['all', '全部'], ['free', '免费'], ['paid', '收费']].map(([pv, plabel]) => (
-                        <button key={pv} onClick={(e) => { e.stopPropagation(); setPaidFilter(pv); setShowPaidDropdown(false); }}
+                        <button key={pv} onClick={e => { e.stopPropagation(); setPaidFilter(pv); setShowPaidDropdown(false); }}
                           className={`block w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 ${paidFilter === pv ? 'text-orange-500 font-medium' : 'text-slate-600 dark:text-slate-300'}`}>
                           {plabel}
                         </button>
@@ -604,7 +604,7 @@ export default function ActivitiesPage() {
                     </div>
                     <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-1 line-clamp-2">{activity.title}</h3>
                     <span className="inline-block px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded text-xs font-mono cursor-pointer hover:bg-amber-200 transition-colors mb-2"
-                      onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(getShortActivityId(activity.id)) }}
+                      onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(getShortActivityId(activity.id)); }}
                       title="点击复制活动ID，用于记录中心查询">
                       活动ID: {getShortActivityId(activity.id)}
                     </span>
@@ -630,7 +630,7 @@ export default function ActivitiesPage() {
                     </div>
                     {/* 操作按钮 */}
                     {user && (
-                      <div className="flex gap-2 mt-4 pt-3 border-t border-slate-100 dark:border-slate-700" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex gap-2 mt-4 pt-3 border-t border-slate-100 dark:border-slate-700" onClick={e => e.stopPropagation()}>
                         {/* 我发布的：显示编辑和删除 */}
                         {isMyPublished(activity) && (
                           <>
@@ -682,7 +682,7 @@ export default function ActivitiesPage() {
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <form onSubmit={async (e) => {
+              <form onSubmit={async e => {
                 e.preventDefault();
                 const form = e.target as HTMLFormElement;
                 const title = (form.elements.namedItem('title') as HTMLInputElement).value;
@@ -756,7 +756,7 @@ export default function ActivitiesPage() {
                   {isPaid && (
                     <div>
                       <label className="block text-sm font-medium mb-1">金额（元）</label>
-                      <input type="number" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="请输入金额" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
+                      <input type="number" min="0" step="0.01" value={price} onChange={e => setPrice(e.target.value)} placeholder="请输入金额" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
                     </div>
                   )}
                   <div className="grid grid-cols-2 gap-4">
@@ -827,7 +827,7 @@ export default function ActivitiesPage() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
                 className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 relative"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 {/* 关闭按钮 */}
                 <button onClick={closeDetail} className="absolute top-4 right-4 p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg z-10">
@@ -948,29 +948,29 @@ export default function ActivitiesPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">活动标题 <span className="text-red-500">*</span></label>
-                    <input value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} required placeholder="请输入活动标题" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
+                    <input value={editForm.title} onChange={e => setEditForm({ ...editForm, title: e.target.value })} required placeholder="请输入活动标题" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-1">开始时间</label>
-                      <input value={editForm.start_time} onChange={(e) => setEditForm({ ...editForm, start_time: e.target.value })} type="datetime-local" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
+                      <input value={editForm.start_time} onChange={e => setEditForm({ ...editForm, start_time: e.target.value })} type="datetime-local" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">结束时间</label>
-                      <input value={editForm.end_time} onChange={(e) => setEditForm({ ...editForm, end_time: e.target.value })} type="datetime-local" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
+                      <input value={editForm.end_time} onChange={e => setEditForm({ ...editForm, end_time: e.target.value })} type="datetime-local" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
                     </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">人数上限</label>
-                    <input value={editForm.max_participants} onChange={(e) => setEditForm({ ...editForm, max_participants: e.target.value })} type="number" min="1" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
+                    <input value={editForm.max_participants} onChange={e => setEditForm({ ...editForm, max_participants: e.target.value })} type="number" min="1" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">活动地点</label>
-                    <input value={editForm.location} onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} placeholder="请输入活动地点" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
+                    <input value={editForm.location} onChange={e => setEditForm({ ...editForm, location: e.target.value })} placeholder="请输入活动地点" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">活动描述</label>
-                    <RichTextEditor placeholder="请输入活动描述..." value={editForm.description} onChange={(v) => setEditForm({ ...editForm, description: v })} />
+                    <RichTextEditor placeholder="请输入活动描述..." value={editForm.description} onChange={v => setEditForm({ ...editForm, description: v })} />
                   </div>
                   {/* 封面图片 */}
                   <div>
@@ -990,11 +990,11 @@ export default function ActivitiesPage() {
                       <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg cursor-pointer hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors">
                         <Image className="w-8 h-8 text-slate-400 mb-2" />
                         <span className="text-sm text-slate-500">点击上传封面图片</span>
-                        <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                        <input type="file" accept="image/*" className="hidden" onChange={async e => {
                           const file = e.target.files?.[0];
                           if (!file) return;
                           const reader = new FileReader();
-                          reader.onload = (ev) => setCoverImagePreview(ev.target?.result as string);
+                          reader.onload = ev => setCoverImagePreview(ev.target?.result as string);
                           reader.readAsDataURL(file);
                           const formData = new FormData();
                           formData.append('file', file);
@@ -1028,7 +1028,7 @@ export default function ActivitiesPage() {
                   {isPaid && (
                     <div>
                       <label className="block text-sm font-medium mb-1">金额（元）</label>
-                      <input type="number" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="请输入金额" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
+                      <input type="number" min="0" step="0.01" value={price} onChange={e => setPrice(e.target.value)} placeholder="请输入金额" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
                     </div>
                   )}
                 </div>

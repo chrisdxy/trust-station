@@ -32,13 +32,13 @@ interface RecentActivity {
 export default function DashboardPage() {
   const router = useRouter();
   const { user: authUser } = useAuth();
-  const [user, setUser] = useState<{ name: string; nickname?: string; display_name?: string } | null>(null);
+  const [user, setUser] = useState<{ name: string; nickname?: string; display_name?: string; phone?: string } | null>(null);
   const [stats, setStats] = useState<UserStats>({
     totalProfiles: 0,
     publicProfiles: 0,
     connections: 0,
     mediationCases: 0,
-    partnerDownline: 0,
+    partnerDownline: 0
   });
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [partnerStatus, setPartnerStatus] = useState<{ status: string; level?: string } | null>(null);
@@ -79,7 +79,7 @@ export default function DashboardPage() {
     setStats(prev => ({
       ...prev,
       totalProfiles: profiles.length,
-      publicProfiles: publicCount,
+      publicProfiles: publicCount
     }));
 
     // 加载合伙人状态
@@ -91,7 +91,7 @@ export default function DashboardPage() {
         const downline = JSON.parse(localStorage.getItem('user_partner_downline') || '{"totalCount":0}');
         setStats(prev => ({
           ...prev,
-          partnerDownline: downline.totalCount,
+          partnerDownline: downline.totalCount
         }));
       }
     }
@@ -105,7 +105,7 @@ export default function DashboardPage() {
         // 模拟案件数
         setStats(prev => ({
           ...prev,
-          mediationCases: 3,
+          mediationCases: 3
         }));
       }
     }
@@ -115,7 +115,7 @@ export default function DashboardPage() {
       { id: '1', type: 'profile', title: '更新了个人名片信息', time: '2小时前', status: 'success' },
       { id: '2', type: 'partner', title: '提交了事业合伙人申请', time: '1天前', status: 'pending' },
       { id: '3', type: 'system', title: '完成了身份认证', time: '3天前', status: 'success' },
-      { id: '4', type: 'mediation', title: '协调案件已归档', time: '1周前', status: 'info' },
+      { id: '4', type: 'mediation', title: '协调案件已归档', time: '1周前', status: 'info' }
     ]);
   }, []);
 
@@ -138,14 +138,14 @@ export default function DashboardPage() {
     { href: '/communities', icon: Users2, label: '成长共同体', color: 'from-cyan-400 to-cyan-500', desc: '加入成长社群' },
     { href: '/cooperation', icon: Handshake, label: '合作中心', color: 'from-amber-400 to-amber-500', desc: '管理合作关系' },
     { href: '/archives', icon: FileText, label: '记录中心', color: 'from-teal-400 to-teal-500', desc: '记录认知历程' },
-    { href: '/mediation', icon: Scale, label: '协调中心', color: 'from-orange-400 to-orange-500', desc: '纠纷协调服务' },
+    { href: '/mediation', icon: Scale, label: '协调中心', color: 'from-orange-400 to-orange-500', desc: '纠纷协调服务' }
   ];
 
   const quickActions = [
     { icon: User, label: '创建名片', href: '/profile?action=create', color: 'bg-green-500' },
     { icon: Calendar, label: '发起活动', href: '/activities?action=create', color: 'bg-pink-500' },
     { icon: Briefcase, label: '发布项目', href: '/projects?action=create', color: 'bg-indigo-500' },
-    { icon: Users2, label: '创建共同体', href: '/communities?action=create', color: 'bg-cyan-500' },
+    { icon: Users2, label: '创建共同体', href: '/communities?action=create', color: 'bg-cyan-500' }
   ];
 
   return (
@@ -298,7 +298,7 @@ export default function DashboardPage() {
             >
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">最近活动</h2>
               <div className="space-y-4">
-                {recentActivities.map((activity) => (
+                {recentActivities.map(activity => (
                   <div key={activity.id} className="flex items-start gap-3">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                       activity.status === 'success' ? 'bg-green-100 text-green-600' :

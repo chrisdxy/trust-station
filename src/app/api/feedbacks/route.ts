@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
       items: rows || [],
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
       unreadCounts,
-      userUnreadCount,
+      userUnreadCount
     });
   } catch (error: any) {
     console.error('获取投诉建议失败:', error.message);

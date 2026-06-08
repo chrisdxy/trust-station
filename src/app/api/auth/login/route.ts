@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
         {
           userId: user.id,
           phone: user.phone,
-          isAdmin: user.is_admin === 1 || user.is_admin === true,
+          isAdmin: user.is_admin === 1 || user.is_admin === true
         },
         process.env.JWT_SECRET || 'zhengdao-secret-key',
         { expiresIn: '7d' }
@@ -66,8 +66,8 @@ export async function POST(request: NextRequest) {
           company_name: user.company_name,
           identity_verified: user.identity_verified,
           avatar_url: user.avatar_url,
-          is_admin: user.is_admin === 1 || user.is_admin === true,
-        },
+          is_admin: user.is_admin === 1 || user.is_admin === true
+        }
       });
     }
 
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
       {
         userId: user.id,
         phone: user.phone,
-        isAdmin: user.is_admin === 1 || user.is_admin === true,
+        isAdmin: user.is_admin === 1 || user.is_admin === true
       },
       process.env.JWT_SECRET || 'zhengdao-secret-key',
       { expiresIn: '7d' }
@@ -124,8 +124,8 @@ export async function POST(request: NextRequest) {
         company_name: user.company_name,
         identity_verified: user.identity_verified,
         avatar_url: user.avatar_url,
-        is_admin: user.is_admin === 1 || user.is_admin === true,
-      },
+        is_admin: user.is_admin === 1 || user.is_admin === true
+      }
     });
   } catch (error: any) {
     console.error('用户登录错误:', error.message);

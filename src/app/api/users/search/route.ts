@@ -33,12 +33,12 @@ export async function GET(request: NextRequest) {
       avatar_url: row.avatar_url,
       identity_verified: !!row.identity_verified,
       company: row.company,
-      position: row.position,
+      position: row.position
     }));
 
     return NextResponse.json({
       success: true,
-      users,
+      users
     });
   } catch (error: any) {
     console.error('用户搜索错误:', error.message);

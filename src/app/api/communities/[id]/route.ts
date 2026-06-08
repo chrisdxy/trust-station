@@ -43,7 +43,7 @@ export async function GET(request: NextRequest, context: any) {
     return NextResponse.json({
       success: true,
       community: communities[0],
-      members: members || [],
+      members: members || []
     });
   } catch (error) {
     console.error('获取社区详情错误:', error);
@@ -94,7 +94,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: '更新成功',
+      message: '更新成功'
     });
   } catch (error) {
     console.error('更新社区错误:', error);
@@ -122,7 +122,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: '删除成功',
+      message: '删除成功'
     });
   } catch (error) {
     console.error('删除社区错误:', error);

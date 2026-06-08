@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       'application/vnd.ms-excel',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'application/zip',
-      'application/x-rar-compressed',
+      'application/x-rar-compressed'
     ];
     const validTypes = [...imageTypes, ...docTypes];
     const isValidType = validTypes.includes(file.type) || !file.type || file.type === 'application/octet-stream';

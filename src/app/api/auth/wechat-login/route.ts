@@ -165,9 +165,9 @@ export async function POST(request: NextRequest) {
         realName: userRealName,
         phone: userPhone,
         isNewUser,
-        profileComplete: !!(userPhone && userRealName && userPrivacyAgreed && userConsensusAgreed),
+        profileComplete: !!(userPhone && userRealName && userPrivacyAgreed && userConsensusAgreed)
       },
-      message: 'Login successful',
+      message: 'Login successful'
     });
   } catch (error: any) {
     console.error('Wechat login error:', error);

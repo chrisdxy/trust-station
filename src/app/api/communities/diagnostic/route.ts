@@ -18,13 +18,13 @@ export async function GET() {
       success: true,
       database_charset: dbResult?.[0]?.charset || 'unknown',
       table_create_sql: tableInfo['Create Table'] || 'unknown',
-      columns: columnResult,
+      columns: columnResult
     });
   } catch (error: any) {
     console.error('诊断错误:', error);
     return NextResponse.json({
       success: false,
-      error: error.message,
+      error: error.message
     });
   }
 }

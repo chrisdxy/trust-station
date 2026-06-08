@@ -43,8 +43,8 @@ export async function POST(request: NextRequest) {
         name: admin.name,
         email: admin.email,
         role: admin.role,
-        status: admin.status,
-      },
+        status: admin.status
+      }
     });
   } catch (error: any) {
     console.error('管理员登录错误:', error.message);

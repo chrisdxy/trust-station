@@ -33,7 +33,7 @@ export default function RelationshipsPage() {
     partnerType: 'individual',
     relationshipType: '',
     cooperationLevel: 'potential',
-    notes: '',
+    notes: ''
   });
   const [saving, setSaving] = useState(false);
 
@@ -75,8 +75,8 @@ export default function RelationshipsPage() {
           partnerType: addForm.partnerType,
           relationshipType: addForm.relationshipType,
           cooperationLevel: addForm.cooperationLevel,
-          notes: addForm.notes,
-        }),
+          notes: addForm.notes
+        })
       });
       const data = await response.json();
       if (data.success) {
@@ -86,7 +86,7 @@ export default function RelationshipsPage() {
           partnerType: 'individual',
           relationshipType: '',
           cooperationLevel: 'potential',
-          notes: '',
+          notes: ''
         });
         fetchRelationships();
       }
@@ -101,7 +101,7 @@ export default function RelationshipsPage() {
     const labels: Record<string, string> = {
       trusted: '已信任',
       verified: '已认证',
-      potential: '潜在合作',
+      potential: '潜在合作'
     };
     return labels[level || ''] || level || '未知';
   };
@@ -110,7 +110,7 @@ export default function RelationshipsPage() {
     const colors: Record<string, string> = {
       trusted: 'bg-green-100 text-green-700',
       verified: 'bg-blue-100 text-blue-700',
-      potential: 'bg-amber-100 text-amber-700',
+      potential: 'bg-amber-100 text-amber-700'
     };
     return colors[level || ''] || 'bg-gray-100 text-gray-700';
   };
@@ -119,7 +119,7 @@ export default function RelationshipsPage() {
     const labels: Record<string, string> = {
       individual: '个人',
       enterprise: '企业',
-      expert: '专家',
+      expert: '专家'
     };
     return labels[type || ''] || type || '未知';
   };
@@ -176,13 +176,13 @@ export default function RelationshipsPage() {
                 type="text"
                 placeholder="搜索合作伙伴..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800"
               />
             </div>
             <select
               value={filterLevel}
-              onChange={(e) => setFilterLevel(e.target.value)}
+              onChange={e => setFilterLevel(e.target.value)}
               className="px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800"
             >
               <option value="">全部等级</option>
@@ -291,7 +291,7 @@ export default function RelationshipsPage() {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
                 className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-md"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white">添加合作关系</h3>
@@ -307,7 +307,7 @@ export default function RelationshipsPage() {
                     <input
                       type="text"
                       value={addForm.partnerName}
-                      onChange={(e) => setAddForm(f => ({ ...f, partnerName: e.target.value }))}
+                      onChange={e => setAddForm(f => ({ ...f, partnerName: e.target.value }))}
                       className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900"
                       placeholder="请输入合作伙伴名称"
                     />
@@ -318,7 +318,7 @@ export default function RelationshipsPage() {
                     </label>
                     <select
                       value={addForm.partnerType}
-                      onChange={(e) => setAddForm(f => ({ ...f, partnerType: e.target.value }))}
+                      onChange={e => setAddForm(f => ({ ...f, partnerType: e.target.value }))}
                       className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900"
                     >
                       <option value="individual">个人</option>
@@ -333,7 +333,7 @@ export default function RelationshipsPage() {
                     <input
                       type="text"
                       value={addForm.relationshipType}
-                      onChange={(e) => setAddForm(f => ({ ...f, relationshipType: e.target.value }))}
+                      onChange={e => setAddForm(f => ({ ...f, relationshipType: e.target.value }))}
                       className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900"
                       placeholder="如：战略合作、项目合作"
                     />
@@ -344,7 +344,7 @@ export default function RelationshipsPage() {
                     </label>
                     <select
                       value={addForm.cooperationLevel}
-                      onChange={(e) => setAddForm(f => ({ ...f, cooperationLevel: e.target.value }))}
+                      onChange={e => setAddForm(f => ({ ...f, cooperationLevel: e.target.value }))}
                       className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900"
                     >
                       <option value="potential">潜在合作</option>
@@ -358,7 +358,7 @@ export default function RelationshipsPage() {
                     </label>
                     <textarea
                       value={addForm.notes}
-                      onChange={(e) => setAddForm(f => ({ ...f, notes: e.target.value }))}
+                      onChange={e => setAddForm(f => ({ ...f, notes: e.target.value }))}
                       className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900"
                       rows={3}
                       placeholder="备注信息（可选）"

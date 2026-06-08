@@ -38,6 +38,8 @@
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "deploy-package-v5",
+    "src/**/\u65B0\u5EFA\u6587\u4EF6\u5939/**"
   ]
 }

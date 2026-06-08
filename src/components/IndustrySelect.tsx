@@ -26,7 +26,7 @@ function buildTree(all: IndustryOption[]): IndustryOption[] {
     ...p,
     children: children
       .filter(c => String(c.parent_id) === String(p.id))
-      .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)),
+      .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
   }));
 }
 
@@ -48,7 +48,7 @@ export function IndustrySelect({
   onChange,
   placeholder = '请选择行业',
   required = false,
-  inline = false,
+  inline = false
 }: IndustrySelectProps) {
   const [allOptions, setAllOptions] = useState<IndustryOption[]>([]);
   const [tree, setTree] = useState<IndustryOption[]>([]);
@@ -104,7 +104,7 @@ export function IndustrySelect({
           ...p,
           children: p.children?.filter(c =>
             c.name.includes(searchTerm) || p.name.includes(searchTerm)
-          ),
+          )
         }))
         .filter(p =>
           p.name.includes(searchTerm) || (p.children && p.children.length > 0)
@@ -116,14 +116,14 @@ export function IndustrySelect({
     if (loading) return <div className="text-center py-4 text-sm text-slate-500">加载中...</div>;
     if (items.length === 0) return <div className="text-center py-4 text-sm text-slate-500">暂无数据</div>;
 
-    return items.map((parent) => (
+    return items.map(parent => (
       <div key={parent.id}>
         {/* 一级分类 */}
         <div className="flex items-center">
           {parent.children && parent.children.length > 0 && (
             <button
               type="button"
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 toggleExpand(parent.id);
               }}
@@ -159,7 +159,7 @@ export function IndustrySelect({
         {/* 二级分类 */}
         {parent.children && expandedParents.has(parent.id) && (
           <div className="ml-6 border-l-2 border-slate-200 dark:border-slate-700">
-            {parent.children.map((child) => (
+            {parent.children.map(child => (
               <button
                 key={child.id}
                 type="button"
@@ -199,10 +199,10 @@ export function IndustrySelect({
               <input
                 type="text"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 placeholder="搜索行业..."
                 className="w-full pl-9 pr-3 py-1.5 text-sm border border-slate-200 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               />
             </div>
           </div>
@@ -257,10 +257,10 @@ export function IndustrySelect({
                 <input
                   type="text"
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={e => setSearchTerm(e.target.value)}
                   placeholder="搜索行业..."
                   className="w-full pl-9 pr-3 py-1.5 text-sm border border-slate-200 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={e => e.stopPropagation()}
                 />
               </div>
             </div>

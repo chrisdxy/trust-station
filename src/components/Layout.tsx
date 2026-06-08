@@ -22,7 +22,7 @@ const navItems = [
   { path: '/cooperation', labelKey: 'nav.cooperation', icon: Users },
   { path: '/archives', labelKey: 'nav.archives', icon: FileText },
   { path: '/mediation', labelKey: 'nav.mediation', icon: Scale },
-  { path: '/feedbacks', labelKey: '投诉与建议', icon: MessageSquare },
+  { path: '/feedbacks', labelKey: '投诉与建议', icon: MessageSquare }
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {

@@ -58,7 +58,7 @@ function initSharedTestUsers() {
     { phone: '13800138003', nickname: '王五', realName: '王伟' },
     { phone: '13900139001', nickname: '赵六', realName: '赵强' },
     { phone: '13900139002', nickname: '孙七', realName: '孙丽' },
-    { phone: '13700137001', nickname: '周八', realName: '周伟' },
+    { phone: '13700137001', nickname: '周八', realName: '周伟' }
   ];
   
   testUsers.forEach(user => {
@@ -66,13 +66,13 @@ function initSharedTestUsers() {
       phone: user.phone,
       nickname: user.nickname,
       realName: user.realName,
-      createdAt: new Date(),
+      createdAt: new Date()
     });
     global.sharedUserProfiles!.set(user.phone, {
       phone: user.phone,
       nickname: user.nickname,
       realName: user.realName,
-      createdAt: new Date(),
+      createdAt: new Date()
     });
   });
   

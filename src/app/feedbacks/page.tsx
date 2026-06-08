@@ -38,7 +38,7 @@ export default function FeedbacksPage() {
     try {
       await fetch('/api/feedbacks', {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userRead: true, userId: user.id }),
+        body: JSON.stringify({ userRead: true, userId: user.id })
       });
     } catch {}
   }, [user?.id]);
@@ -85,8 +85,8 @@ export default function FeedbacksPage() {
           userId: user.id,
           userName: (user as any).display_name || (user as any).real_name || '',
           type: formType,
-          content: content.trim(),
-        }),
+          content: content.trim()
+        })
       });
       const data = await res.json();
       if (data.success) {
@@ -109,8 +109,8 @@ export default function FeedbacksPage() {
           userId: user.id,
           userName: (user as any).display_name || (user as any).real_name || '',
           content: followUpText.trim(),
-          parentId,
-        }),
+          parentId
+        })
       });
       const data = await res.json();
       if (data.success) {

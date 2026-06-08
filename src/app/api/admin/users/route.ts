@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       users: rows || [],
-      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) }
     });
   } catch (error: any) {
     console.error('获取用户列表失败:', error.message);

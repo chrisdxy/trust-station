@@ -30,7 +30,7 @@ interface EditForm {
 }
 
 const typeLabels: Record<PublishType, string> = {
-  community: '共同体列表', activity: '活动列表', project: '项目列表',
+  community: '共同体列表', activity: '活动列表', project: '项目列表'
 };
 
 const statusLabels: Record<string, { label: string; color: string }> = {
@@ -38,7 +38,7 @@ const statusLabels: Record<string, { label: string; color: string }> = {
   draft: { label: '草稿', color: 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-400' },
   pending: { label: '待审核', color: 'text-blue-600 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400' },
   rejected: { label: '已驳回', color: 'text-red-600 bg-red-100 dark:bg-red-900/30 dark:text-red-400' },
-  inactive: { label: '已下架', color: 'text-slate-600 bg-slate-100 dark:bg-slate-900/30 dark:text-slate-400' },
+  inactive: { label: '已下架', color: 'text-slate-600 bg-slate-100 dark:bg-slate-900/30 dark:text-slate-400' }
 };
 
 export default function PublishManagementPage() {
@@ -68,7 +68,7 @@ export default function PublishManagementPage() {
     ? communityCategories.map((c: any) => ({ value: c.id, label: c.name }))
     : [
         { value: '1', label: '商业合作' }, { value: '2', label: '技术交流' },
-        { value: '3', label: '资源共享' }, { value: '4', label: '创业投资' },
+        { value: '3', label: '资源共享' }, { value: '4', label: '创业投资' }
       ];
 
   // Markdown 格式化（与前台一致）
@@ -156,7 +156,7 @@ export default function PublishManagementPage() {
       coverImage: a.coverImage || a.cover_image || '', qrCode: a.qrCode || a.qr_code || '',
       isPublic: a.isPublic !== undefined ? !!a.isPublic : true,
       maxMembers: a.maxMembers || 0, rules: a.rules || '',
-      hosts: a.hosts || [],
+      hosts: a.hosts || []
     });
     setCoverPreview('');
     setEditModal({ open: true, item });
@@ -176,8 +176,8 @@ export default function PublishManagementPage() {
           coverImage: editForm.coverImage, qrCode: editForm.qrCode,
           isPublic: editForm.isPublic,
           maxMembers: editForm.maxMembers, rules: editForm.rules,
-          location: editForm.location, max_participants: editForm.max_participants,
-        }),
+          location: editForm.location, max_participants: editForm.max_participants
+        })
       });
       if (!res.ok) {
         const errText = await res.text();
@@ -354,7 +354,7 @@ export default function PublishManagementPage() {
               </div>
 
               {/* 5. 行业选择 */}
-              <IndustrySelect value={editForm.industry || ''} onChange={(id) => setEditForm({ ...editForm, industry: id })} placeholder="请选择行业" inline={true} />
+              <IndustrySelect value={editForm.industry || ''} onChange={id => setEditForm({ ...editForm, industry: id })} placeholder="请选择行业" inline={true} />
 
               {/* 6. 封面图片 */}
               <div>
@@ -419,12 +419,12 @@ export default function PublishManagementPage() {
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">组织发起人</label>
                 <UserSelect
                   selectedUsers={editForm.hosts}
-                  onSelect={(user) => {
+                  onSelect={user => {
                     if (!editForm.hosts.find(h => h.id === user.id)) {
                       setEditForm({ ...editForm, hosts: [...editForm.hosts, user] });
                     }
                   }}
-                  onRemove={(userId) => setEditForm({ ...editForm, hosts: editForm.hosts.filter(h => h.id !== userId) })}
+                  onRemove={userId => setEditForm({ ...editForm, hosts: editForm.hosts.filter(h => h.id !== userId) })}
                 />
               </div>
 

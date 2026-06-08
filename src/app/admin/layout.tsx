@@ -4,7 +4,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Layout from '@/components/Layout';
 
 export default function AdminLayout({
-  children,
+  children
 }: {
   children: React.ReactNode;
 }) {

@@ -99,7 +99,7 @@ function LoginPageContent() {
       const response = await fetch('/api/auth/wechat-callback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code })
       });
       
       const data = await response.json();
@@ -118,7 +118,7 @@ function LoginPageContent() {
           display_name: data.wechatUser.nickname || '微信用户',
           real_name: data.wechatUser.real_name || '',
           avatar_url: data.wechatUser.headimgurl || '',
-          isWechatUser: true,
+          isWechatUser: true
         };
         localStorage.setItem('user', JSON.stringify(userData));
         localStorage.setItem('profile', JSON.stringify(userData));
@@ -156,7 +156,7 @@ function LoginPageContent() {
       const response = await fetch('/api/auth/send-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, type: 'login' }),
+        body: JSON.stringify({ phone, type: 'login' })
       });
       
       const data = await response.json();
@@ -220,8 +220,8 @@ function LoginPageContent() {
         body: JSON.stringify({
           phone,
           password: loginMethod === 'password' ? password : undefined,
-          verifyCode: loginMethod === 'sms' ? verifyCode : undefined,
-        }),
+          verifyCode: loginMethod === 'sms' ? verifyCode : undefined
+        })
       });
 
       const data = await response.json();
@@ -232,7 +232,7 @@ function LoginPageContent() {
         const existingUser = localUserData ? JSON.parse(localUserData) : {};
         const mergedUser = {
           ...existingUser,
-          ...data.user,
+          ...data.user
         };
         
         // 从API获取完整用户档案
@@ -247,7 +247,7 @@ function LoginPageContent() {
           identity_verified: false,
           wallet_address: null,
           avatar_url: null,
-          phone: phone,
+          phone: phone
         };
         
         // 尝试从API获取完整资料
@@ -266,7 +266,7 @@ function LoginPageContent() {
               identity_verified: profileData.profile.identity_verified || false,
               wallet_address: null,
               avatar_url: profileData.profile.avatar_url || null,
-              phone: profileData.profile.phone || phone,
+              phone: profileData.profile.phone || phone
             };
           }
         } catch (e) {
@@ -391,7 +391,7 @@ function LoginPageContent() {
                     <input
                       type="tel"
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
+                      onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
                       className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-400 focus:border-transparent"
                       placeholder="请输入11位手机号"
                       required
@@ -436,7 +436,7 @@ function LoginPageContent() {
                       <input
                         type="password"
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={e => setPassword(e.target.value)}
                         className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-400 focus:border-transparent"
                         placeholder="请输入密码"
                         required
@@ -457,7 +457,7 @@ function LoginPageContent() {
                         <input
                           type="text"
                           value={verifyCode}
-                          onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                          onChange={e => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                           className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-400 focus:border-transparent"
                           placeholder="6位验证码"
                           required
@@ -481,7 +481,7 @@ function LoginPageContent() {
                     <input 
                       type="checkbox" 
                       checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
+                      onChange={e => setRememberMe(e.target.checked)}
                       className="w-4 h-4 rounded border-slate-300" 
                     />
                     记住我

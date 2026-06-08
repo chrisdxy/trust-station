@@ -45,7 +45,7 @@ export function IndustryCategoryView({
   toggleSelect,
   saving,
   handleUpdate,
-  onAddChild,
+  onAddChild
 }: IndustryCategoryViewProps) {
   const [addingChildFor, setAddingChildFor] = useState<string | null>(null);
   const [newChildName, setNewChildName] = useState('');
@@ -68,7 +68,7 @@ export function IndustryCategoryView({
       <input
         type="number"
         value={editForm.sort_order ?? ''}
-        onChange={(e) => {
+        onChange={e => {
           const val = e.target.value ? parseInt(e.target.value) : 0;
           setEditForm({ ...editForm, sort_order: val });
         }}
@@ -78,7 +78,7 @@ export function IndustryCategoryView({
       <input
         type="text"
         value={editForm.name || ''}
-        onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+        onChange={e => setEditForm({ ...editForm, name: e.target.value })}
         className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900"
         autoFocus
       />
@@ -186,7 +186,7 @@ export function IndustryCategoryView({
         {/* Children rows */}
         {isExpanded && (
           <div className="bg-white dark:bg-slate-800">
-            {parentChildren.map((child) => (
+            {parentChildren.map(child => (
               <div key={child.id} className="p-3 pl-12 flex items-center justify-between border-t border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/30">
                 {editingId === child.id ? (
                   renderEditRow(child)
@@ -239,14 +239,14 @@ export function IndustryCategoryView({
                     <input
                       type="number"
                       value={newChildSortOrder}
-                      onChange={(e) => setNewChildSortOrder(e.target.value)}
+                      onChange={e => setNewChildSortOrder(e.target.value)}
                       className="w-20 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-sm"
                       placeholder="序号"
                     />
                     <input
                       type="text"
                       value={newChildName}
-                      onChange={(e) => setNewChildName(e.target.value)}
+                      onChange={e => setNewChildName(e.target.value)}
                       className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-sm"
                       placeholder="输入子类名称"
                       autoFocus

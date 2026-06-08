@@ -78,8 +78,8 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit),
-      },
+        totalPages: Math.ceil(total / limit)
+      }
     });
   } catch (error) {
     console.error('获取活动列表错误:', error);
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: '活动创建成功',
-      id,
+      id
     });
   } catch (error: any) {
     console.error('[活动创建] 错误:', error?.message || error?.code || error, error);

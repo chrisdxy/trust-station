@@ -127,7 +127,7 @@ export function UserSelect({ onSelect, selectedUsers, placeholder = '搜索用�
       {/* 已选用户显示 */}
       {selectedUsers.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {selectedUsers.map((user) => (
+          {selectedUsers.map(user => (
             <span
               key={user.id}
               className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-lg text-sm"
@@ -154,7 +154,7 @@ export function UserSelect({ onSelect, selectedUsers, placeholder = '搜索用�
             ref={inputRef}
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={e => setSearchQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             onFocus={() => searchQuery.trim() && setShowDropdown(true)}
             placeholder={placeholder}
@@ -178,7 +178,7 @@ export function UserSelect({ onSelect, selectedUsers, placeholder = '搜索用�
             {/* 匹配结果列表 */}
             {status === 'success' && searchResults.length > 0 && !loading && (
               <div className="max-h-60 overflow-y-auto">
-                {searchResults.map((user) => (
+                {searchResults.map(user => (
                   <button
                     key={user.id}
                     type="button"

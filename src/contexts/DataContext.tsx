@@ -100,20 +100,20 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 const initialProjects: Project[] = [
   { id: '1', title: '智慧城市建设', status: 'ongoing', location: '北京', industry: '科技', type: '合作', description: '智慧城市建设项目旨在利用信息技术提升城市管理效率，改善市民生活质量。', images: [], date: '2024-03-01', participants: 8 },
   { id: '2', title: '新能源项目合作', status: 'recruiting', location: '上海', industry: '能源', type: '投资', description: '寻找新能源领域投资合作伙伴，共同开发太阳能、风能等项目。', images: [], date: '2024-02-15', participants: 12 },
-  { id: '3', title: '农业科技园', status: 'ongoing', location: '深圳', industry: '农业', type: '合伙', description: '打造现代化农业科技园区，集研发、种植、展示于一体。', images: [], date: '2024-01-20', participants: 6 },
+  { id: '3', title: '农业科技园', status: 'ongoing', location: '深圳', industry: '农业', type: '合伙', description: '打造现代化农业科技园区，集研发、种植、展示于一体。', images: [], date: '2024-01-20', participants: 6 }
 ];
 
 const initialActivities: Activity[] = [
   { id: '1', title: '创业者沙龙', type: 'offline', status: 'upcoming', participants: 25, location: '北京朝阳', date: '2024-03-25', startTime: '14:00', endTime: '17:00', description: '创业者沙龙是一个汇聚创新者、投资人和企业家的平台。', images: [], hosts: [] },
   { id: '2', title: '信任建设工作坊', type: 'online', status: 'ongoing', participants: 150, location: '线上', date: '2024-03-20', startTime: '19:00', endTime: '21:00', description: '通过互动练习和案例分析，帮助参与者建立更深层次的信任关系。', images: [], hosts: [] },
-  { id: '3', title: '商业合作交流会', type: 'offline', status: 'upcoming', participants: 40, location: '上海浦东', date: '2024-03-28', startTime: '10:00', endTime: '16:00', description: '为企业和个人提供面对面交流的机会，探索潜在的商业合作可能。', images: [], hosts: [] },
+  { id: '3', title: '商业合作交流会', type: 'offline', status: 'upcoming', participants: 40, location: '上海浦东', date: '2024-03-28', startTime: '10:00', endTime: '16:00', description: '为企业和个人提供面对面交流的机会，探索潜在的商业合作可能。', images: [], hosts: [] }
 ];
 
 const initialCommunities: Community[] = [
   { id: '1', name: '创业者联盟', members: 256, category: 'entrepreneurship', description: '连接创业者，共享资源与经验。', images: [], activities: [{ id: 'a1', title: '创业者沙龙', date: '2024-03-25', time: '14:00', participants: 25 }], createdAt: '2024-01-15', isPublic: true, memberList: [] },
   { id: '2', name: '高效沟通圈', members: 128, category: 'communication', description: '学习沟通技巧，提升人际关系。', images: [], activities: [{ id: 'a2', title: '沟通技巧工作坊', date: '2024-03-22', time: '19:00', participants: 30 }], createdAt: '2024-02-01', isPublic: true, memberList: [] },
   { id: '3', name: '读书会', members: 89, category: 'reading', description: '每月一本书，共同成长进步。', images: [], activities: [{ id: 'a3', title: '《原则》读书分享', date: '2024-03-30', time: '15:00', participants: 15 }], createdAt: '2024-01-20', isPublic: true, memberList: [] },
-  { id: '4', name: '正念修习社', members: 64, category: 'mindfulness', description: '培养正念习惯，提升内心平静。', images: [], activities: [], createdAt: '2024-02-10', isPublic: true, memberList: [] },
+  { id: '4', name: '正念修习社', members: 64, category: 'mindfulness', description: '培养正念习惯，提升内心平静。', images: [], activities: [], createdAt: '2024-02-10', isPublic: true, memberList: [] }
 ];
 
 const initialNewMembers: NewMember[] = [
@@ -121,7 +121,7 @@ const initialNewMembers: NewMember[] = [
   { id: '2', name: '李华', title: '项目经理', joinedAt: '2024-03-17' },
   { id: '3', name: '王芳', title: '设计师', joinedAt: '2024-03-16' },
   { id: '4', name: '刘强', title: '技术总监', joinedAt: '2024-03-15' },
-  { id: '5', name: '陈静', title: '投资人', joinedAt: '2024-03-14' },
+  { id: '5', name: '陈静', title: '投资人', joinedAt: '2024-03-14' }
 ];
 
 export function DataProvider({ children }: { children: ReactNode }) {
@@ -136,7 +136,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const newProject: Project = {
       ...project,
       id: Date.now().toString(),
-      date: new Date().toISOString().split('T')[0],
+      date: new Date().toISOString().split('T')[0]
     };
     setProjects(prev => [newProject, ...prev]);
   }, []);
@@ -153,7 +153,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const addActivity = useCallback((activity: Omit<Activity, 'id'>) => {
     const newActivity: Activity = {
       ...activity,
-      id: Date.now().toString(),
+      id: Date.now().toString()
     };
     setActivities(prev => [newActivity, ...prev]);
   }, []);
@@ -171,7 +171,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const newCommunity: Community = {
       ...community,
       id: Date.now().toString(),
-      createdAt: new Date().toISOString().split('T')[0],
+      createdAt: new Date().toISOString().split('T')[0]
     };
     setCommunities(prev => [newCommunity, ...prev]);
   }, []);
@@ -200,7 +200,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       deleteCommunity,
       newMembers,
       publicProfiles,
-      setPublicProfiles,
+      setPublicProfiles
     }}>
       {children}
     </DataContext.Provider>

@@ -50,7 +50,7 @@ export default function AdminPublicRecordsPage() {
       const res = await fetch('/api/admin/public-records', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status }),
+        body: JSON.stringify({ id, status })
       });
       const data = await res.json();
       if (data.success) {
@@ -95,7 +95,7 @@ export default function AdminPublicRecordsPage() {
           { value: 'pending', label: '待审核' },
           { value: 'approved', label: '已公开' },
           { value: 'paused', label: '已暂停' },
-          { value: 'stopped', label: '已停止' },
+          { value: 'stopped', label: '已停止' }
         ].map(f => (
           <button
             key={f.value}

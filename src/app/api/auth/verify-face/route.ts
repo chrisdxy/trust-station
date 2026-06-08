@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: formData.toString(),
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(15000)
     });
 
     await logError('数脉API响应', { status: res.status, statusText: res.statusText });
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: false,
         error: data.msg || '认证失败',
-        code: data.code,
+        code: data.code
       }, { status: 400 });
     }
 
@@ -97,8 +97,8 @@ export async function POST(request: NextRequest) {
         incorrect: data.data?.incorrect,
         sex: data.data?.sex,
         birthday: data.data?.birthday,
-        address: data.data?.address,
-      },
+        address: data.data?.address
+      }
     });
   } catch (error: any) {
     const errMsg = error?.message || String(error);

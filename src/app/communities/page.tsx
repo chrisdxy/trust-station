@@ -114,7 +114,13 @@ export default function CommunitiesPage() {
           images: community.images || [],
           isPublic: community.isPublic !== undefined ? community.isPublic : true,
           qrCode: community.qrCode || '',
-          hosts: community.memberList?.filter((m: any) => m.role === 'admin' || m.role === 'creator') || [],
+          hosts: community.memberList?.filter((m: any) => m.role === 'admin' || m.role === 'creator').map((m: any) => ({
+            id: m.id || m.email || '',
+            phone: m.phone || '',
+            display_name: m.name || null,
+            real_name: null,
+            avatar_url: null
+          })) || []
         });
         setShowModal(true);
       }
@@ -141,7 +147,7 @@ export default function CommunitiesPage() {
     images: [] as string[],
     isPublic: true,
     qrCode: '',  // 社群二维码
-    hosts: [] as UserSearchResult[],
+    hosts: [] as UserSearchResult[]
   });
 
   // 封面图片上传
@@ -156,7 +162,7 @@ export default function CommunitiesPage() {
     setUploading(true);
     // 先显示本地预览
     const reader = new FileReader();
-    reader.onload = (ev) => setCoverImagePreview(ev.target?.result as string);
+    reader.onload = ev => setCoverImagePreview(ev.target?.result as string);
     reader.readAsDataURL(file);
     // 上传到服务器
     try {
@@ -220,7 +226,7 @@ export default function CommunitiesPage() {
       entrepreneurship: '创业',
       communication: '沟通',
       reading: '阅读',
-      mindfulness: '正念',
+      mindfulness: '正念'
     };
     return fallbackLabels[categoryId] || categoryId;
   };
@@ -230,7 +236,7 @@ export default function CommunitiesPage() {
         { value: '1', label: '商业合作' },
         { value: '2', label: '技术交流' },
         { value: '3', label: '资源共享' },
-        { value: '4', label: '创业投资' },
+        { value: '4', label: '创业投资' }
       ];
 
   // 生成简短的共同体ID（显示用）
@@ -272,7 +278,7 @@ export default function CommunitiesPage() {
 
     setFormData({
       ...formData,
-      description: text.substring(0, start) + newText + text.substring(end),
+      description: text.substring(0, start) + newText + text.substring(end)
     });
 
     setTimeout(() => {
@@ -311,7 +317,7 @@ export default function CommunitiesPage() {
     }
     setFormData({
       ...formData,
-      hosts: [...formData.hosts, user],
+      hosts: [...formData.hosts, user]
     });
   };
 
@@ -319,7 +325,7 @@ export default function CommunitiesPage() {
   const handleRemoveHost = (userId: string) => {
     setFormData({
       ...formData,
-      hosts: formData.hosts.filter((h) => h.id !== userId),
+      hosts: formData.hosts.filter(h => h.id !== userId)
     });
   };
 
@@ -354,13 +360,13 @@ export default function CommunitiesPage() {
     const files = e.target.files;
     if (!files) return;
 
-    Array.from(files).forEach(async (file) => {
+    Array.from(files).forEach(async file => {
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = event => {
         const result = event.target?.result as string;
-        setFormData((prev) => ({
+        setFormData(prev => ({
           ...prev,
-          images: [...prev.images, result],
+          images: [...prev.images, result]
         }));
       };
       reader.readAsDataURL(file);
@@ -370,9 +376,9 @@ export default function CommunitiesPage() {
       const res = await fetch('/api/upload', { method: 'POST', body: fd });
       const data = await res.json();
       if (data.success) {
-        setFormData((prev) => ({
+        setFormData(prev => ({
           ...prev,
-          images: prev.images.map((img, i) => i === prev.images.length - 1 ? data.url : img),
+          images: prev.images.map((img, i) => i === prev.images.length - 1 ? data.url : img)
         }));
       }
     });
@@ -380,9 +386,9 @@ export default function CommunitiesPage() {
 
   // 移除图片
   const removeImage = (index: number) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      images: prev.images.filter((_, i) => i !== index),
+      images: prev.images.filter((_, i) => i !== index)
     }));
   };
 
@@ -392,7 +398,7 @@ export default function CommunitiesPage() {
     if (!file) return;
     // 本地预览（仅用于UI展示，不存入formData）
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = event => {
       setQrPreview(event.target?.result as string);
     };
     reader.readAsDataURL(file);
@@ -402,7 +408,7 @@ export default function CommunitiesPage() {
     const res = await fetch('/api/upload', { method: 'POST', body: fd });
     const data = await res.json();
     if (data.success) {
-      setFormData((prev) => ({ ...prev, qrCode: data.url }));
+      setFormData(prev => ({ ...prev, qrCode: data.url }));
     } else {
       alert(data.error || '上传二维码失败');
     }
@@ -448,8 +454,8 @@ export default function CommunitiesPage() {
               name: h.display_name || h.real_name || '',
               role: 'admin',
               joinedAt: new Date().toISOString()
-            })),
-          }),
+            }))
+          })
         });
         
         const data = await res.json();
@@ -485,8 +491,8 @@ export default function CommunitiesPage() {
           industry: formData.industry,
           isPublic: formData.isPublic,
           images: formData.images,
-          qrCode: formData.qrCode,
-        }),
+          qrCode: formData.qrCode
+        })
       });
 
       const data = await res.json();
@@ -508,7 +514,7 @@ export default function CommunitiesPage() {
           images: [] as string[],
           isPublic: true,
           qrCode: '',
-          hosts: [] as UserSearchResult[],
+          hosts: [] as UserSearchResult[]
         });
         setShowModal(false);
       } else {
@@ -535,8 +541,8 @@ export default function CommunitiesPage() {
           communityId: id,
           userId: currentUser.id,
           userName: currentUser.display_name || currentUser.phone || '用户',
-          action: isJoined ? 'leave' : 'join',
-        }),
+          action: isJoined ? 'leave' : 'join'
+        })
       });
       const data = await res.json();
       if (data.success) {
@@ -589,8 +595,8 @@ export default function CommunitiesPage() {
     if (activeTab === 'created') return isCreatedByMe(community);
     if (activeTab === 'joined') return isJoinedByMe(community);
     // 'all' 标签下的子筛选
-    if (subFilter === 'pinned') return community.isPinned || community.sortOrder > 0;
-    if (subFilter === 'active') return community.activityCount >= 2; // 每周2次以上活动
+    if (subFilter === 'pinned') return community.isPinned || (community.sortOrder ?? 0) > 0;
+    if (subFilter === 'active') return (community.activityCount ?? 0) >= 2; // 每周2次以上活动
     if (subFilter === 'newest') return true; // 按时间排序，不需要过滤
     return true;
   }).filter(community => {
@@ -640,7 +646,7 @@ export default function CommunitiesPage() {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-md w-full text-center shadow-2xl"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle className="w-10 h-10 text-green-500" />
@@ -707,8 +713,8 @@ export default function CommunitiesPage() {
           {[
             { key: 'all', label: '全部' },
             { key: 'created', label: '我创建的' },
-            { key: 'joined', label: '我参与的' },
-          ].map((tab) => (
+            { key: 'joined', label: '我参与的' }
+          ].map(tab => (
             <button
               key={tab.key}
               onClick={() => {
@@ -746,7 +752,7 @@ export default function CommunitiesPage() {
               { key: 'all', label: '全部' },
               { key: 'pinned', label: '置顶' },
               { key: 'active', label: '最活跃' },
-              { key: 'newest', label: '最新的' },
+              { key: 'newest', label: '最新的' }
             ].map(({ key, label }) => (
               <button key={key} onClick={() => setSubFilter(key as typeof subFilter)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
@@ -768,7 +774,7 @@ export default function CommunitiesPage() {
         {/* Communities Grid */}
         {!loading && sortedCommunities.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {sortedCommunities.map((community) => (
+            {sortedCommunities.map(community => (
             <div
               key={community.id}
               className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow cursor-pointer"
@@ -807,7 +813,7 @@ export default function CommunitiesPage() {
                     </div>
                   </div>
                   <span className="inline-block px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded text-xs font-mono cursor-pointer hover:bg-amber-200 transition-colors mt-1"
-                    onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(getShortCommunityId(community.id)) }}
+                    onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(getShortCommunityId(community.id)); }}
                     title="点击复制共同体ID，用于记录中心查询">
                     共同体ID: {getShortCommunityId(community.id)}
                   </span>
@@ -822,11 +828,11 @@ export default function CommunitiesPage() {
                     </p>
                   )}
                   {/* 操作按钮 */}
-                  <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
                     {isCreatedByMe(community) && (
                       <>
                         <button
-                          onClick={(e) => {
+                          onClick={e => {
                             e.stopPropagation();
                             console.log('编辑按钮点击', community);
                             setEditingCommunity(community);
@@ -846,8 +852,8 @@ export default function CommunitiesPage() {
                                 phone: m.phone || '',
                                 display_name: m.name,
                                 real_name: m.name,
-                                avatar_url: null,
-                              })),
+                                avatar_url: null
+                              }))
                             });
                             setCoverImagePreview(community.coverImage || '');
                             uploadedCoverRef.current = '';
@@ -859,7 +865,7 @@ export default function CommunitiesPage() {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={(e) => {
+                          onClick={e => {
                             e.stopPropagation();
                             setDeleteTarget(community.id);
                           }}
@@ -879,7 +885,7 @@ export default function CommunitiesPage() {
                       <Eye className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={(e) => {
+                      onClick={e => {
                         e.stopPropagation();
                         handleJoin(community.id);
                       }}
@@ -895,7 +901,7 @@ export default function CommunitiesPage() {
                   </div>
 
                   {/* 成员信息行 */}
-                  <div className="flex items-center gap-3 text-sm text-slate-500 mt-2" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center gap-3 text-sm text-slate-500 mt-2" onClick={e => e.stopPropagation()}>
                     <div className="flex items-center gap-1">
                       <Globe className="w-4 h-4 flex-shrink-0" />
                       <span className="whitespace-nowrap">{community.memberList?.length || community.members}{t('communities.members')}</span>
@@ -937,7 +943,7 @@ export default function CommunitiesPage() {
           >
             <div
               className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800 rounded-t-2xl z-10">
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{editingCommunity ? '编辑共同体' : '创建共同体'}</h2>
@@ -957,7 +963,7 @@ export default function CommunitiesPage() {
                       images: [] as string[],
                       isPublic: true,
                       qrCode: '',
-                      hosts: [] as UserSearchResult[],
+                      hosts: [] as UserSearchResult[]
                     });
                   }}
                   className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg"
@@ -974,7 +980,7 @@ export default function CommunitiesPage() {
                     <input
                       type="text"
                       value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onChange={e => setFormData({ ...formData, name: e.target.value })}
                       placeholder="请输入共同体名称"
                       className="w-full px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                     />
@@ -986,7 +992,7 @@ export default function CommunitiesPage() {
                     </label>
                     <textarea
                       value={formData.summary}
-                      onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
+                      onChange={e => setFormData({ ...formData, summary: e.target.value })}
                       placeholder="简要介绍共同体的宗旨、目标和原则"
                       rows={2}
                       className="w-full px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white resize-none"
@@ -998,7 +1004,7 @@ export default function CommunitiesPage() {
                       类型
                     </label>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      {categoryOptions.map((option) => (
+                      {categoryOptions.map(option => (
                         <label
                           key={option.value}
                           className={`flex items-center justify-center p-2 border rounded-lg cursor-pointer transition-colors ${
@@ -1012,7 +1018,7 @@ export default function CommunitiesPage() {
                             name="category"
                             value={option.value}
                             checked={formData.category === option.value}
-                            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                            onChange={e => setFormData({ ...formData, category: e.target.value })}
                             className="sr-only"
                           />
                           <span className="text-sm font-medium">{option.label}</span>
@@ -1130,7 +1136,7 @@ export default function CommunitiesPage() {
                         id="community-description"
                         rows={4}
                         value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        onChange={e => setFormData({ ...formData, description: e.target.value })}
                         placeholder="请输入共同体介绍..."
                         className="w-full px-4 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-white resize-none focus:outline-none"
                       />
@@ -1239,7 +1245,7 @@ export default function CommunitiesPage() {
 
       {showDetailModal && selectedCommunity && (
         <>
-          <WeChatShareSetup title={selectedCommunity.name} description={selectedCommunity.summary || selectedCommunity.description?.replace(/<[^>]*>/g, '').slice(0, 200)} imageUrl={selectedCommunity.icon || ''} />
+          <WeChatShareSetup title={selectedCommunity.name} description={selectedCommunity.summary || selectedCommunity.description?.replace(/<[^>]*>/g, '').slice(0, 200)} imageUrl={selectedCommunity.coverImage || selectedCommunity.images?.[0] || ''} />
           <div
             className="fixed inset-0 bg-black/50 z-50"
             onClick={() => setShowDetailModal(false)}
@@ -1250,7 +1256,7 @@ export default function CommunitiesPage() {
           >
               <div
                 className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800 rounded-t-2xl z-10">
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-white">共同体详情</h2>
@@ -1275,8 +1281,8 @@ export default function CommunitiesPage() {
                               phone: m.phone || '',
                               display_name: m.name,
                               real_name: m.name,
-                              avatar_url: null,
-                            })),
+                              avatar_url: null
+                            }))
                           });
                           setCoverImagePreview(selectedCommunity.coverImage || '');
                           setShowDetailModal(false);
@@ -1384,7 +1390,7 @@ export default function CommunitiesPage() {
                           src={selectedCommunity.qrCode?.startsWith('/') ? 'https://myfriends.vip' + selectedCommunity.qrCode : selectedCommunity.qrCode}
                           alt="社群二维码"
                           crossOrigin="anonymous"
-                          onClick={() => setQrPreviewUrl(selectedCommunity.qrCode?.startsWith('/') ? 'https://myfriends.vip' + selectedCommunity.qrCode : selectedCommunity.qrCode)}
+                          onClick={() => setQrPreviewUrl(selectedCommunity.qrCode?.startsWith('/') ? 'https://myfriends.vip' + selectedCommunity.qrCode : (selectedCommunity.qrCode ?? null))}
                           className="w-48 h-48 object-contain rounded-xl border border-slate-200 dark:border-slate-600 cursor-pointer hover:opacity-80 transition-opacity"
                         />
                       </div>
@@ -1404,7 +1410,7 @@ export default function CommunitiesPage() {
                         initial={{ scale: 0.9 }}
                         animate={{ scale: 1 }}
                         className="relative max-w-md w-full bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-2xl"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={e => e.stopPropagation()}
                       >
                         <button
                           onClick={() => setQrPreviewUrl(null)}
@@ -1445,7 +1451,7 @@ export default function CommunitiesPage() {
                         共同体活动 ({selectedCommunity.activities.length})
                       </h3>
                       <div className="space-y-2">
-                        {selectedCommunity.activities.map((activity) => (
+                        {selectedCommunity.activities.map(activity => (
                           <div key={activity.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
                             <div>
                               <p className="font-medium text-slate-900 dark:text-white">{activity.title}</p>
@@ -1528,7 +1534,7 @@ export default function CommunitiesPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm max-h-[70vh] flex flex-col"
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-700">
                 <h3 className="font-semibold text-slate-900 dark:text-white">
@@ -1581,7 +1587,7 @@ export default function CommunitiesPage() {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm p-6"
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             <div className="text-center mb-6">
               <div className="w-14 h-14 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">

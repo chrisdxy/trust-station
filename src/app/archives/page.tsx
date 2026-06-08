@@ -79,7 +79,7 @@ export default function ArchivesPage() {
     description: '',
     expiry_date: '',
     scope: [] as string[],
-    status: 'active' as string,
+    status: 'active' as string
   });
   const [savingAuth, setSavingAuth] = useState(false);
 
@@ -168,8 +168,8 @@ export default function ArchivesPage() {
           publicPersonName: publicPerson.real_name || publicPerson.display_name || '',
           publicPersonPhone: publicPerson.phone || '',
           recordIds: selectedPublicRecordIds,
-          description: publicDescription,
-        }),
+          description: publicDescription
+        })
       });
       const data = await res.json();
       if (data.success) {
@@ -252,7 +252,7 @@ export default function ArchivesPage() {
     related_type: '',
     related_id: '',
     related_title: '',
-    related_parties: [] as UserSearchResult[], // 有关方
+    related_parties: [] as UserSearchResult[] // 有关方
   });
   
   // 有关方 - 用户选择
@@ -282,7 +282,7 @@ export default function ArchivesPage() {
     authorized_record_ids: '',
     partner_id: '',
     partner_name: '',
-    recordTypes: [] as string[],
+    recordTypes: [] as string[]
   });
 
   // 关联留痕：当前用户所有记录（打开弹窗时加载）+ 多选
@@ -479,7 +479,7 @@ export default function ArchivesPage() {
       ...prev,
       authorized_record_id: record.id, // 修复：设置授权的记录ID
       relationship_id: record.related_id || record.relationship_id || null,
-      relationship_title: record.related_title || record.relationship_title || null,
+      relationship_title: record.related_title || record.relationship_title || null
     }));
     setShowAuthRelationshipDropdown(false);
     console.log('[selectAuthRelationship] 已设置 authorized_record_id:', record.id);
@@ -496,7 +496,7 @@ export default function ArchivesPage() {
           phone: p.phone || '',
           display_name: p.name || p.display_name || p.real_name || '用户',
           real_name: p.real_name || null,
-          avatar_url: p.avatar_url || null,
+          avatar_url: p.avatar_url || null
         };
       });
       setCandidateGrantees(candidateGrantees);
@@ -514,7 +514,7 @@ export default function ArchivesPage() {
     setAuthorizationForm(prev => ({
       ...prev,
       relationship_id: '',
-      relationship_title: '',
+      relationship_title: ''
     }));
     setCandidateGrantees([]);
   };
@@ -576,7 +576,7 @@ export default function ArchivesPage() {
       ...prev, 
       related_id: item.id, 
       related_title: title,
-      title: prev.title || recordTitle,
+      title: prev.title || recordTitle
     }));
     setShowRelatedDropdown(false);
 
@@ -603,7 +603,7 @@ export default function ArchivesPage() {
             phone: '',
             display_name: m.name || m.userName || m.role || '成员',
             real_name: null,
-            avatar_url: null,
+            avatar_url: null
           }));
         }
         // memberList为空时，owner也算相关方
@@ -613,7 +613,7 @@ export default function ArchivesPage() {
             phone: '',
             display_name: community.ownerName || '创建者',
             real_name: null,
-            avatar_url: null,
+            avatar_url: null
           }];
         }
       } else if (type === 'project') {
@@ -627,7 +627,7 @@ export default function ArchivesPage() {
           phone: '',
           display_name: m.name || m.userName || m.user_name || '成员',
           real_name: null,
-          avatar_url: null,
+          avatar_url: null
         }));
       } else if (type === 'relationship') {
         // 合作事项有关方 = 合作双方
@@ -640,7 +640,7 @@ export default function ArchivesPage() {
             phone: '',
             display_name: rel.partner_name || rel.partnerName || '合作方',
             real_name: null,
-            avatar_url: null,
+            avatar_url: null
           }];
         }
       }
@@ -721,8 +721,8 @@ export default function ArchivesPage() {
           tags: '',
           visibility: recordForm.visibility,
           related_items: relatedItems,
-          related_parties: selectedRelatedUsers.map(u => u.id) || [],
-        }),
+          related_parties: selectedRelatedUsers.map(u => u.id) || []
+        })
       });
       const data = await response.json();
       if (data.success) {
@@ -778,14 +778,14 @@ export default function ArchivesPage() {
         description: authorizationForm.description,
         expiry_date: authExpiryRef.current?.value || authorizationForm.expiry_date || null,
         relationship_id: authorizationForm.relationship_id || null,
-        relationship_title: authorizationForm.relationship_title || null,
+        relationship_title: authorizationForm.relationship_title || null
       };
       console.log('[handleAddAuthorization] request body:', requestBody);
       
       const response = await fetch('/api/authorizations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify(requestBody)
       });
       
       const data = await response.json();
@@ -808,7 +808,7 @@ export default function ArchivesPage() {
     if (!confirm('确定要删除此授权吗？')) return;
     try {
       const response = await fetch(`/api/authorizations?id=${id}`, {
-        method: 'DELETE',
+        method: 'DELETE'
       });
       const data = await response.json();
       if (data.success) {
@@ -829,7 +829,7 @@ export default function ArchivesPage() {
       description: auth.description || '',
       expiry_date: auth.expiry_date ? auth.expiry_date.slice(0, 10) : '',
       scope: auth.scope ? auth.scope.split(',').map(s => s.trim()).filter(Boolean) : [],
-      status: auth.status || 'active',
+      status: auth.status || 'active'
     });
     setShowEditAuthModal(true);
   };
@@ -847,8 +847,8 @@ export default function ArchivesPage() {
           scope: editAuthForm.scope,
           description: editAuthForm.description,
           expiry_date: editAuthExpiryRef.current?.value || editAuthForm.expiry_date || null,
-          status: editAuthForm.status,
-        }),
+          status: editAuthForm.status
+        })
       });
       const data = await res.json();
       if (data.success) {
@@ -962,7 +962,7 @@ export default function ArchivesPage() {
     { id: 'records' as TabType, label: '认知留痕', icon: FileText },
     { id: 'authorizations' as TabType, label: '授权查询', icon: Key },
     { id: 'accessible' as TabType, label: '授权记录', icon: Eye },
-    { id: 'public' as TabType, label: '维权记录', icon: Shield },
+    { id: 'public' as TabType, label: '维权记录', icon: Shield }
   ];
 
   const filteredRecords = records.filter(r => {
@@ -1014,7 +1014,7 @@ export default function ArchivesPage() {
       'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400',
       'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400',
       'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400',
-      'bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-400',
+      'bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-400'
     ];
     const typeStr = Array.isArray(type) ? type[0] : String(type || '');
     const idx = effectiveRecordTypes.findIndex(o => o.value === typeStr || o.value === (typeStr.includes(',') ? typeStr.split(',')[0].trim() : typeStr));
@@ -1119,7 +1119,7 @@ export default function ArchivesPage() {
               type="text"
               placeholder={`搜索${tabs.find(t => t.id === activeTab)?.label}...`}
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800"
             />
           </div>
@@ -1156,7 +1156,7 @@ export default function ArchivesPage() {
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2 flex-wrap">
                               <span className="px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 cursor-pointer hover:bg-amber-200 transition-colors"
-                                onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(getShortRecordId(rec.id)) }}
+                                onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(getShortRecordId(rec.id)); }}
                                 title="点击复制记录ID">
                                 {getShortRecordId(rec.id)}
                               </span>
@@ -1314,7 +1314,7 @@ export default function ArchivesPage() {
                       {titleSearchResults.length > 0 && (
                         <div className="space-y-2">
                           <p className="text-xs text-slate-400">找到 {titleSearchResults.length} 条记录（仅显示标题）</p>
-                          {titleSearchResults.map((rec) => (
+                          {titleSearchResults.map(rec => (
                             <div key={rec.id} className="flex items-center gap-3 px-4 py-2.5 border border-slate-100 dark:border-slate-700 rounded-lg">
                               <span className={`px-1.5 py-0.5 rounded text-xs ${getRecordTypeBg(rec.record_type)}`}>
                                 {getRecordTypeLabel(rec.record_type)}
@@ -1366,7 +1366,7 @@ export default function ArchivesPage() {
                           被公开人 <span className="text-red-500">*</span>
                         </label>
                         <UserSelect
-                          onSelect={(user) => {
+                          onSelect={user => {
                             setPublicPerson(user);
                             setPublicPersonRecords([]);
                             setSelectedPublicRecordIds([]);
@@ -1394,7 +1394,7 @@ export default function ArchivesPage() {
                             </p>
                           ) : (
                             <div className="border border-slate-200 dark:border-slate-700 rounded-lg max-h-72 overflow-y-auto">
-                              {publicPersonRecords.map((rec) => {
+                              {publicPersonRecords.map(rec => {
                                 const isSelected = selectedPublicRecordIds.includes(rec.id);
                                 return (
                                   <label
@@ -1612,14 +1612,14 @@ export default function ArchivesPage() {
                           {/* 操作图标 */}
                           <div className="flex items-center gap-1 ml-3 flex-shrink-0">
                             <button
-                              onClick={(e) => { e.stopPropagation(); openEditAuth(auth, true); }}
+                              onClick={e => { e.stopPropagation(); openEditAuth(auth, true); }}
                               title="查看"
                               className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
                             >
                               <Eye className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={(e) => { e.stopPropagation(); openEditAuth(auth, false); }}
+                              onClick={e => { e.stopPropagation(); openEditAuth(auth, false); }}
                               title="编辑"
                               className="p-2 text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
                             >
@@ -1649,7 +1649,7 @@ export default function ArchivesPage() {
             >
               <div
                 className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800 rounded-t-2xl z-10">
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white">添加认知留痕</h3>
@@ -1727,7 +1727,7 @@ export default function ArchivesPage() {
                           <input
                             type="text"
                             value={relatedSearch}
-                            onChange={(e) => {
+                            onChange={e => {
                               setRelatedSearch(e.target.value);
                               setShowRelatedDropdown(true);
                             }}
@@ -1784,7 +1784,7 @@ export default function ArchivesPage() {
                     <input
                       type="text"
                       value={recordForm.title}
-                      onChange={(e) => setRecordForm({ ...recordForm, title: e.target.value })}
+                      onChange={e => setRecordForm({ ...recordForm, title: e.target.value })}
                       placeholder="选择关联事项后自动生成，可手动修改"
                       className="w-full px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
                     />
@@ -1812,12 +1812,12 @@ export default function ArchivesPage() {
                       </div>
                     )}
                     <UserSelect
-                      onSelect={(user) => {
+                      onSelect={user => {
                         if (!selectedRelatedUsers.find(u => u.id === user.id)) {
                           setSelectedRelatedUsers([...selectedRelatedUsers, user]);
                         }
                       }}
-                      onRemove={(userId) => setSelectedRelatedUsers(prev => prev.filter(u => u.id !== userId))}
+                      onRemove={userId => setSelectedRelatedUsers(prev => prev.filter(u => u.id !== userId))}
                       selectedUsers={selectedRelatedUsers}
                       placeholder="搜索添加有关方..."
                     />
@@ -1863,7 +1863,7 @@ export default function ArchivesPage() {
                     </label>
                     <textarea
                       value={recordForm.content}
-                      onChange={(e) => setRecordForm({ ...recordForm, content: e.target.value })}
+                      onChange={e => setRecordForm({ ...recordForm, content: e.target.value })}
                       placeholder="请输入内容"
                       rows={4}
                       className="w-full px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 resize-none"
@@ -1878,7 +1878,7 @@ export default function ArchivesPage() {
                     </button>
                     <button
                       id="save-record-btn"
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleAddRecord(); }}
+                      onClick={e => { e.preventDefault(); e.stopPropagation(); handleAddRecord(); }}
                       disabled={savingRecord}
                       className="flex-1 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
@@ -1908,7 +1908,7 @@ export default function ArchivesPage() {
                 exit={{ scale: 0.8, opacity: 0 }}
                 transition={{ type: 'spring', duration: 0.5 }}
                 className="bg-white dark:bg-slate-800 rounded-2xl p-8 w-full max-w-sm text-center"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 <motion.div
                   initial={{ scale: 0 }}
@@ -1963,7 +1963,7 @@ export default function ArchivesPage() {
             >
               <div
                 className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800 rounded-t-2xl z-10">
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white">添加授权</h3>
@@ -1984,7 +1984,7 @@ export default function ArchivesPage() {
                       </p>
                     ) : (
                       <div className="border border-slate-200 dark:border-slate-700 rounded-lg max-h-56 overflow-y-auto">
-                        {availableRecords.map((record) => {
+                        {availableRecords.map(record => {
                           const isSelected = selectedRecordIds.includes(record.id);
                           return (
                             <label
@@ -2081,7 +2081,7 @@ export default function ArchivesPage() {
                     )}
 
                     <UserSelect
-                      onSelect={(user) => {
+                      onSelect={user => {
                         if (!selectedGrantees.find(u => u.id === user.id)) {
                           setSelectedGrantees([...selectedGrantees, user]);
                           const newPartnerIds = [...selectedGrantees.map(u => u.id), user.id];
@@ -2095,7 +2095,7 @@ export default function ArchivesPage() {
                           }));
                         }
                       }}
-                      onRemove={(userId) => {
+                      onRemove={userId => {
                         setSelectedGrantees(prev => prev.filter(u => u.id !== userId));
                         setAuthorizationForm(prev => {
                           const newIds = prev.partner_id.split(',').filter(id => id !== userId);
@@ -2106,7 +2106,7 @@ export default function ArchivesPage() {
                           return {
                             ...prev,
                             partner_id: newIds.join(','),
-                            partner_name: newNames.join(','),
+                            partner_name: newNames.join(',')
                           };
                         });
                       }}
@@ -2151,7 +2151,7 @@ export default function ArchivesPage() {
                     </label>
                     <textarea
                       value={authorizationForm.description}
-                      onChange={(e) => setAuthorizationForm({ ...authorizationForm, description: e.target.value })}
+                      onChange={e => setAuthorizationForm({ ...authorizationForm, description: e.target.value })}
                       placeholder="请输入授权说明"
                       rows={3}
                       className="w-full px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 resize-none"
@@ -2176,7 +2176,7 @@ export default function ArchivesPage() {
                       取消
                     </button>
                     <button
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleAddAuthorization(e); }}
+                      onClick={e => { e.preventDefault(); e.stopPropagation(); handleAddAuthorization(e); }}
                       className="flex-1 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600"
                     >
                       保存
@@ -2431,8 +2431,8 @@ export default function ArchivesPage() {
                         <input
                           type="text"
                           value={newComment}
-                          onChange={(e) => setNewComment(e.target.value)}
-                          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitComment(); } }}
+                          onChange={e => setNewComment(e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitComment(); } }}
                           placeholder="输入互动内容，按 Enter 发送..."
                           className="flex-1 px-4 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />

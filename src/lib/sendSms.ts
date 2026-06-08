@@ -9,25 +9,25 @@ async function sendSmsAliyun(config: any, phone: string, code: string, templateC
       accessKeyId: config.accessKeyId,
       accessKeySecret: config.accessKeySecret,
       endpoint: 'https://dysmsapi.aliyuncs.com',
-      apiVersion: '2017-05-25',
+      apiVersion: '2017-05-25'
     });
     
     const params = {
       PhoneNumbers: phone,
       SignName: config.signName,
       TemplateCode: templateCodeOverride || config.templateCodeLogin,
-      TemplateParam: JSON.stringify({ code }),
+      TemplateParam: JSON.stringify({ code })
     };
     
     const result = await client.request('SendSms', params, {
       method: 'POST',
-      timeout: 10000,
+      timeout: 10000
     });
     
     return {
       success: result.Code === 'OK',
       message: result.Message || result.Code,
-      requestId: result.RequestId,
+      requestId: result.RequestId
     };
   } catch (err: any) {
     let msg = err.message || 'Aliyun SMS failed';
@@ -49,9 +49,9 @@ async function sendSmsTencent(config: any, phone: string, code: string, template
     const client = new tencentcloud.sms.v20210111.Client({
       credential: {
         secretId: config.accessKeyId,
-        secretKey: config.accessKeySecret,
+        secretKey: config.accessKeySecret
       },
-      region: 'ap-guangzhou',
+      region: 'ap-guangzhou'
     });
     
     const params = {
@@ -59,14 +59,14 @@ async function sendSmsTencent(config: any, phone: string, code: string, template
       SignName: config.signName,
       TemplateId: templateCodeOverride || config.templateCodeLogin,
       TemplateParamSet: [code],
-      PhoneNumberSet: [`+86${phone}`],
+      PhoneNumberSet: [`+86${phone}`]
     };
     
     const resp = await client.SendSms(params);
     const result = resp.Response?.SendStatusSet?.[0];
     return {
       success: result?.Code === 'Ok',
-      message: String(result?.Message || result?.Code || 'unknown'),
+      message: String(result?.Message || result?.Code || 'unknown')
     };
   } catch (err: any) {
     console.error('[Tencent SMS] Failed:', err);
@@ -85,7 +85,7 @@ async function sendSmsSubmail(config: any, phone: string, code: string) {
       signature: config.signName,
       project: config.templateCodeLogin,
       to: phone,
-      vars: JSON.stringify({ code }),
+      vars: JSON.stringify({ code })
     });
     
     const auth = Buffer.from(`${config.accessKeyId}:${config.accessKeySecret}`).toString('base64');
@@ -97,11 +97,11 @@ async function sendSmsSubmail(config: any, phone: string, code: string) {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Content-Length': Buffer.byteLength(postData),
-        'Authorization': `Basic ${auth}`,
-      },
+        'Authorization': `Basic ${auth}`
+      }
     };
     
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       const req = https.request(options, (res: any) => {
         let data = '';
         res.on('data', (chunk: string) => data += chunk);
@@ -110,7 +110,7 @@ async function sendSmsSubmail(config: any, phone: string, code: string) {
             const result = JSON.parse(data);
             resolve({
               success: result.status === 'success',
-              message: String(result.msg || result.status || 'unknown'),
+              message: String(result.msg || result.status || 'unknown')
             });
           } catch {
             resolve({ success: false, message: 'Submail response parse failed' });
@@ -137,7 +137,7 @@ export async function sendSms(config: any, phone: string, code: string, template
     if (config?.simulate) {
       const simInfo = {
         signName: config.signName,
-        templateCode: templateCodeOverride || config.templateCodeLogin,
+        templateCode: templateCodeOverride || config.templateCodeLogin
       };
       console.log(`[SMS Simulate-${provider}] Phone: ${phone}, Code: ${code}`);
       return { success: true, message: '[Simulate] SMS sent (not really)' };

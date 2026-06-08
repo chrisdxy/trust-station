@@ -48,7 +48,7 @@ function signRequest(method: string, key: string, headers: Record<string, string
     `q-sign-time=${keyTime}`,
     `q-key-time=${keyTime}`,
     `q-header-list=${signedHeaders}`,
-    `q-signature=${signature}`,
+    `q-signature=${signature}`
   ].join('&');
 }
 
@@ -66,9 +66,9 @@ export async function uploadToCOS(key: string, body: Buffer): Promise<string> {
       Authorization: auth,
       Host: COS_HOST,
       'Content-Type': contentType,
-      'Content-Length': String(body.length),
+      'Content-Length': String(body.length)
     },
-    body,
+    body: body as unknown as BodyInit
   });
 
   if (!res.ok) {
@@ -86,7 +86,7 @@ export async function existsInCOS(key: string): Promise<boolean> {
     const auth = signRequest('HEAD', key);
     const res = await fetch(`https://${COS_HOST}/${key}`, {
       method: 'HEAD',
-      headers: { Authorization: auth, Host: COS_HOST },
+      headers: { Authorization: auth, Host: COS_HOST }
     });
     return res.ok;
   } catch {
@@ -102,7 +102,7 @@ function getContentType(filename: string): string {
     pdf: 'application/pdf', doc: 'application/msword', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     xls: 'application/vnd.ms-excel', xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     zip: 'application/zip', rar: 'application/x-rar-compressed',
-    mp4: 'video/mp4', heic: 'image/heic', heif: 'image/heif',
+    mp4: 'video/mp4', heic: 'image/heic', heif: 'image/heif'
   };
   return map[ext] || 'application/octet-stream';
 }

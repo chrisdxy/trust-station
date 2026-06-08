@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
     const offset = (page - 1) * limit;
     const userId = searchParams.get('userId') || '';
-    let whereConditions: string[] = [];
+    const whereConditions: string[] = [];
     const params: any[] = [];
 
     // 公开可见的（active）或者创建者查看自己的（pending/draft）
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
           name: m.display_name || m.real_name || m.user_name || ('uid-' + (m.user_id || '')),
           email: 'uid-' + (m.user_id || ''),
           role: m.role || 'member',
-          joinedAt: m.joinedAt ? new Date(m.joinedAt).toISOString().split('T')[0] : '',
+          joinedAt: m.joinedAt ? new Date(m.joinedAt).toISOString().split('T')[0] : ''
         }));
         // 如果 member_list 为空但有社区成员，回写 JSON
         if (memberList.length > 0 && (!c.member_list || c.member_list === '[]' || c.member_list === 'null')) {
@@ -130,7 +130,7 @@ export async function GET(request: NextRequest) {
         coverImage: c.coverImage || '',
         qrCode: c.qrCode || '',
         ownerId: c.ownerId,
-        ownerName: c.ownerName,
+        ownerName: c.ownerName
       };
     }));
 
@@ -141,8 +141,8 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit),
-      },
+        totalPages: Math.ceil(total / limit)
+      }
     });
   } catch (error: any) {
     console.error('获取社区列表错误:', error);
@@ -227,7 +227,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: '社区创建成功',
-      id,
+      id
     });
   } catch (error: any) {
     console.error('创建社区错误:', error);
@@ -302,7 +302,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: '社区更新成功',
+      message: '社区更新成功'
     });
   } catch (error: any) {
     console.error('更新社区错误:', error);
@@ -333,7 +333,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: '社区删除成功',
+      message: '社区删除成功'
     });
   } catch (error: any) {
     console.error('删除社区错误:', error);

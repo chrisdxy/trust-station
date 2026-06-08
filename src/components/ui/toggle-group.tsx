@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group"
-import { type VariantProps } from "class-variance-authority"
+import * as React from "react";
+import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
+import { type VariantProps } from "class-variance-authority";
 
-import { cn } from "@/lib/utils"
-import { toggleVariants } from "@/components/ui/toggle"
+import { cn } from "@/lib/utils";
+import { toggleVariants } from "@/components/ui/toggle";
 
 const ToggleGroupContext = React.createContext<
   VariantProps<typeof toggleVariants> & {
@@ -14,8 +14,8 @@ const ToggleGroupContext = React.createContext<
 >({
   size: "default",
   variant: "default",
-  spacing: 0,
-})
+  spacing: 0
+});
 
 function ToggleGroup({
   className,
@@ -45,7 +45,7 @@ function ToggleGroup({
         {children}
       </ToggleGroupContext.Provider>
     </ToggleGroupPrimitive.Root>
-  )
+  );
 }
 
 function ToggleGroupItem({
@@ -56,7 +56,7 @@ function ToggleGroupItem({
   ...props
 }: React.ComponentProps<typeof ToggleGroupPrimitive.Item> &
   VariantProps<typeof toggleVariants>) {
-  const context = React.useContext(ToggleGroupContext)
+  const context = React.useContext(ToggleGroupContext);
 
   return (
     <ToggleGroupPrimitive.Item
@@ -67,7 +67,7 @@ function ToggleGroupItem({
       className={cn(
         toggleVariants({
           variant: context.variant || variant,
-          size: context.size || size,
+          size: context.size || size
         }),
         "w-auto min-w-0 shrink-0 px-3 focus:z-10 focus-visible:z-10",
         "data-[spacing=0]:rounded-none data-[spacing=0]:shadow-none data-[spacing=0]:first:rounded-l-md data-[spacing=0]:last:rounded-r-md data-[spacing=0]:data-[variant=outline]:border-l-0 data-[spacing=0]:data-[variant=outline]:first:border-l",
@@ -77,7 +77,7 @@ function ToggleGroupItem({
     >
       {children}
     </ToggleGroupPrimitive.Item>
-  )
+  );
 }
 
-export { ToggleGroup, ToggleGroupItem }
+export { ToggleGroup, ToggleGroupItem };

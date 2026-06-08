@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      archives: archives || [],
+      archives: archives || []
     });
   } catch (error) {
     console.error('获取存档错误:', error);

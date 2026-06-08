@@ -62,8 +62,8 @@ export async function GET(request: NextRequest) {
         company_name: user.company_name,
         identity_verified: user.identity_verified,
         avatar_url: user.avatar_url,
-        is_admin: user.is_admin === 1 || user.is_admin === true,
-      },
+        is_admin: user.is_admin === 1 || user.is_admin === true
+      }
     });
   } catch (error: any) {
     console.error('获取用户信息错误:', error.message);

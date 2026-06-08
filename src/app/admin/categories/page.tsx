@@ -32,7 +32,7 @@ const categoryConfigs: CategoryConfig[] = [
   { type: 'cooperation', label: '合作类型', color: 'bg-rose-500' },
   { type: 'record_type', label: '记录类型', color: 'bg-orange-500' },
   { type: 'partner_level', label: '合伙人类型', color: 'bg-cyan-500' },
-  { type: 'ai_tool', label: 'AI工具分类', color: 'bg-indigo-500' },
+  { type: 'ai_tool', label: 'AI工具分类', color: 'bg-indigo-500' }
 ];
 
 export default function CategoriesPage() {
@@ -73,7 +73,7 @@ export default function CategoriesPage() {
       const parsed = cached ? JSON.parse(cached) : {};
       parsed[activeCategory] = categories.map(c => ({
         id: String(c.id),
-        name: c.name,
+        name: c.name
       }));
       localStorage.setItem('admin_categories', JSON.stringify(parsed));
     } catch (_) { /* ignore */ }
@@ -228,7 +228,7 @@ export default function CategoriesPage() {
             name: parent.name,
             sort_order: parent.sortOrder,
             parent_id: null
-          }),
+          })
         });
         const data = await response.json();
         if (data.success && data.id) {
@@ -248,7 +248,7 @@ export default function CategoriesPage() {
               name: child.name,
               sort_order: child.sortOrder,
               parent_id: parentId
-            }),
+            })
           });
         }
       }
@@ -285,7 +285,7 @@ export default function CategoriesPage() {
             name: item.name.trim(),
             sortOrder: item.sortOrder ? parseInt(item.sortOrder) : index + categories.length + 1
           }))
-        }),
+        })
       });
       const data = await response.json();
       
@@ -319,7 +319,7 @@ export default function CategoriesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ids: Array.from(selectedIds)
-        }),
+        })
       });
       const data = await response.json();
       if (data.success) {
@@ -347,7 +347,7 @@ export default function CategoriesPage() {
         body: JSON.stringify({
           ids: Array.from(selectedIds),
           sortOrder: parseInt(batchSortOrder)
-        }),
+        })
       });
       const data = await response.json();
       if (data.success) {
@@ -370,7 +370,7 @@ export default function CategoriesPage() {
     if (!confirm('确定要删除这个分类吗？')) return;
     try {
       const response = await fetch(`/api/admin/categories?id=${id}`, {
-        method: 'DELETE',
+        method: 'DELETE'
       });
       const data = await response.json();
       if (data.success) {
@@ -392,8 +392,8 @@ export default function CategoriesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: editingId,
-          ...editForm,
-        }),
+          ...editForm
+        })
       });
       const data = await response.json();
       if (data.success) {
@@ -421,8 +421,8 @@ export default function CategoriesPage() {
           type: activeCategory,
           name,
           sort_order: sortOrder,
-          parent_id: parentId,
-        }),
+          parent_id: parentId
+        })
       });
       console.log('[handleAddChild] 响应状态:', response.status);
       const data = await response.json();
@@ -542,7 +542,7 @@ export default function CategoriesPage() {
 
         {/* 分类标签 */}
         <div className="flex flex-wrap gap-2">
-          {categoryConfigs.map((config) => (
+          {categoryConfigs.map(config => (
             <button
               key={config.type}
               onClick={() => setActiveCategory(config.type)}
@@ -591,7 +591,7 @@ export default function CategoriesPage() {
                   <input
                     type="number"
                     value={batchSortOrder}
-                    onChange={(e) => setBatchSortOrder(e.target.value)}
+                    onChange={e => setBatchSortOrder(e.target.value)}
                     placeholder="输入序号"
                     className="w-24 px-3 py-1.5 border border-blue-300 dark:border-blue-700 rounded-lg text-sm bg-white dark:bg-slate-800"
                     min="0"
@@ -646,7 +646,7 @@ export default function CategoriesPage() {
             <div className="divide-y divide-slate-200 dark:divide-slate-700">
               {/* 非行业：平铺列表 */}
               {activeCategory !== 'project_industry' ? (
-                categories.map((cat) => (
+                categories.map(cat => (
                   <CategoryRow 
                     key={cat.id} 
                     cat={cat}
@@ -692,7 +692,7 @@ export default function CategoriesPage() {
           <div 
             className="fixed inset-0 flex items-center justify-center z-[200]"
             style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-            onClick={(e) => { if (e.target === e.currentTarget) setShowAddForm(false); }}
+            onClick={e => { if (e.target === e.currentTarget) setShowAddForm(false); }}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -721,7 +721,7 @@ export default function CategoriesPage() {
                       <input
                         type="number"
                         value={item.sortOrder}
-                        onChange={(e) => {
+                        onChange={e => {
                           const newItems = [...batchAddItems];
                           newItems[index].sortOrder = e.target.value;
                           setBatchAddItems(newItems);
@@ -735,7 +735,7 @@ export default function CategoriesPage() {
                       <input
                         type="text"
                         value={item.name}
-                        onChange={(e) => {
+                        onChange={e => {
                           const newItems = [...batchAddItems];
                           newItems[index].name = e.target.value;
                           setBatchAddItems(newItems);
@@ -790,7 +790,7 @@ export default function CategoriesPage() {
           <div 
             className="fixed inset-0 flex items-center justify-center z-[200]"
             style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-            onClick={(e) => { if (e.target === e.currentTarget) setShowBulkImport(false); }}
+            onClick={e => { if (e.target === e.currentTarget) setShowBulkImport(false); }}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -810,7 +810,7 @@ export default function CategoriesPage() {
                 </label>
                 <textarea
                   value={bulkImportText}
-                  onChange={(e) => setBulkImportText(e.target.value)}
+                  onChange={e => setBulkImportText(e.target.value)}
                   className="w-full h-64 px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white resize-none"
                   placeholder={"格式1 - 只导入一级分类：\n互联网\n金融科技\n医疗健康\n\n格式2 - 导入一级和二级分类：\n互联网:电商,金融,教育\n制造业:汽车,电子,机械\n服务业:餐饮,酒店,零售\n\n说明：冒号前是一级分类，冒号后是二级分类（用逗号分隔）"}
                 />
@@ -840,7 +840,7 @@ export default function CategoriesPage() {
           <div 
             className="fixed inset-0 flex items-center justify-center z-[200]"
             style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-            onClick={(e) => { if (e.target === e.currentTarget) setShowNewParentForm(false); }}
+            onClick={e => { if (e.target === e.currentTarget) setShowNewParentForm(false); }}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -862,7 +862,7 @@ export default function CategoriesPage() {
                   <input
                     type="number"
                     value={newCategorySortOrder}
-                    onChange={(e) => setNewCategorySortOrder(e.target.value)}
+                    onChange={e => setNewCategorySortOrder(e.target.value)}
                     className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                     placeholder="数字越小越靠前"
                   />
@@ -875,7 +875,7 @@ export default function CategoriesPage() {
                   <input
                     type="text"
                     value={newCategoryName}
-                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    onChange={e => setNewCategoryName(e.target.value)}
                     className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                     placeholder="请输入分类名称"
                   />
@@ -902,7 +902,7 @@ export default function CategoriesPage() {
                           name: newCategoryName.trim(),
                           sortOrder: parseInt(newCategorySortOrder) || 0,
                           isParent: true
-                        }),
+                        })
                       });
                       const data = await response.json();
                       if (data.success) {
@@ -967,14 +967,14 @@ function CategoryRow({
           <input
             type="number"
             value={editForm.sort_order ?? ''}
-            onChange={(e) => { const val = e.target.value ? parseInt(e.target.value) : 0; setEditForm({ ...editForm, sort_order: val }); }}
+            onChange={e => { const val = e.target.value ? parseInt(e.target.value) : 0; setEditForm({ ...editForm, sort_order: val }); }}
             className="w-20 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900"
             placeholder="序号"
           />
           <input
             type="text"
             value={editForm.name || ''}
-            onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+            onChange={e => setEditForm({ ...editForm, name: e.target.value })}
             className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900"
             autoFocus
           />

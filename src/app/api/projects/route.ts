@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
           members: (() => { try { const m = typeof p.members === 'string' ? JSON.parse(p.members) : (p.members || []); return Array.isArray(m) ? m : []; } catch { return []; } })(),
           creatorId: p.user_id,
           paused: p.paused === 1 || p.paused === true,
-          coverImage: Array.isArray(images) && images.length > 0 ? images[0] : '',
+          coverImage: Array.isArray(images) && images.length > 0 ? images[0] : ''
         }
       });
     }
@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
         creatorId: p.user_id,
         paused: p.paused === 1 || p.paused === true,
         coverImage: Array.isArray(images) && images.length > 0 ? images[0] : '',
-        qr_code: p.qr_code || '',
+        qr_code: p.qr_code || ''
       };
     });
 
@@ -123,8 +123,8 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit),
-      },
+        totalPages: Math.ceil(total / limit)
+      }
     });
   } catch (error) {
     console.error('获取项目列表错误:', error);
@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: '项目创建成功',
-      id,
+      id
     });
   } catch (error) {
     console.error('创建项目错误:', error);

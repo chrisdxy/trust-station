@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Layout, Plus, Eye, Edit2, Trash2, Copy, Check, X, Grid, List, Search, 
-  User, Building, Award, ExternalLink, Share2, FileText, Globe, EyeOff, RefreshCcw
+  User, Building, Award, ExternalLink, Share2, FileText, Globe, EyeOff, RefreshCcw, Handshake
 } from 'lucide-react';
 import LayoutComponent from '@/components/Layout';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -29,7 +29,7 @@ interface PhoneField {
 
 interface DisplayProfile {
   id: string;
-  type: 'personal' | 'enterprise' | 'expert';
+  type: 'personal' | 'enterprise' | 'expert' | 'partner';
   avatar?: string;
   fields: DisplayField[];
   phoneNumbers: string[];  // 支持多个手机号
@@ -46,22 +46,29 @@ const categoryConfig = {
     icon: User,
     color: 'bg-green-100 text-green-600 dark:bg-green-900/30',
     bgColor: 'from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30',
-    borderColor: 'border-green-200 dark:border-green-800',
+    borderColor: 'border-green-200 dark:border-green-800'
   },
   enterprise: {
     label: '企业名片',
     icon: Building,
     color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30',
     bgColor: 'from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30',
-    borderColor: 'border-blue-200 dark:border-blue-800',
+    borderColor: 'border-blue-200 dark:border-blue-800'
   },
   expert: {
     label: '专家名片',
     icon: Award,
     color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30',
     bgColor: 'from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30',
-    borderColor: 'border-purple-200 dark:border-purple-800',
+    borderColor: 'border-purple-200 dark:border-purple-800'
   },
+  partner: {
+    label: '合伙人名片',
+    icon: Handshake,
+    color: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30',
+    bgColor: 'from-cyan-100 to-teal-100 dark:from-cyan-900/30 dark:to-teal-900/30',
+    borderColor: 'border-cyan-200 dark:border-cyan-800'
+  }
 };
 
 // 默认字段模板（不包含姓名，姓名自动从系统获取；phoneNumbers 单独处理多手机号）
@@ -74,7 +81,7 @@ const defaultFieldTemplates = {
     // phoneNumbers 字段单独处理，不放在这里
     { key: 'wechat', label: '微信', type: 'text' as const, placeholder: '微信号（选填）' },
     { key: 'expertise', label: '专业领域', type: 'text' as const, placeholder: '如：项目管理、前端开发' },
-    { key: 'cooperation', label: '合作意向', type: 'textarea' as const, placeholder: '希望寻找什么样的合作机会...' },
+    { key: 'cooperation', label: '合作意向', type: 'textarea' as const, placeholder: '希望寻找什么样的合作机会...' }
   ],
   enterprise: [
     { key: 'companyName', label: '企业名称', type: 'text' as const, placeholder: '请输入企业名称' },
@@ -84,7 +91,7 @@ const defaultFieldTemplates = {
     { key: 'website', label: '官网', type: 'link' as const, placeholder: 'https://...' },
     { key: 'email', label: '联系邮箱', type: 'email' as const, placeholder: '请输入联系邮箱' },
     { key: 'address', label: '地址', type: 'text' as const, placeholder: '公司地址' },
-    { key: 'cooperation', label: '合作需求', type: 'textarea' as const, placeholder: '希望寻找什么样的合作伙伴...' },
+    { key: 'cooperation', label: '合作需求', type: 'textarea' as const, placeholder: '希望寻找什么样的合作伙伴...' }
   ],
   expert: [
     { key: 'title', label: '职称/头衔', type: 'text' as const, placeholder: '如：高级工程师、教授' },
@@ -94,8 +101,16 @@ const defaultFieldTemplates = {
     { key: 'bio', label: '专家简介', type: 'textarea' as const, placeholder: '详细介绍专业背景、擅长领域...' },
     { key: 'email', label: '邮箱', type: 'email' as const, placeholder: '请输入邮箱地址' },
     // phoneNumbers 字段单独处理，不放在这里
-    { key: 'consultation', label: '咨询说明', type: 'textarea' as const, placeholder: '咨询服务范围、收费说明...' },
+    { key: 'consultation', label: '咨询说明', type: 'textarea' as const, placeholder: '咨询服务范围、收费说明...' }
   ],
+  partner: [
+    { key: 'company', label: '公司/组织', type: 'text' as const, placeholder: '公司名称（选填）' },
+    { key: 'title', label: '职位/头衔', type: 'text' as const, placeholder: '如：合伙人、联合创始人' },
+    { key: 'bio', label: '个人简介', type: 'textarea' as const, placeholder: '简要介绍自己...' },
+    { key: 'email', label: '邮箱', type: 'email' as const, placeholder: '请输入邮箱地址' },
+    { key: 'expertise', label: '合作领域', type: 'text' as const, placeholder: '如：资源对接、项目合作' },
+    { key: 'cooperation', label: '合作意向', type: 'textarea' as const, placeholder: '希望寻找什么样的合作机会...' }
+  ]
 };
 
 function generateShareCode(): string {
@@ -146,6 +161,7 @@ export default function TemplatesPage() {
     { key: 'personal', label: '个人' },
     { key: 'enterprise', label: '企业' },
     { key: 'expert', label: '专家' },
+    { key: 'partner', label: '合伙人' }
   ];
 
   const filteredProfiles = publicProfiles.filter(profile => {
@@ -179,7 +195,7 @@ export default function TemplatesPage() {
     setProfileForm({
       type,
       fields: autoFilledFields,
-      phoneNumbers: initialPhones,
+      phoneNumbers: initialPhones
     });
     setEditingProfile(null);
     setShowEditModal(true);
@@ -189,7 +205,7 @@ export default function TemplatesPage() {
     setProfileForm({
       type: profile.type,
       fields: [...profile.fields],
-      phoneNumbers: profile.phoneNumbers || [],
+      phoneNumbers: profile.phoneNumbers || []
     });
     setEditingProfile(profile);
     setShowEditModal(true);
@@ -203,7 +219,7 @@ export default function TemplatesPage() {
           ...p,
           fields: profileForm.fields,
           phoneNumbers: profileForm.phoneNumbers,
-          updatedAt: new Date().toISOString().split('T')[0],
+          updatedAt: new Date().toISOString().split('T')[0]
         } : p)
       );
     } else {
@@ -217,7 +233,7 @@ export default function TemplatesPage() {
         isPublic: true, // 默认公开
         createdAt: new Date().toISOString().split('T')[0],
         updatedAt: new Date().toISOString().split('T')[0],
-        shareCode: generateShareCode(),
+        shareCode: generateShareCode()
       };
       setPublicProfiles(prev => [newProfile, ...prev]);
     }
@@ -230,7 +246,7 @@ export default function TemplatesPage() {
     if (!confirm('确定要删除这张名片吗？')) return;
     try {
       const response = await fetch(`/api/profiles/${id}`, {
-        method: 'DELETE',
+        method: 'DELETE'
       });
       const data = await response.json();
       if (data.success) {
@@ -251,7 +267,7 @@ export default function TemplatesPage() {
       const response = await fetch(`/api/profiles/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isPublic: !profile.isPublic }),
+        body: JSON.stringify({ isPublic: !profile.isPublic })
       });
       const data = await response.json();
       if (data.success) {
@@ -259,7 +275,7 @@ export default function TemplatesPage() {
           prev.map(p => p.id === id ? {
             ...p,
             isPublic: !p.isPublic,
-            updatedAt: new Date().toISOString().split('T')[0],
+            updatedAt: new Date().toISOString().split('T')[0]
           } : p)
         );
       } else {
@@ -276,14 +292,14 @@ export default function TemplatesPage() {
       const response = await fetch(`/api/profiles/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isDefault: true }),
+        body: JSON.stringify({ isDefault: true })
       });
       const data = await response.json();
       if (data.success) {
         setPublicProfiles(prev =>
           prev.map(p => ({
             ...p,
-            isDefault: p.id === id,
+            isDefault: p.id === id
           }))
         );
       } else {
@@ -340,7 +356,7 @@ export default function TemplatesPage() {
             <input
               type="text"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
               placeholder="搜索名片..."
               className="w-full pl-12 pr-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
@@ -391,7 +407,7 @@ export default function TemplatesPage() {
 
         {/* Category Tabs */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          {categories.map((cat) => (
+          {categories.map(cat => (
             <button
               key={cat.key}
               onClick={() => setSelectedCategory(cat.key)}
@@ -466,7 +482,7 @@ export default function TemplatesPage() {
                       {/* 卡片内容 */}
                       <div className="p-4">
                         <div className="space-y-2 mb-4">
-                          {profile.fields.slice(0, 3).map((field) => (
+                          {profile.fields.slice(0, 3).map(field => (
                             <div key={field.key} className="flex items-center gap-2 text-sm">
                               <span className="text-slate-400">{getFieldIcon(field.type)}</span>
                               <span className="text-slate-600 dark:text-slate-300 truncate">
@@ -691,7 +707,7 @@ export default function TemplatesPage() {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
                 className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-md w-full overflow-hidden"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 {/* 预览头部 */}
                 <div className={`bg-gradient-to-r ${categoryConfig[selectedProfile.type].bgColor} p-6`}>
@@ -717,7 +733,7 @@ export default function TemplatesPage() {
                 {/* 预览内容 */}
                 <div className="p-6">
                   <div className="space-y-4">
-                    {selectedProfile.fields.filter(f => f.value).map((field) => (
+                    {selectedProfile.fields.filter(f => f.value).map(field => (
                       <div key={field.key} className="flex items-start gap-3">
                         <div className="w-8 h-8 bg-slate-100 dark:bg-slate-700 rounded-lg flex items-center justify-center text-sm flex-shrink-0">
                           {getFieldIcon(field.type)}
@@ -803,7 +819,7 @@ export default function TemplatesPage() {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
                 className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-lg w-full max-h-[85vh] overflow-hidden flex flex-col"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 <div className="p-6 border-b border-slate-100 dark:border-slate-700">
                   <div className="flex items-center justify-between">
@@ -829,9 +845,9 @@ export default function TemplatesPage() {
                       <input
                         type="text"
                         value={profileForm.fields.find(f => f.key === 'companyName')?.value || ''}
-                        onChange={(e) => setProfileForm(prev => ({
+                        onChange={e => setProfileForm(prev => ({
                           ...prev,
-                          fields: prev.fields.map(f => f.key === 'companyName' ? { ...f, value: e.target.value } : f),
+                          fields: prev.fields.map(f => f.key === 'companyName' ? { ...f, value: e.target.value } : f)
                         }))}
                         placeholder="请输入企业名称"
                         className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
@@ -854,7 +870,7 @@ export default function TemplatesPage() {
                       名片类型
                     </label>
                     <div className="grid grid-cols-3 gap-3">
-                      {(['personal', 'enterprise', 'expert'] as const).map((cat) => {
+                      {(['personal', 'enterprise', 'expert'] as const).map(cat => {
                         const config = categoryConfig[cat];
                         const Icon = config.icon;
                         return (
@@ -865,7 +881,7 @@ export default function TemplatesPage() {
                                 setProfileForm(prev => ({
                                   ...prev,
                                   type: cat,
-                                  fields: defaultFieldTemplates[cat].map(t => ({ ...t, value: '' })),
+                                  fields: defaultFieldTemplates[cat].map(t => ({ ...t, value: '' }))
                                 }));
                               }
                             }}
@@ -892,7 +908,7 @@ export default function TemplatesPage() {
                       展示信息
                     </label>
                     <div className="space-y-3">
-                      {profileForm.fields.map((field) => (
+                      {profileForm.fields.map(field => (
                         <div key={field.key}>
                           <label className="block text-xs text-slate-500 mb-1">
                             {field.label}
@@ -900,9 +916,9 @@ export default function TemplatesPage() {
                           {field.type === 'textarea' ? (
                             <textarea
                               value={field.value}
-                              onChange={(e) => setProfileForm(prev => ({
+                              onChange={e => setProfileForm(prev => ({
                                 ...prev,
-                                fields: prev.fields.map(f => f.key === field.key ? { ...f, value: e.target.value } : f),
+                                fields: prev.fields.map(f => f.key === field.key ? { ...f, value: e.target.value } : f)
                               }))}
                               placeholder={field.placeholder}
                               rows={3}
@@ -912,9 +928,9 @@ export default function TemplatesPage() {
                             <input
                               type={field.type === 'text' ? 'text' : field.type}
                               value={field.value}
-                              onChange={(e) => setProfileForm(prev => ({
+                              onChange={e => setProfileForm(prev => ({
                                 ...prev,
-                                fields: prev.fields.map(f => f.key === field.key ? { ...f, value: e.target.value } : f),
+                                fields: prev.fields.map(f => f.key === field.key ? { ...f, value: e.target.value } : f)
                               }))}
                               placeholder={field.placeholder}
                               className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
@@ -936,9 +952,9 @@ export default function TemplatesPage() {
                           <input
                             type="tel"
                             value={phone}
-                            onChange={(e) => setProfileForm(prev => ({
+                            onChange={e => setProfileForm(prev => ({
                               ...prev,
-                              phoneNumbers: prev.phoneNumbers.map((p, i) => i === idx ? e.target.value : p),
+                              phoneNumbers: prev.phoneNumbers.map((p, i) => i === idx ? e.target.value : p)
                             }))}
                             placeholder="请输入手机号码"
                             className="flex-1 px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
@@ -946,7 +962,7 @@ export default function TemplatesPage() {
                           <button
                             onClick={() => setProfileForm(prev => ({
                               ...prev,
-                              phoneNumbers: prev.phoneNumbers.filter((_, i) => i !== idx),
+                              phoneNumbers: prev.phoneNumbers.filter((_, i) => i !== idx)
                             }))}
                             className="p-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
                           >
@@ -957,7 +973,7 @@ export default function TemplatesPage() {
                       <button
                         onClick={() => setProfileForm(prev => ({
                           ...prev,
-                          phoneNumbers: [...prev.phoneNumbers, ''],
+                          phoneNumbers: [...prev.phoneNumbers, '']
                         }))}
                         className="flex items-center gap-2 w-full py-2.5 px-4 border border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors text-sm"
                       >

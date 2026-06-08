@@ -47,14 +47,14 @@ export async function GET(request: NextRequest) {
         relationCount: relationCount || 0,
         ongoingMediation: ongoingMediation || 0,
         newUsers: newUsers || 0,
-        growthRate: `+${growthRate}%`,
+        growthRate: `+${growthRate}%`
       },
       pending: {
         mediation: pendingMediation || 0,
         community: pendingCommunity || 0,
-        feedback: pendingFeedback || 0,
+        feedback: pendingFeedback || 0
       },
-      activities: activities.slice(0, 10),
+      activities: activities.slice(0, 10)
     });
   } catch (error: any) {
     console.error('获取仪表盘数据失败:', error?.message || error);

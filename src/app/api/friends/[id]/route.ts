@@ -33,7 +33,7 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
-      message: action === 'accept' ? '已添加好友' : '已拒绝申请',
+      message: action === 'accept' ? '已添加好友' : '已拒绝申请'
     });
   } catch (error: any) {
     console.error('处理好友申请失败:', error);

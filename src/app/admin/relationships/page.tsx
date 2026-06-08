@@ -22,21 +22,21 @@ const statusColors: Record<string, string> = {
   active: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
   pending: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
   disputed: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  ended: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400',
+  ended: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'
 };
 
 const statusIcons: Record<string, React.ReactNode> = {
   active: <CheckCircle className="w-4 h-4" />,
   pending: <Clock className="w-4 h-4" />,
   disputed: <AlertTriangle className="w-4 h-4" />,
-  ended: <FileText className="w-4 h-4" />,
+  ended: <FileText className="w-4 h-4" />
 };
 
 const statusLabels: Record<string, string> = {
   active: '进行中',
   pending: '待审核',
   disputed: '存在分歧',
-  ended: '已结束',
+  ended: '已结束'
 };
 
 export default function RelationshipsPage() {
@@ -83,7 +83,7 @@ export default function RelationshipsPage() {
       const response = await fetch(`/api/relationships`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status: newStatus }),
+        body: JSON.stringify({ id, status: newStatus })
       });
       const data = await response.json();
       if (data.success) {
@@ -94,7 +94,7 @@ export default function RelationshipsPage() {
     }
   };
 
-  const filteredRelationships = relationships.filter((r) => {
+  const filteredRelationships = relationships.filter(r => {
     const matchesSearch = !searchTerm || 
       r.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       r.serial_number?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -131,13 +131,13 @@ export default function RelationshipsPage() {
               type="text"
               placeholder="搜索关系标题或编号..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800"
             />
           </div>
           <select
             value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
+            onChange={e => setFilterStatus(e.target.value)}
             className="px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800"
           >
             <option value="">全部状态</option>
@@ -193,7 +193,7 @@ export default function RelationshipsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                  {filteredRelationships.map((rel) => (
+                  {filteredRelationships.map(rel => (
                     <tr key={rel.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-sm font-mono text-slate-600 dark:text-slate-400">
@@ -267,7 +267,7 @@ export default function RelationshipsPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-lg"
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">关系详情</h3>

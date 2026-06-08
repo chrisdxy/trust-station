@@ -25,7 +25,7 @@ export default function ProfilePage() {
     isPublic: boolean;
   } | null>(null);
   const [createForm, setCreateForm] = useState<{
-    type: 'personal' | 'enterprise' | 'expert' | 'partner';
+    type: 'personal' | 'enterprise' | 'expert' | 'partner' | 'coach';
     fields: Record<string, string>;
     phoneNumbers: string[];
     isPublic: boolean;
@@ -33,14 +33,14 @@ export default function ProfilePage() {
     type: 'personal',
     fields: {},
     phoneNumbers: [],
-    isPublic: true,
+    isPublic: true
   });
   const [editForm, setEditForm] = useState({
     display_name: '',
     real_name: '',
     company_name: '',
     phone: '',
-    email: '',
+    email: ''
   });
 
   // 加载名片数据
@@ -106,7 +106,7 @@ export default function ProfilePage() {
     try {
       // 将图片转换为 base64
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = event => {
         const base64Image = event.target?.result as string;
         const imageMarkdown = `\n![图片](${base64Image})\n`;
         
@@ -158,7 +158,7 @@ export default function ProfilePage() {
     type: '',
     expertise: [] as string[],
     customExpertise: '',
-    description: '',
+    description: ''
   });
   const [isSubmittingMediator, setIsSubmittingMediator] = useState(false);
 
@@ -208,7 +208,7 @@ export default function ProfilePage() {
           result: m.result || '',
           feedback: m.feedback || '',
           comments: [],
-          expanded: false,
+          expanded: false
         })));
       }
     } catch {}
@@ -237,7 +237,7 @@ export default function ProfilePage() {
   const [partnerForm, setPartnerForm] = useState({
     level: '',
     region: '',
-    businessPlan: '',
+    businessPlan: ''
   });
   const [isSubmittingPartner, setIsSubmittingPartner] = useState(false);
 
@@ -248,7 +248,7 @@ export default function ProfilePage() {
   const [verifyForm, setVerifyForm] = useState({
     realName: '',
     idNumber: '',
-    facePhoto: '', // 人脸照片 base64
+    facePhoto: '' // 人脸照片 base64
   });
 
   // 个人认证状态
@@ -303,7 +303,7 @@ export default function ProfilePage() {
             expertise: typeof m.expertise === 'string' ? JSON.parse(m.expertise) : (m.expertise || []),
             description: m.description || '',
             caseCount: m.case_count || 0,
-            successRate: m.success_rate || 0,
+            successRate: m.success_rate || 0
           });
         }
       } catch { /* fallback to localStorage */ }
@@ -313,7 +313,7 @@ export default function ProfilePage() {
     // 加载陪跑专家状态
     const loadCoach = async () => {
       try {
-        const res = await fetch(`/api/coach?userId=${user.id}`);
+        const res = await fetch(`/api/coach?userId=${user?.id}`);
         const data = await res.json();
         if (data.success && data.coaches?.length > 0) {
           const c = data.coaches[0];
@@ -323,7 +323,7 @@ export default function ProfilePage() {
             name: c.name || '',
             type: c.type || '',
             expertise: typeof c.expertise === 'string' ? JSON.parse(c.expertise) : (c.expertise || []),
-            description: c.description || '',
+            description: c.description || ''
           });
         }
       } catch {}
@@ -359,8 +359,8 @@ export default function ProfilePage() {
           email: user?.email || '',
           type: mediatorForm.type,
           expertise: allExpertise,
-          description: mediatorForm.description,
-        }),
+          description: mediatorForm.description
+        })
       });
       const data = await res.json();
       if (!data.success) { alert(data.error || '提交失败'); return; }
@@ -374,7 +374,7 @@ export default function ProfilePage() {
       expertise: allExpertise,
       description: mediatorForm.description,
       caseCount: 0,
-      successRate: 0,
+      successRate: 0
     };
     
     setMediatorProfile(newProfile);
@@ -405,8 +405,8 @@ export default function ProfilePage() {
         email: user?.email || '',
         type: coachForm.type || '战略陪跑',
         expertise: allExpertise,
-        description: coachForm.description,
-      }),
+        description: coachForm.description
+      })
     });
     const data = await res.json();
     if (!data.success) { alert(data.error || '提交失败'); setIsSubmittingMediator(false); return; }
@@ -416,7 +416,7 @@ export default function ProfilePage() {
       name: user?.real_name || user?.display_name || '',
       type: coachForm.type || '战略陪跑',
       expertise: allExpertise,
-      description: coachForm.description,
+      description: coachForm.description
     });
     setIsSubmittingMediator(false);
     setShowCoachModal(false);
@@ -442,7 +442,7 @@ export default function ProfilePage() {
             level: app.level,
             region: app.region,
             businessPlan: app.business_plan,
-            submittedAt: app.submitted_at,
+            submittedAt: app.submitted_at
           };
           setPartnerProfile(newProfile);
           localStorage.setItem('user_partner_profile', JSON.stringify(newProfile));
@@ -521,8 +521,8 @@ export default function ProfilePage() {
           userId: user?.id,
           level: partnerForm.level,
           region: partnerForm.region,
-          businessPlan: partnerForm.businessPlan,
-        }),
+          businessPlan: partnerForm.businessPlan
+        })
       });
       
       const data = await response.json();
@@ -534,7 +534,7 @@ export default function ProfilePage() {
           level: partnerForm.level,
           region: partnerForm.region,
           businessPlan: partnerForm.businessPlan,
-          submittedAt: new Date().toISOString(),
+          submittedAt: new Date().toISOString()
         };
         
         setPartnerProfile(newProfile);
@@ -587,8 +587,8 @@ export default function ProfilePage() {
           name: verifyForm.realName,
           idcard: verifyForm.idNumber,
           image: verifyForm.facePhoto,
-          userId: user?.id,
-        }),
+          userId: user?.id
+        })
       });
       const data = await res.json();
 
@@ -631,14 +631,14 @@ export default function ProfilePage() {
       { key: 'wechat', label: '微信', placeholder: '微信号' },
       { key: 'expertise', label: '专业领域', placeholder: '如：项目管理' },
       { key: 'cooperation', label: '合作意向', placeholder: '希望寻找合作机会...' },
-      { key: 'bio', label: '个人简介', placeholder: '简要介绍自己...', isRichText: true },
+      { key: 'bio', label: '个人简介', placeholder: '简要介绍自己...', isRichText: true }
     ],
     enterprise: [
       { key: 'industry', label: '所属行业', placeholder: '如：科技、金融' },
       { key: 'description', label: '企业简介', placeholder: '介绍企业主营业务...', isRichText: true },
       { key: 'email', label: '联系邮箱', placeholder: '请输入联系邮箱' },
       { key: 'address', label: '地址', placeholder: '公司地址' },
-      { key: 'cooperation', label: '合作需求', placeholder: '寻找合作伙伴...' },
+      { key: 'cooperation', label: '合作需求', placeholder: '寻找合作伙伴...' }
     ],
     expert: [
       { key: 'title', label: '职称/头衔', placeholder: '如：高级工程师、教授' },
@@ -647,7 +647,7 @@ export default function ProfilePage() {
       { key: 'education', label: '教育背景', placeholder: '如：清华大学 MBA' },
       { key: 'email', label: '邮箱', placeholder: 'expert@zhengdao.com' },
       { key: 'phone', label: '电话', placeholder: '联系电话' },
-      { key: 'bio', label: '简介', placeholder: '详细介绍专业背景...', isRichText: true },
+      { key: 'bio', label: '简介', placeholder: '详细介绍专业背景...', isRichText: true }
     ],
     coach: [
       { key: 'title', label: '职称/头衔', placeholder: '如：战略顾问、企业教练' },
@@ -657,7 +657,7 @@ export default function ProfilePage() {
       { key: 'cases', label: '陪跑案例', placeholder: '列举服务过的企业案例' },
       { key: 'email', label: '邮箱', placeholder: 'coach@zhengdao.com' },
       { key: 'phone', label: '电话', placeholder: '联系电话' },
-      { key: 'bio', label: '简介', placeholder: '详细介绍陪跑服务内容...', isRichText: true },
+      { key: 'bio', label: '简介', placeholder: '详细介绍陪跑服务内容...', isRichText: true }
     ],
     partner: [
       { key: 'title', label: '合伙人类型', placeholder: '如：城市合伙人、项目合伙人' },
@@ -667,8 +667,8 @@ export default function ProfilePage() {
       { key: 'cooperation', label: '合作意向', placeholder: '希望寻找的合作伙伴...' },
       { key: 'email', label: '邮箱', placeholder: '联系邮箱' },
       { key: 'phone', label: '电话', placeholder: '联系电话' },
-      { key: 'bio', label: '个人简介', placeholder: '介绍合伙人背景与愿景...', isRichText: true },
-    ],
+      { key: 'bio', label: '个人简介', placeholder: '介绍合伙人背景与愿景...', isRichText: true }
+    ]
   };
 
   const handleOpenEdit = () => {
@@ -677,7 +677,7 @@ export default function ProfilePage() {
       real_name: profile?.real_name || '',
       company_name: profile?.company_name || '',
       phone: profile?.phone || '',
-      email: profile?.email || '',
+      email: profile?.email || ''
     });
     setShowEditModal(true);
   };
@@ -699,7 +699,7 @@ export default function ProfilePage() {
       real_name: editForm.real_name.trim() || undefined,
       company_name: editForm.company_name.trim() || undefined,
       phone: editForm.phone.trim() || undefined,
-      email: editForm.email.trim() || undefined,
+      email: editForm.email.trim() || undefined
     });
     setIsSaving(false);
     
@@ -723,7 +723,7 @@ export default function ProfilePage() {
     try {
       // 读取文件
       const reader = new FileReader();
-      reader.onload = async (event) => {
+      reader.onload = async event => {
         const imgUrl = event.target?.result as string;
         
         // 创建 Image 对象进行裁剪
@@ -934,7 +934,7 @@ export default function ProfilePage() {
                                 type: mediatorProfile.type,
                                 expertise: mediatorProfile.expertise.filter(e => expertiseAreas.includes(e)),
                                 customExpertise: mediatorProfile.expertise.find(e => !expertiseAreas.includes(e)) || '',
-                                description: mediatorProfile.description,
+                                description: mediatorProfile.description
                               });
                               setShowMediatorModal(true);
                             }}
@@ -1058,7 +1058,7 @@ export default function ProfilePage() {
                               setPartnerForm({
                                 level: partnerProfile.level,
                                 region: partnerProfile.region,
-                                businessPlan: partnerProfile.businessPlan,
+                                businessPlan: partnerProfile.businessPlan
                               });
                               setShowPartnerModal(true);
                             }}
@@ -1130,7 +1130,7 @@ export default function ProfilePage() {
 
             {/* 筛选标签 */}
             <div className="flex items-center gap-2 mb-4">
-              {(['全部', '待调解', '调解中', '调解结束', '已存档'] as const).map((filter) => {
+              {(['全部', '待调解', '调解中', '调解结束', '已存档'] as const).map(filter => {
                 const count = filter === '全部' ? mediationCases.length : mediationCases.filter(c => c.status === ({
                   '待调解': 'pending', '调解中': 'ongoing', '调解结束': 'resolved', '已存档': 'archived'
                 })[filter]).length;
@@ -1145,7 +1145,7 @@ export default function ProfilePage() {
 
             {/* 案件列表 */}
             <div className="space-y-3">
-              {mediationCases.length > 0 ? mediationCases.map((caseItem) => (
+              {mediationCases.length > 0 ? mediationCases.map(caseItem => (
                 <div key={caseItem.id} className="border rounded-xl overflow-hidden">
                   <div
                     onClick={() => toggleExpand(caseItem.id)}
@@ -1175,7 +1175,7 @@ export default function ProfilePage() {
                             caseItem.status === 'resolved' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
                             'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
                           }`}>
-                            {{pending:'待调解',ongoing:'调解中',resolved:'调解结束',archived:'已存档'}[caseItem.status]||caseItem.status}
+                            {{ pending:'待调解',ongoing:'调解中',resolved:'调解结束',archived:'已存档' }[caseItem.status]||caseItem.status}
                           </span>
                         </div>
                         <p className="text-xs text-slate-500">案件编号：{caseItem.caseNumber} · {caseItem.type} · 当事人：{caseItem.parties.join(' / ')}</p>
@@ -1220,15 +1220,15 @@ export default function ProfilePage() {
                       {/* 发表意见 */}
                       <div className="flex gap-2 mt-3">
                         <input type="text" value={commentInput[caseItem.id]||''}
-                          onChange={e => setCommentInput({...commentInput, [caseItem.id]: e.target.value})}
+                          onChange={e => setCommentInput({ ...commentInput, [caseItem.id]: e.target.value })}
                           placeholder="发表协调意见或询问..."
                           onKeyDown={e => { if (e.key === 'Enter') {
                             const c = commentInput[caseItem.id]?.trim();
                             if (!c) return;
                             const now = new Date();
-                            const updated = mediationCases.map(x => x.id===caseItem.id ? {...x, comments: [...(x.comments||[]), {id: Date.now().toString(), author: '协调专家', content: c, time: now.toLocaleString()}]} : x);
+                            const updated = mediationCases.map(x => x.id===caseItem.id ? { ...x, comments: [...(x.comments||[]), { id: Date.now().toString(), author: '协调专家', content: c, time: now.toLocaleString() }] } : x);
                             setMediationCases(updated);
-                            setCommentInput({...commentInput, [caseItem.id]: ''});
+                            setCommentInput({ ...commentInput, [caseItem.id]: '' });
                           }}}
                           className="flex-1 px-3 py-2 text-sm border rounded-lg bg-white dark:bg-slate-700 dark:text-white"
                         />
@@ -1236,9 +1236,9 @@ export default function ProfilePage() {
                           const c = commentInput[caseItem.id]?.trim();
                           if (!c) return;
                           const now = new Date();
-                          const updated = mediationCases.map(x => x.id===caseItem.id ? {...x, comments: [...(x.comments||[]), {id: Date.now().toString(), author: '协调专家', content: c, time: now.toLocaleString()}]} : x);
+                          const updated = mediationCases.map(x => x.id===caseItem.id ? { ...x, comments: [...(x.comments||[]), { id: Date.now().toString(), author: '协调专家', content: c, time: now.toLocaleString() }] } : x);
                           setMediationCases(updated);
-                          setCommentInput({...commentInput, [caseItem.id]: ''});
+                          setCommentInput({ ...commentInput, [caseItem.id]: '' });
                         }} className="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm">发表</button>
                       </div>
                     </div>
@@ -1314,7 +1314,7 @@ export default function ProfilePage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-md w-full overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               {/* Modal Header */}
               <div className="p-6 border-b border-slate-100 dark:border-slate-700">
@@ -1372,7 +1372,7 @@ export default function ProfilePage() {
                   <input
                     type="text"
                     value={editForm.display_name}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, display_name: e.target.value }))}
+                    onChange={e => setEditForm(prev => ({ ...prev, display_name: e.target.value }))}
                     placeholder="设置您的昵称"
                     className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                   />
@@ -1386,7 +1386,7 @@ export default function ProfilePage() {
                   <input
                     type="text"
                     value={editForm.real_name}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, real_name: e.target.value }))}
+                    onChange={e => setEditForm(prev => ({ ...prev, real_name: e.target.value }))}
                     placeholder="输入您的真实姓名"
                     className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                   />
@@ -1402,7 +1402,7 @@ export default function ProfilePage() {
                     <input
                       type="text"
                       value={editForm.company_name}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, company_name: e.target.value }))}
+                      onChange={e => setEditForm(prev => ({ ...prev, company_name: e.target.value }))}
                       placeholder="输入企业名称"
                       className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
@@ -1417,7 +1417,7 @@ export default function ProfilePage() {
                   <input
                     type="tel"
                     value={editForm.phone}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
+                    onChange={e => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
                     placeholder="输入手机号"
                     className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                   />
@@ -1431,7 +1431,7 @@ export default function ProfilePage() {
                   <input
                     type="email"
                     value={editForm.email}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                    onChange={e => setEditForm(prev => ({ ...prev, email: e.target.value }))}
                     placeholder="输入邮箱"
                     className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                   />
@@ -1484,7 +1484,7 @@ export default function ProfilePage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-lg w-full max-h-[85vh] overflow-hidden flex flex-col"
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               <div className="p-6 border-b border-slate-100 dark:border-slate-700">
                 <div className="flex items-center justify-between">
@@ -1510,7 +1510,7 @@ export default function ProfilePage() {
                     {[
                       { type: 'personal' as const, icon: UserCircle, label: '个人名片', color: 'bg-green-500', borderColor: 'border-green-500' },
                       { type: 'expert' as const, icon: Award, label: '专家名片', color: 'bg-purple-500', borderColor: 'border-purple-500' },
-                      { type: 'partner' as const, icon: Handshake, label: '合伙人名片', color: 'bg-teal-500', borderColor: 'border-teal-500' },
+                      { type: 'partner' as const, icon: Handshake, label: '合伙人名片', color: 'bg-teal-500', borderColor: 'border-teal-500' }
                     ].map(({ type, icon: TypeIcon, label, color, borderColor }) => (
                       <button
                         key={type}
@@ -1519,7 +1519,7 @@ export default function ProfilePage() {
                             type,
                             fields: {},
                             phoneNumbers: profile?.phone ? [profile.phone] : [],
-                            isPublic: true,
+                            isPublic: true
                           });
                         }}
                         className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
@@ -1552,7 +1552,7 @@ export default function ProfilePage() {
                       </button>
                       <button
                         onClick={() => setCreateForm({ ...createForm, type: 'coach' })}
-                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${createForm.type === 'coach' ? 'bg-teal-500 text-white' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-600'}`}
+                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${(createForm.type as string) === 'coach' ? 'bg-teal-500 text-white' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-600'}`}
                       >
                         陪跑专家
                       </button>
@@ -1573,7 +1573,7 @@ export default function ProfilePage() {
                   <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">
                     填写名片信息
                   </h3>
-                  {fieldTemplates[createForm.type].map((field) => (
+                  {fieldTemplates[createForm.type].map(field => (
                     <div key={field.key}>
                       <label className="block text-xs text-slate-500 mb-1">
                         {field.label}
@@ -1583,9 +1583,9 @@ export default function ProfilePage() {
                           <input
                             type="text"
                             value={createForm.fields[field.key] || ''}
-                            onChange={(e) => setCreateForm(prev => ({
+                            onChange={e => setCreateForm(prev => ({
                               ...prev,
-                              fields: { ...prev.fields, [field.key]: e.target.value },
+                              fields: { ...prev.fields, [field.key]: e.target.value }
                             }))}
                             placeholder={field.placeholder}
                             className="flex-1 px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
@@ -1594,16 +1594,16 @@ export default function ProfilePage() {
                             <input
                               type="checkbox"
                               checked={createForm.fields[field.key] === (profile?.phone || createForm.fields.phone)}
-                              onChange={(e) => {
+                              onChange={e => {
                                 if (e.target.checked) {
                                   setCreateForm(prev => ({
                                     ...prev,
-                                    fields: { ...prev.fields, [field.key]: prev.fields.phone || profile?.phone || '' },
+                                    fields: { ...prev.fields, [field.key]: prev.fields.phone || profile?.phone || '' }
                                   }));
                                 } else {
                                   setCreateForm(prev => ({
                                     ...prev,
-                                    fields: { ...prev.fields, [field.key]: '' },
+                                    fields: { ...prev.fields, [field.key]: '' }
                                   }));
                                 }
                               }}
@@ -1692,15 +1692,15 @@ export default function ProfilePage() {
                                 type="file"
                                 accept="image/*"
                                 className="hidden"
-                                onChange={(e) => handleImageUpload(e, field.key)}
+                                onChange={e => handleImageUpload(e, field.key)}
                               />
                             </div>
                             <textarea
                               id={`bio-editor-${createForm.type}`}
                               value={createForm.fields[field.key] || ''}
-                              onChange={(e) => setCreateForm(prev => ({
+                              onChange={e => setCreateForm(prev => ({
                                 ...prev,
-                                fields: { ...prev.fields, [field.key]: e.target.value },
+                                fields: { ...prev.fields, [field.key]: e.target.value }
                               }))}
                               placeholder={field.key === 'description' ? '介绍企业主营业务、核心优势、团队实力、发展愿景...' : '介绍一下你自己：背景、技能、价值观、想寻找的合作机会...'}
                               rows={6}
@@ -1712,9 +1712,9 @@ export default function ProfilePage() {
                         <input
                           type="text"
                           value={createForm.fields[field.key] || ''}
-                          onChange={(e) => setCreateForm(prev => ({
+                          onChange={e => setCreateForm(prev => ({
                             ...prev,
-                            fields: { ...prev.fields, [field.key]: e.target.value },
+                            fields: { ...prev.fields, [field.key]: e.target.value }
                           }))}
                           placeholder={field.placeholder}
                           className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
@@ -1734,9 +1734,9 @@ export default function ProfilePage() {
                           <input
                             type="tel"
                             value={phone}
-                            onChange={(e) => setCreateForm(prev => ({
+                            onChange={e => setCreateForm(prev => ({
                               ...prev,
-                              phoneNumbers: prev.phoneNumbers.map((p, i) => i === idx ? e.target.value : p),
+                              phoneNumbers: prev.phoneNumbers.map((p, i) => i === idx ? e.target.value : p)
                             }))}
                             placeholder="请输入手机号码"
                             className="flex-1 px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
@@ -1744,7 +1744,7 @@ export default function ProfilePage() {
                           <button
                             onClick={() => setCreateForm(prev => ({
                               ...prev,
-                              phoneNumbers: prev.phoneNumbers.filter((_, i) => i !== idx),
+                              phoneNumbers: prev.phoneNumbers.filter((_, i) => i !== idx)
                             }))}
                             className="p-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
                           >
@@ -1755,7 +1755,7 @@ export default function ProfilePage() {
                       <button
                         onClick={() => setCreateForm(prev => ({
                           ...prev,
-                          phoneNumbers: [...prev.phoneNumbers, ''],
+                          phoneNumbers: [...prev.phoneNumbers, '']
                         }))}
                         className="flex items-center gap-2 w-full py-2.5 px-4 border border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors text-sm"
                       >
@@ -1810,7 +1810,7 @@ export default function ProfilePage() {
                         key,
                         label: fieldTemplates[createForm.type].find(f => f.key === key)?.label || key,
                         value,
-                        type: 'text' as const,
+                        type: 'text' as const
                       }));
 
                       const response = await fetch('/api/profiles', {
@@ -1822,8 +1822,8 @@ export default function ProfilePage() {
                           fields,
                           phoneNumbers: createForm.phoneNumbers,
                           isDefault: publicProfiles.length === 0,
-                          isPublic: createForm.isPublic,
-                        }),
+                          isPublic: createForm.isPublic
+                        })
                       });
 
                       const data = await response.json();
@@ -1864,7 +1864,7 @@ export default function ProfilePage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col"
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-700">
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white">编辑名片</h2>
@@ -1929,15 +1929,15 @@ export default function ProfilePage() {
                             type="file"
                             accept="image/*"
                             className="hidden"
-                            onChange={(e) => handleImageUpload(e, field.key)}
+                            onChange={e => handleImageUpload(e, field.key)}
                           />
                         </div>
                         <textarea
                           id={`edit-bio-editor-${editingCard.type}`}
                           value={editingCard.fields[field.key] || ''}
-                          onChange={(e) => setEditingCard(prev => prev ? ({
+                          onChange={e => setEditingCard(prev => prev ? ({
                             ...prev,
-                            fields: { ...prev.fields, [field.key]: e.target.value },
+                            fields: { ...prev.fields, [field.key]: e.target.value }
                           }) : null)}
                           placeholder={field.placeholder}
                           rows={6}
@@ -1948,9 +1948,9 @@ export default function ProfilePage() {
                       <input
                         type="text"
                         value={editingCard.fields[field.key] || ''}
-                        onChange={(e) => setEditingCard(prev => prev ? ({
+                        onChange={e => setEditingCard(prev => prev ? ({
                           ...prev,
-                          fields: { ...prev.fields, [field.key]: e.target.value },
+                          fields: { ...prev.fields, [field.key]: e.target.value }
                         }) : null)}
                         placeholder={field.placeholder}
                         className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
@@ -1970,9 +1970,9 @@ export default function ProfilePage() {
                         <input
                           type="tel"
                           value={phone}
-                          onChange={(e) => setEditingCard(prev => prev ? ({
+                          onChange={e => setEditingCard(prev => prev ? ({
                             ...prev,
-                            phoneNumbers: prev.phoneNumbers.map((p, i) => i === idx ? e.target.value : p),
+                            phoneNumbers: prev.phoneNumbers.map((p, i) => i === idx ? e.target.value : p)
                           }) : null)}
                           placeholder="请输入手机号码"
                           className="flex-1 px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
@@ -1980,7 +1980,7 @@ export default function ProfilePage() {
                         <button
                           onClick={() => setEditingCard(prev => prev ? ({
                             ...prev,
-                            phoneNumbers: prev.phoneNumbers.filter((_, i) => i !== idx),
+                            phoneNumbers: prev.phoneNumbers.filter((_, i) => i !== idx)
                           }) : null)}
                           className="p-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
                         >
@@ -1991,7 +1991,7 @@ export default function ProfilePage() {
                     <button
                       onClick={() => setEditingCard(prev => prev ? ({
                         ...prev,
-                        phoneNumbers: [...prev.phoneNumbers, ''],
+                        phoneNumbers: [...prev.phoneNumbers, '']
                       }) : null)}
                       className="flex items-center gap-2 w-full py-2.5 px-4 border border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors text-sm"
                     >
@@ -2036,7 +2036,7 @@ export default function ProfilePage() {
                         key,
                         label: (fieldTemplates[editingCard.type] || []).find((f: any) => f.key === key)?.label || key,
                         value,
-                        type: 'text',
+                        type: 'text'
                       }));
 
                       const response = await fetch(`/api/profiles/${editingCard.id}`, {
@@ -2046,8 +2046,8 @@ export default function ProfilePage() {
                           type: editingCard.type,
                           fields,
                           phoneNumbers: editingCard.phoneNumbers,
-                          isPublic: editingCard.isPublic,
-                        }),
+                          isPublic: editingCard.isPublic
+                        })
                       });
 
                       const data = await response.json();
@@ -2092,7 +2092,7 @@ export default function ProfilePage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
               className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md"
             >
               <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
@@ -2122,11 +2122,11 @@ export default function ProfilePage() {
                   </label>
                   <select
                     value={mediatorForm.type}
-                    onChange={(e) => setMediatorForm({ ...mediatorForm, type: e.target.value })}
+                    onChange={e => setMediatorForm({ ...mediatorForm, type: e.target.value })}
                     className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                   >
                     <option value="">请选择协调专家类型</option>
-                    {expertTypes.map((type) => (
+                    {expertTypes.map(type => (
                       <option key={type} value={type}>{type}</option>
                     ))}
                   </select>
@@ -2145,7 +2145,7 @@ export default function ProfilePage() {
                         <button type="button" onClick={() => setMediatorForm({ ...mediatorForm, expertise: mediatorForm.expertise.filter(e => e !== skill) })} className="ml-1 hover:text-red-500">&times;</button>
                       </span>
                     ))}
-                    {expertiseAreas.map((skill) => (
+                    {expertiseAreas.map(skill => (
                       <button
                         key={skill}
                         type="button"
@@ -2169,14 +2169,14 @@ export default function ProfilePage() {
                       <input
                         type="text"
                         value={mediatorForm.customExpertise}
-                        onChange={(e) => setMediatorForm({ ...mediatorForm, customExpertise: e.target.value })}
+                        onChange={e => setMediatorForm({ ...mediatorForm, customExpertise: e.target.value })}
                         placeholder="输入擅长领域名称，可添加多个"
                         className="flex-1 px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300"
-                        onKeyDown={(e) => {
+                        onKeyDown={e => {
                           if (e.key === 'Enter' && mediatorForm.customExpertise.trim()) {
                             e.preventDefault();
                             if (!mediatorForm.expertise.includes(mediatorForm.customExpertise.trim())) {
-                              setMediatorForm({...mediatorForm, expertise: [...mediatorForm.expertise, mediatorForm.customExpertise.trim()], customExpertise: ''});
+                              setMediatorForm({ ...mediatorForm, expertise: [...mediatorForm.expertise, mediatorForm.customExpertise.trim()], customExpertise: '' });
                             }
                           }
                         }}
@@ -2186,7 +2186,7 @@ export default function ProfilePage() {
                         onClick={() => {
                           if (!mediatorForm.customExpertise.trim()) return;
                           if (!mediatorForm.expertise.includes(mediatorForm.customExpertise.trim())) {
-                            setMediatorForm({...mediatorForm, expertise: [...mediatorForm.expertise, mediatorForm.customExpertise.trim()], customExpertise: ''});
+                            setMediatorForm({ ...mediatorForm, expertise: [...mediatorForm.expertise, mediatorForm.customExpertise.trim()], customExpertise: '' });
                           }
                         }}
                         className="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm hover:bg-amber-600 flex-shrink-0"
@@ -2271,7 +2271,7 @@ export default function ProfilePage() {
                         type="file"
                         accept="image/*"
                         className="hidden"
-                        onChange={(e) => {
+                        onChange={e => {
                           const file = e.target.files?.[0];
                           if (!file) return;
                           if (file.size > 5 * 1024 * 1024) {
@@ -2279,7 +2279,7 @@ export default function ProfilePage() {
                             return;
                           }
                           const reader = new FileReader();
-                          reader.onload = (event) => {
+                          reader.onload = event => {
                             const base64Image = event.target?.result as string;
                             const imageMarkdown = `\n![图片](${base64Image})\n`;
                             const textarea = document.getElementById('mediator-bio-editor') as HTMLTextAreaElement;
@@ -2298,7 +2298,7 @@ export default function ProfilePage() {
                     <textarea
                       id="mediator-bio-editor"
                       value={mediatorForm.description}
-                      onChange={(e) => setMediatorForm({ ...mediatorForm, description: e.target.value })}
+                      onChange={e => setMediatorForm({ ...mediatorForm, description: e.target.value })}
                       placeholder="请介绍一下您的专业背景和协调经验..."
                       rows={4}
                       className="w-full px-4 py-2.5 bg-transparent text-slate-900 dark:text-white resize-none focus:outline-none text-sm"
@@ -2351,7 +2351,7 @@ export default function ProfilePage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
               className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-lg"
             >
               <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
@@ -2384,7 +2384,7 @@ export default function ProfilePage() {
                     合伙人类型 <span className="text-red-500">*</span>
                   </label>
                   <div className="grid grid-cols-2 gap-2">
-                    {partnerLevels.map((level) => (
+                    {partnerLevels.map(level => (
                       <button
                         key={level}
                         type="button"
@@ -2410,7 +2410,7 @@ export default function ProfilePage() {
                     <input
                       type="text"
                       value={partnerForm.region}
-                      onChange={(e) => setPartnerForm({ ...partnerForm, region: e.target.value })}
+                      onChange={e => setPartnerForm({ ...partnerForm, region: e.target.value })}
                       placeholder="请输入您希望负责的城市（地级市）"
                       className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
@@ -2491,7 +2491,7 @@ export default function ProfilePage() {
                         type="file"
                         accept="image/*"
                         className="hidden"
-                        onChange={(e) => {
+                        onChange={e => {
                           const file = e.target.files?.[0];
                           if (!file) return;
                           if (file.size > 5 * 1024 * 1024) {
@@ -2499,7 +2499,7 @@ export default function ProfilePage() {
                             return;
                           }
                           const reader = new FileReader();
-                          reader.onload = (event) => {
+                          reader.onload = event => {
                             const base64Image = event.target?.result as string;
                             const imageMarkdown = `\n![图片](${base64Image})\n`;
                             const textarea = document.getElementById('partner-plan-editor') as HTMLTextAreaElement;
@@ -2518,7 +2518,7 @@ export default function ProfilePage() {
                     <textarea
                       id="partner-plan-editor"
                       value={partnerForm.businessPlan}
-                      onChange={(e) => setPartnerForm({ ...partnerForm, businessPlan: e.target.value })}
+                      onChange={e => setPartnerForm({ ...partnerForm, businessPlan: e.target.value })}
                       placeholder="请详细描述您的商业计划：&#10;1. 个人/团队背景介绍&#10;2. 市场分析与目标定位&#10;3. 发展策略与实施计划&#10;4. 预期成果与贡献"
                       rows={8}
                       className="w-full px-4 py-3 bg-transparent text-slate-900 dark:text-white placeholder:text-slate-400 resize-none focus:outline-none"
@@ -2606,7 +2606,7 @@ export default function ProfilePage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
               className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md"
             >
               <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
@@ -2636,7 +2636,7 @@ export default function ProfilePage() {
                       <input
                         type="text"
                         value={verifyForm.realName}
-                        onChange={(e) => setVerifyForm({ ...verifyForm, realName: e.target.value })}
+                        onChange={e => setVerifyForm({ ...verifyForm, realName: e.target.value })}
                         placeholder="请输入证件上的真实姓名"
                         className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                       />
@@ -2649,7 +2649,7 @@ export default function ProfilePage() {
                       <input
                         type="text"
                         value={verifyForm.idNumber}
-                        onChange={(e) => setVerifyForm({ ...verifyForm, idNumber: e.target.value })}
+                        onChange={e => setVerifyForm({ ...verifyForm, idNumber: e.target.value })}
                         placeholder="请输入18位身份证号码"
                         maxLength={18}
                         className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
@@ -2673,7 +2673,7 @@ export default function ProfilePage() {
                             // 检查大小 < 5MB
                             if (file.size > 5 * 1024 * 1024) { alert('图片大小不能超过5MB'); return; }
                             const reader = new FileReader();
-                            reader.onload = (ev) => {
+                            reader.onload = ev => {
                               const base64 = (ev.target?.result as string).split(',')[1];
                               setVerifyForm({ ...verifyForm, facePhoto: base64 || '' });
                             };
@@ -2817,7 +2817,7 @@ export default function ProfilePage() {
               <div className="p-6">
                 {publicProfiles.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {publicProfiles.map((profile) => {
+                    {publicProfiles.map(profile => {
                       const typeConfig: any = { personal: { icon: UserCircle, color: 'bg-green-100 text-green-600', label: '个人' }, enterprise: { icon: Building, color: 'bg-blue-100 text-blue-600', label: '企业' }, expert: { icon: Award, color: 'bg-purple-100 text-purple-600', label: '专家' }, partner: { icon: Handshake, color: 'bg-teal-100 text-teal-600', label: '合伙人' } }[profile.type] || { icon: UserCircle, color: 'bg-green-100 text-green-600', label: profile.type };
                       const Icon = typeConfig.icon;
                       return (
@@ -2829,8 +2829,8 @@ export default function ProfilePage() {
                               <span className={`text-xs ${typeConfig.color}`}>{typeConfig.label}</span>
                             </div>
                             <div className="flex gap-1">
-                              <button onClick={() => { const f: any = {}; (profile.fields||[]).forEach((ff: any) => { f[ff.key] = ff.value || '' }); setEditingCard({ id: profile.id, type: profile.type as any, fields: f, phoneNumbers: (profile.phoneNumbers||[]).filter((p:string)=>p), isPublic: profile.isPublic }); setShowProfileModal(false); setShowCardEditModal(true); }} className="p-1.5 text-slate-400 hover:text-amber-500 rounded-lg"><Edit className="w-4 h-4" /></button>
-                              <button onClick={async () => { if(!confirm('确定删除？')) return; try { const r=await fetch('/api/profiles/'+profile.id,{method:'DELETE'});if((await r.json()).success) setPublicProfiles(prev=>prev.filter(p=>p.id!==profile.id)); } catch {} }} className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                              <button onClick={() => { const f: any = {}; (profile.fields||[]).forEach((ff: any) => { f[ff.key] = ff.value || ''; }); setEditingCard({ id: profile.id, type: profile.type as any, fields: f, phoneNumbers: (profile.phoneNumbers||[]).filter((p:string)=>p), isPublic: profile.isPublic }); setShowProfileModal(false); setShowCardEditModal(true); }} className="p-1.5 text-slate-400 hover:text-amber-500 rounded-lg"><Edit className="w-4 h-4" /></button>
+                              <button onClick={async () => { if(!confirm('确定删除？')) return; try { const r=await fetch('/api/profiles/'+profile.id,{ method:'DELETE' });if((await r.json()).success) setPublicProfiles(prev=>prev.filter(p=>p.id!==profile.id)); } catch {} }} className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg"><Trash2 className="w-4 h-4" /></button>
                             </div>
                           </div>
                           <div className="flex items-center justify-between">

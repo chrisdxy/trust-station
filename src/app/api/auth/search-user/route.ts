@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: true,
         users: [],
-        message: '请输入至少2个字符的搜索关键词',
+        message: '请输入至少2个字符的搜索关键词'
       });
     }
 
@@ -33,13 +33,13 @@ export async function GET(request: NextRequest) {
       realName: user.realName,
       nickname: user.displayName,
       avatar: user.avatar,
-      userType: user.user_type,
+      userType: user.user_type
     }));
 
     return NextResponse.json({
       success: true,
       users: results,
-      count: results.length,
+      count: results.length
     });
   } catch (error) {
     console.error('搜索用户错误:', error);

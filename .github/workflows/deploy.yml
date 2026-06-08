@@ -28,16 +28,16 @@ jobs:
 
             # 1. 从 GitHub 拉取最新代码
             echo "[1/7] 拉取最新代码..."
-            git fetch origin main
-            git reset --hard origin/main
+            git fetch origin master
+            git reset --hard origin/master
 
             # 2. 清理旧缓存
             echo "[2/7] 清理旧缓存..."
-            rm -rf .next node_modules
+            rm -rf .next
 
-            # 3. 安装依赖
+            # 3. 安装依赖（包含 devDependencies，构建需要）
             echo "[3/7] 安装依赖..."
-            npm install --omit=dev
+            npm ci
 
             # 4. 构建
             echo "[4/7] 构建项目..."
@@ -54,10 +54,9 @@ jobs:
             ln -sf /root/zhengdao/.next/standalone /root/zhengdao/standalone
             cp -r /root/zhengdao/public/* /root/zhengdao/.next/standalone/public/
 
-            # 7. 重启服务
+            # 7. 重启服务（使用 reload 避免停机）
             echo "[7/7] 重启服务..."
-            DB_PASSWORD='${{ secrets.DB_PASSWORD }}' pm2 kill
-            sleep 2
-            DB_PASSWORD='${{ secrets.DB_PASSWORD }}' pm2 start /root/zhengdao/ecosystem.config.js
+            DB_PASSWORD='${{ secrets.DB_PASSWORD }}' pm2 reload /root/zhengdao/ecosystem.config.js || \
+              DB_PASSWORD='${{ secrets.DB_PASSWORD }}' pm2 start /root/zhengdao/ecosystem.config.js
 
             echo "========== ✅ 部署完成 =========="

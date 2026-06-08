@@ -34,12 +34,12 @@ export async function GET(request: NextRequest) {
       isPublic: row.is_public === 1,
       shareCode: row.share_code,
       createdAt: row.created_at,
-      updatedAt: row.updated_at,
+      updatedAt: row.updated_at
     }));
 
     return NextResponse.json({
       success: true,
-      public_profiles,
+      public_profiles
     });
   } catch (error) {
     console.error('获取名片列表错误:', error);
@@ -94,8 +94,8 @@ export async function POST(request: NextRequest) {
         isPublic: isPublic !== false,
         shareCode,
         createdAt: new Date().toISOString().split('T')[0],
-        updatedAt: new Date().toISOString().split('T')[0],
-      },
+        updatedAt: new Date().toISOString().split('T')[0]
+      }
     });
   } catch (error) {
     console.error('创建名片错误:', error);

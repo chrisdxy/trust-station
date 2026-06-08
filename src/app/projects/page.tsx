@@ -80,7 +80,7 @@ export default function ProjectsPage() {
     images: [] as string[],
     members: [] as string[],
     isDueDiligence: false,
-    dueDiligenceDetails: '',
+    dueDiligenceDetails: ''
   });
   
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
@@ -162,7 +162,7 @@ export default function ProjectsPage() {
     if (!file) return;
     
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = e => {
       setCoverImagePreview((e.target as FileReader).result as string);
     };
     reader.readAsDataURL(file);
@@ -173,7 +173,7 @@ export default function ProjectsPage() {
     try {
       const res = await fetch('/api/upload', {
         method: 'POST',
-        body: formData,
+        body: formData
       });
       const data = await res.json();
       if (data.success) {
@@ -240,7 +240,7 @@ export default function ProjectsPage() {
       try {
         const res = await fetch('/api/upload', {
           method: 'POST',
-          body: formData,
+          body: formData
         });
         const data = await res.json();
         if (data.success) {
@@ -304,7 +304,7 @@ export default function ProjectsPage() {
     setSelectedMembers(prev => [...prev, user]);
     setFormData(prev => ({
       ...prev,
-      members: prev.members.includes(name) ? prev.members : [...prev.members, name],
+      members: prev.members.includes(name) ? prev.members : [...prev.members, name]
     }));
   };
 
@@ -312,7 +312,7 @@ export default function ProjectsPage() {
     setSelectedMembers(prev => prev.filter(u => (u.real_name || u.display_name) !== member));
     setFormData(prev => ({
       ...prev,
-      members: prev.members.filter(m => m !== member),
+      members: prev.members.filter(m => m !== member)
     }));
   };
   
@@ -341,8 +341,8 @@ export default function ProjectsPage() {
             images: formData.images,
             projectTypes: formData.types,
             industry: formData.industry,
-            location: formData.location,
-          }),
+            location: formData.location
+          })
         });
         const data = await res.json();
         if (data.success) {
@@ -372,8 +372,8 @@ export default function ProjectsPage() {
             coverImage: formData.coverImage,
             projectTypes: formData.types,
             industry: formData.industry,
-            location: formData.location,
-          }),
+            location: formData.location
+          })
         });
         const data = await res.json();
         if (data.success) {
@@ -474,7 +474,7 @@ export default function ProjectsPage() {
             {[
               { key: 'all', label: '全部' },
               { key: 'created', label: '我创建的' },
-              { key: 'following', label: '我关注的' },
+              { key: 'following', label: '我关注的' }
             ].map(tab => (
               <button
                 key={tab.key}
@@ -496,7 +496,7 @@ export default function ProjectsPage() {
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               placeholder="搜索项目..."
               className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
@@ -561,7 +561,7 @@ export default function ProjectsPage() {
                     <input
                       type="checkbox"
                       checked={selectedTypes.includes(opt)}
-                      onChange={(e) => {
+                      onChange={e => {
                         if (e.target.checked) {
                           setSelectedTypes([...selectedTypes, opt]);
                         } else {
@@ -593,7 +593,7 @@ export default function ProjectsPage() {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
                 className="bg-white dark:bg-slate-800 rounded-2xl p-6 max-w-md w-full"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">项目创建成功</h3>
                 <p className="text-slate-600 dark:text-slate-400 mb-2">项目ID:</p>
@@ -668,7 +668,7 @@ export default function ProjectsPage() {
                       ))}
                     </div>
                     <span className="inline-block px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded text-xs font-mono cursor-pointer hover:bg-amber-200 transition-colors mb-2"
-                      onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(getShortProjectId(project.id)).then(() => {}) }}
+                      onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(getShortProjectId(project.id)).then(() => {}); }}
                       title="点击复制项目ID，用于记录中心查询">
                       项目ID: {getShortProjectId(project.id)}
                     </span>
@@ -689,7 +689,7 @@ export default function ProjectsPage() {
                     {currentUserId && project.creatorId === currentUserId && (
                       <div className="flex justify-end mt-2 pt-2 border-t border-slate-100 dark:border-slate-700">
                         <button
-                          onClick={(e) => {
+                          onClick={e => {
                             e.stopPropagation();
                             if (!confirm('确定删除该项目？')) return;
                             fetch(`/api/projects?id=${project.id}`, { method: 'DELETE' })
@@ -735,7 +735,7 @@ export default function ProjectsPage() {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 className="fixed inset-0 z-50 flex items-center justify-center p-4"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
                   {/* Modal Header */}
@@ -765,7 +765,7 @@ export default function ProjectsPage() {
                       <input
                         type="text"
                         value={formData.title}
-                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        onChange={e => setFormData({ ...formData, title: e.target.value })}
                         placeholder="请输入项目名称"
                         className="w-full px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                       />
@@ -780,7 +780,7 @@ export default function ProjectsPage() {
                         <input
                           type="text"
                           value={formData.location}
-                          onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                          onChange={e => setFormData({ ...formData, location: e.target.value })}
                           placeholder="如：北京"
                           className="w-full px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                         />
@@ -791,7 +791,7 @@ export default function ProjectsPage() {
                         </label>
                         <select
                           value={formData.industry}
-                          onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                          onChange={e => setFormData({ ...formData, industry: e.target.value })}
                           className="w-full px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                         >
                           <option value="">请选择</option>
@@ -879,7 +879,7 @@ export default function ProjectsPage() {
                     {/* 简介 */}
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">项目简介</label>
-                      <textarea value={formData.summary} onChange={(e) => setFormData(prev => ({ ...prev, summary: e.target.value }))} rows={3} className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 resize-none" placeholder="简短介绍项目亮点，将显示在项目卡片上..." />
+                      <textarea value={formData.summary} onChange={e => setFormData(prev => ({ ...prev, summary: e.target.value }))} rows={3} className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 resize-none" placeholder="简短介绍项目亮点，将显示在项目卡片上..." />
                     </div>
 
                     {/* Description */}
@@ -942,7 +942,7 @@ export default function ProjectsPage() {
                           id="project-description"
                           rows={4}
                           value={formData.description}
-                          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                          onChange={e => setFormData({ ...formData, description: e.target.value })}
                           placeholder="请输入项目详情..."
                           className="w-full px-4 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-white resize-none focus:outline-none"
                         />
@@ -1026,7 +1026,7 @@ export default function ProjectsPage() {
                             id="due-diligence-details"
                             rows={4}
                             value={formData.dueDiligenceDetails}
-                            onChange={(e) => setFormData({ ...formData, dueDiligenceDetails: e.target.value })}
+                            onChange={e => setFormData({ ...formData, dueDiligenceDetails: e.target.value })}
                             placeholder="请输入尽调详情..."
                             className="w-full px-4 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-white resize-none focus:outline-none"
                           />
@@ -1043,7 +1043,7 @@ export default function ProjectsPage() {
                         <div className="flex-1">
                           <UserSelect
                             onSelect={addMember}
-                            onRemove={(userId) => {
+                            onRemove={userId => {
                               const u = selectedMembers.find(m => m.id === userId);
                               if (u) removeMember(u.real_name || u.display_name || '用户');
                             }}
@@ -1117,7 +1117,7 @@ export default function ProjectsPage() {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                   {/* Modal Header */}
@@ -1141,7 +1141,7 @@ export default function ProjectsPage() {
                             images: selectedProject.images || [],
                             members: selectedProject.members || [],
                             isDueDiligence: selectedProject.isDueDiligence || false,
-                            dueDiligenceDetails: selectedProject.dueDiligenceDetails || '',
+                            dueDiligenceDetails: selectedProject.dueDiligenceDetails || ''
                           });
                           setSelectedProject(null);
                           setShowModal(true);

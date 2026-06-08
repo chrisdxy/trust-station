@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({
       success: true,
-      comments: result || [],
+      comments: result || []
     });
   } catch (error) {
     console.error('获取评论失败:', error);
@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({
       success: true,
-      comment: result?.[0] || null,
+      comment: result?.[0] || null
     });
   } catch (error) {
     console.error('添加评论失败:', error);
@@ -191,7 +191,7 @@ export async function DELETE(request: NextRequest) {
     
     return NextResponse.json({
       success: true,
-      message: '删除成功',
+      message: '删除成功'
     });
   } catch (error) {
     console.error('删除评论失败:', error);

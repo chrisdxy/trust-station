@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       records: result,
-      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) }
     });
   } catch (error: any) {
     console.error('获取公开记录列表失败:', error);
@@ -71,7 +71,7 @@ export async function PUT(request: NextRequest) {
     const statusLabel: Record<string, string> = {
       approved: '已同意公开',
       paused: '已暂停公开',
-      stopped: '已停止公开',
+      stopped: '已停止公开'
     };
 
     return NextResponse.json({ success: true, message: statusLabel[status] || '操作成功' });

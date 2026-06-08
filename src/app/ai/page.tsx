@@ -27,7 +27,7 @@ const categoryIconMap: Record<string, { icon: string; color: string }> = {
   '代码助手':   { icon: '💻', color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' },
   '数据处理':   { icon: '📊', color: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' },
   '搜索与研究': { icon: '🔍', color: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' },
-  '内容创作':   { icon: '✍️', color: 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400' },
+  '内容创作':   { icon: '✍️', color: 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400' }
 };
 
 export default function AIToolsPage() {
@@ -89,7 +89,7 @@ export default function AIToolsPage() {
       const response = await fetch('/api/admin/ai-tools', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(addForm),
+        body: JSON.stringify(addForm)
       });
       const data = await response.json();
       if (data.success) {
@@ -125,7 +125,7 @@ export default function AIToolsPage() {
       doubao: '🔵',
       deepseek: '🟣',
       kimi: '🟠',
-      chatgpt: '🟢',
+      chatgpt: '🟢'
     };
     return icons[icon || ''] || '✨';
   };
@@ -135,7 +135,7 @@ export default function AIToolsPage() {
       doubao: 'from-orange-500 to-orange-600',
       deepseek: 'from-slate-700 to-slate-800',
       kimi: 'from-purple-500 to-purple-600',
-      chatgpt: 'from-green-500 to-green-600',
+      chatgpt: 'from-green-500 to-green-600'
     };
     return gradients[icon || ''] || 'from-amber-500 to-orange-500';
   };
@@ -143,7 +143,7 @@ export default function AIToolsPage() {
   // 统计信息
   const stats = {
     total: tools.length,
-    categories: categories.length,
+    categories: categories.length
   };
 
   if (loading) {
@@ -228,7 +228,7 @@ export default function AIToolsPage() {
               <input
                 type="text"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 placeholder="搜索AI工具..."
                 className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
@@ -335,7 +335,7 @@ export default function AIToolsPage() {
                     <div className="flex items-center gap-2">
                       {tool.url && (
                         <button
-                          onClick={(e) => { e.preventDefault(); handleCopy(tool.url || '', tool.id); }}
+                          onClick={e => { e.preventDefault(); handleCopy(tool.url || '', tool.id); }}
                           className="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
                         >
                           {copiedId === tool.id ? <Check size={18} /> : <Copy size={18} />}
@@ -389,7 +389,7 @@ export default function AIToolsPage() {
                       </span>
                       {tool.url && (
                         <button
-                          onClick={(e) => { e.preventDefault(); handleCopy(tool.url || '', tool.id); }}
+                          onClick={e => { e.preventDefault(); handleCopy(tool.url || '', tool.id); }}
                           className="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
                         >
                           {copiedId === tool.id ? <Check size={14} /> : <Copy size={14} />}
@@ -431,7 +431,7 @@ export default function AIToolsPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-md"
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">添加工具</h2>
@@ -451,7 +451,7 @@ export default function AIToolsPage() {
                   <input
                     type="text"
                     value={addForm.name}
-                    onChange={(e) => setAddForm(f => ({ ...f, name: e.target.value }))}
+                    onChange={e => setAddForm(f => ({ ...f, name: e.target.value }))}
                     placeholder="请输入工具名称"
                     className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
                   />
@@ -462,7 +462,7 @@ export default function AIToolsPage() {
                   </label>
                   <textarea
                     value={addForm.description}
-                    onChange={(e) => setAddForm(f => ({ ...f, description: e.target.value }))}
+                    onChange={e => setAddForm(f => ({ ...f, description: e.target.value }))}
                     placeholder="请输入工具描述"
                     rows={3}
                     className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
@@ -475,7 +475,7 @@ export default function AIToolsPage() {
                   <input
                     type="url"
                     value={addForm.url}
-                    onChange={(e) => setAddForm(f => ({ ...f, url: e.target.value }))}
+                    onChange={e => setAddForm(f => ({ ...f, url: e.target.value }))}
                     placeholder="https://..."
                     className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
                   />
@@ -486,7 +486,7 @@ export default function AIToolsPage() {
                   </label>
                   <select
                     value={addForm.category}
-                    onChange={(e) => setAddForm(f => ({ ...f, category: e.target.value }))}
+                    onChange={e => setAddForm(f => ({ ...f, category: e.target.value }))}
                     className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
                   >
                     <option value="">请选择分类</option>

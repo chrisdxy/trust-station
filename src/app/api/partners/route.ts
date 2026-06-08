@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: '申请提交成功',
-      id,
+      id
     });
   } catch (error) {
     console.error('提交合伙人申请错误:', error);
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      application: result?.[0] || null,
+      application: result?.[0] || null
     });
   } catch (error) {
     console.error('获取合伙人申请错误:', error);

@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
         ...row,
         tags: row.tags || '',
         related_items,
-        related_parties,
+        related_parties
       };
     });
 
@@ -79,8 +79,8 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit),
-      },
+        totalPages: Math.ceil(total / limit)
+      }
     });
   } catch (error: any) {
     console.error('获取认知留痕错误:', error);
@@ -114,14 +114,14 @@ export async function POST(request: NextRequest) {
         id, userId, title, content || '', recordTypeValue,
         tags || '', visibility || 'private',
         JSON.stringify(related_items || []),
-        JSON.stringify(related_parties || []),
+        JSON.stringify(related_parties || [])
       ]
     );
 
     return NextResponse.json({
       success: true,
       message: '创建成功',
-      id,
+      id
     });
   } catch (error: any) {
     console.error('创建认知留痕错误:', error);

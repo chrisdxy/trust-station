@@ -70,8 +70,8 @@ export async function POST(request: NextRequest) {
         id,
         phone,
         display_name: display_name || phone,
-        user_type: user_type || 'individual',
-      },
+        user_type: user_type || 'individual'
+      }
     });
   } catch (error: any) {
     console.error('用户注册错误:', error.message);

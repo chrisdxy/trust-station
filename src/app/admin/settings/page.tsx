@@ -23,7 +23,7 @@ const DEFAULT_SMTP: SmtpConfig = {
   pass: '',
   fromEmail: '',
   fromName: '正道驿站',
-  enabled: false,
+  enabled: false
 };
 
 interface GeneralConfig {
@@ -70,13 +70,13 @@ const DEFAULT_GENERAL: GeneralConfig = {
   siteName: '正道驿站',
   siteDescription: '全球商业信任共建社区',
   contactEmail: '',
-  icpNumber: '',
+  icpNumber: ''
 };
 
 const DEFAULT_SECURITY: SecurityConfig = {
   loginAttempts: 5,
   sessionTimeout: 30,
-  requireVerify: true,
+  requireVerify: true
 };
 
 const DEFAULT_SMS: SmsConfig = {
@@ -87,7 +87,7 @@ const DEFAULT_SMS: SmsConfig = {
   accessKeySecret: '',
   signName: '正道驿站',
   templateCode: '',
-  templateCodeLogin: '',
+  templateCodeLogin: ''
 };
 
 const DEFAULT_WECHAT: WechatConfig = {
@@ -96,12 +96,12 @@ const DEFAULT_WECHAT: WechatConfig = {
   appSecret: '',
   token: '',
   aesKey: '',
-  qrcodeUrl: '',
+  qrcodeUrl: ''
 };
 
 const DEFAULT_SHUMAI: ShumaiConfig = {
   appId: '',
-  appSecurity: '',
+  appSecurity: ''
 };
 
 export default function AdminSettings() {
@@ -156,7 +156,7 @@ export default function AdminSettings() {
     { id: 'email', label: '邮件设置', icon: Mail },
     { id: 'sms', label: '短信设置', icon: MessageSquare },
     { id: 'wechat', label: '公众号配置', icon: Globe },
-    { id: 'shumai', label: '数脉API', icon: Shield },
+    { id: 'shumai', label: '数脉API', icon: Shield }
   ];
 
   const handleSave = async () => {
@@ -171,8 +171,8 @@ export default function AdminSettings() {
           smtp_config: smtpConfig,
           sms_config: smsConfig,
           wechat_config: wechatConfig,
-          shumai_config: shumaiConfig,
-        }),
+          shumai_config: shumaiConfig
+        })
       });
       
       if (response.ok) {
@@ -196,7 +196,7 @@ export default function AdminSettings() {
       const response = await fetch('/api/admin/settings/test-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: testEmail, config: smtpConfig }),
+        body: JSON.stringify({ email: testEmail, config: smtpConfig })
       });
       
       const data = await response.json();
@@ -224,7 +224,7 @@ export default function AdminSettings() {
       const response = await fetch('/api/admin/settings/test-sms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: testPhone, config: smsConfig }),
+        body: JSON.stringify({ phone: testPhone, config: smsConfig })
       });
       
       const data = await response.json();
@@ -256,7 +256,7 @@ export default function AdminSettings() {
             {/* 侧边栏 */}
             <div className="w-64 border-r border-slate-200 dark:border-slate-700 p-4">
               <nav className="space-y-1">
-                {tabs.map((tab) => {
+                {tabs.map(tab => {
                   const Icon = tab.icon;
                   return (
                     <button
@@ -298,7 +298,7 @@ export default function AdminSettings() {
                         <input
                           type="text"
                           value={generalConfig.siteName}
-                          onChange={(e) => setGeneralConfig({ ...generalConfig, siteName: e.target.value })}
+                          onChange={e => setGeneralConfig({ ...generalConfig, siteName: e.target.value })}
                           className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
@@ -309,7 +309,7 @@ export default function AdminSettings() {
                         </label>
                         <textarea
                           value={generalConfig.siteDescription}
-                          onChange={(e) => setGeneralConfig({ ...generalConfig, siteDescription: e.target.value })}
+                          onChange={e => setGeneralConfig({ ...generalConfig, siteDescription: e.target.value })}
                           rows={3}
                           className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
@@ -322,7 +322,7 @@ export default function AdminSettings() {
                         <input
                           type="email"
                           value={generalConfig.contactEmail}
-                          onChange={(e) => setGeneralConfig({ ...generalConfig, contactEmail: e.target.value })}
+                          onChange={e => setGeneralConfig({ ...generalConfig, contactEmail: e.target.value })}
                           className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
@@ -334,7 +334,7 @@ export default function AdminSettings() {
                         <input
                           type="text"
                           value={generalConfig.icpNumber}
-                          onChange={(e) => setGeneralConfig({ ...generalConfig, icpNumber: e.target.value })}
+                          onChange={e => setGeneralConfig({ ...generalConfig, icpNumber: e.target.value })}
                           placeholder="如：沪ICP备XXXXXXXX号"
                           className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
@@ -352,7 +352,7 @@ export default function AdminSettings() {
                     </p>
                     <textarea
                       value={generalConfig.siteNavigation || ''}
-                      onChange={(e) => setGeneralConfig({ ...generalConfig, siteNavigation: e.target.value })}
+                      onChange={e => setGeneralConfig({ ...generalConfig, siteNavigation: e.target.value })}
                       rows={18}
                       placeholder="可输入 HTML 内容，例如：&#10;<ul>&#10;  <li><a href='/overview'>社区概览</a></li>&#10;  <li><a href='/people'>发现广场</a></li>&#10;</ul>"
                       className="w-full px-4 py-3 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
@@ -374,7 +374,7 @@ export default function AdminSettings() {
                         <input
                           type="number"
                           value={securityConfig.loginAttempts}
-                          onChange={(e) => setSecurityConfig({ ...securityConfig, loginAttempts: parseInt(e.target.value) })}
+                          onChange={e => setSecurityConfig({ ...securityConfig, loginAttempts: parseInt(e.target.value) })}
                           min={1}
                           max={10}
                           className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -389,7 +389,7 @@ export default function AdminSettings() {
                         <input
                           type="number"
                           value={securityConfig.sessionTimeout}
-                          onChange={(e) => setSecurityConfig({ ...securityConfig, sessionTimeout: parseInt(e.target.value) })}
+                          onChange={e => setSecurityConfig({ ...securityConfig, sessionTimeout: parseInt(e.target.value) })}
                           min={5}
                           max={120}
                           className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -401,7 +401,7 @@ export default function AdminSettings() {
                           type="checkbox"
                           id="requireVerify"
                           checked={securityConfig.requireVerify}
-                          onChange={(e) => setSecurityConfig({ ...securityConfig, requireVerify: e.target.checked })}
+                          onChange={e => setSecurityConfig({ ...securityConfig, requireVerify: e.target.checked })}
                           className="w-5 h-5 rounded border-slate-300 text-blue-500"
                         />
                         <label htmlFor="requireVerify" className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -427,7 +427,7 @@ export default function AdminSettings() {
                           <input 
                             type="checkbox" 
                             checked={smtpConfig.enabled}
-                            onChange={(e) => setSmtpConfig({ ...smtpConfig, enabled: e.target.checked })}
+                            onChange={e => setSmtpConfig({ ...smtpConfig, enabled: e.target.checked })}
                             className="sr-only peer" 
                           />
                           <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-amber-500"></div>
@@ -444,7 +444,7 @@ export default function AdminSettings() {
                               <input
                                 type="text"
                                 value={smtpConfig.host}
-                                onChange={(e) => setSmtpConfig({ ...smtpConfig, host: e.target.value })}
+                                onChange={e => setSmtpConfig({ ...smtpConfig, host: e.target.value })}
                                 placeholder="smtp.example.com"
                                 className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               />
@@ -456,7 +456,7 @@ export default function AdminSettings() {
                               <input
                                 type="text"
                                 value={smtpConfig.port}
-                                onChange={(e) => setSmtpConfig({ ...smtpConfig, port: e.target.value })}
+                                onChange={e => setSmtpConfig({ ...smtpConfig, port: e.target.value })}
                                 placeholder="587"
                                 className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               />
@@ -468,7 +468,7 @@ export default function AdminSettings() {
                               type="checkbox"
                               id="secure"
                               checked={smtpConfig.secure}
-                              onChange={(e) => setSmtpConfig({ ...smtpConfig, secure: e.target.checked })}
+                              onChange={e => setSmtpConfig({ ...smtpConfig, secure: e.target.checked })}
                               className="w-5 h-5 rounded border-slate-300 text-blue-500"
                             />
                             <label htmlFor="secure" className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -484,7 +484,7 @@ export default function AdminSettings() {
                               <input
                                 type="text"
                                 value={smtpConfig.user}
-                                onChange={(e) => setSmtpConfig({ ...smtpConfig, user: e.target.value })}
+                                onChange={e => setSmtpConfig({ ...smtpConfig, user: e.target.value })}
                                 placeholder="your@email.com"
                                 className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               />
@@ -496,7 +496,7 @@ export default function AdminSettings() {
                               <input
                                 type="password"
                                 value={smtpConfig.pass}
-                                onChange={(e) => setSmtpConfig({ ...smtpConfig, pass: e.target.value })}
+                                onChange={e => setSmtpConfig({ ...smtpConfig, pass: e.target.value })}
                                 placeholder="••••••••"
                                 className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               />
@@ -511,7 +511,7 @@ export default function AdminSettings() {
                               <input
                                 type="email"
                                 value={smtpConfig.fromEmail}
-                                onChange={(e) => setSmtpConfig({ ...smtpConfig, fromEmail: e.target.value })}
+                                onChange={e => setSmtpConfig({ ...smtpConfig, fromEmail: e.target.value })}
                                 placeholder="noreply@example.com"
                                 className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               />
@@ -523,7 +523,7 @@ export default function AdminSettings() {
                               <input
                                 type="text"
                                 value={smtpConfig.fromName}
-                                onChange={(e) => setSmtpConfig({ ...smtpConfig, fromName: e.target.value })}
+                                onChange={e => setSmtpConfig({ ...smtpConfig, fromName: e.target.value })}
                                 placeholder="正道驿站"
                                 className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               />
@@ -539,7 +539,7 @@ export default function AdminSettings() {
                               <input
                                 type="email"
                                 value={testEmail}
-                                onChange={(e) => setTestEmail(e.target.value)}
+                                onChange={e => setTestEmail(e.target.value)}
                                 placeholder="输入测试邮箱地址"
                                 className="flex-1 px-4 py-2 border border-blue-200 dark:border-blue-800 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                               />
@@ -630,7 +630,7 @@ export default function AdminSettings() {
                               <input
                                 type="checkbox"
                                 checked={smsConfig.simulate}
-                                onChange={(e) => setSmsConfig({ ...smsConfig, simulate: e.target.checked })}
+                                onChange={e => setSmsConfig({ ...smsConfig, simulate: e.target.checked })}
                                 className="sr-only peer"
                               />
                               <div className="w-11 h-6 bg-slate-200 peer-checked:bg-amber-500 rounded-full peer dark:bg-slate-700 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
@@ -643,7 +643,7 @@ export default function AdminSettings() {
                             </label>
                             <select
                               value={smsConfig.provider}
-                              onChange={(e) => setSmsConfig({ ...smsConfig, provider: e.target.value as any })}
+                              onChange={e => setSmsConfig({ ...smsConfig, provider: e.target.value as any })}
                               className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                             >
                               <option value="aliyun">阿里云短信服务</option>
@@ -660,7 +660,7 @@ export default function AdminSettings() {
                               <input
                                 type="text"
                                 value={smsConfig.accessKeyId}
-                                onChange={(e) => setSmsConfig({ ...smsConfig, accessKeyId: e.target.value })}
+                                onChange={e => setSmsConfig({ ...smsConfig, accessKeyId: e.target.value })}
                                 placeholder="请输入AccessKey ID"
                                 className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               />
@@ -672,7 +672,7 @@ export default function AdminSettings() {
                               <input
                                 type="password"
                                 value={smsConfig.accessKeySecret}
-                                onChange={(e) => setSmsConfig({ ...smsConfig, accessKeySecret: e.target.value })}
+                                onChange={e => setSmsConfig({ ...smsConfig, accessKeySecret: e.target.value })}
                                 placeholder="请输入AccessKey Secret"
                                 className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               />
@@ -688,7 +688,7 @@ export default function AdminSettings() {
                               <input
                                 type="text"
                                 value={smsConfig.appId || ''}
-                                onChange={(e) => setSmsConfig({ ...smsConfig, appId: e.target.value })}
+                                onChange={e => setSmsConfig({ ...smsConfig, appId: e.target.value })}
                                 placeholder="请输入短信应用SmsSdkAppId"
                                 className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               />
@@ -702,7 +702,7 @@ export default function AdminSettings() {
                             <input
                               type="text"
                               value={smsConfig.signName}
-                              onChange={(e) => setSmsConfig({ ...smsConfig, signName: e.target.value })}
+                              onChange={e => setSmsConfig({ ...smsConfig, signName: e.target.value })}
                               placeholder="请输入短信签名"
                               className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
@@ -716,7 +716,7 @@ export default function AdminSettings() {
                               <input
                                 type="text"
                                 value={smsConfig.templateCode}
-                                onChange={(e) => setSmsConfig({ ...smsConfig, templateCode: e.target.value })}
+                                onChange={e => setSmsConfig({ ...smsConfig, templateCode: e.target.value })}
                                 placeholder="SMS_XXXXXXX"
                                 className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               />
@@ -728,7 +728,7 @@ export default function AdminSettings() {
                               <input
                                 type="text"
                                 value={smsConfig.templateCodeLogin}
-                                onChange={(e) => setSmsConfig({ ...smsConfig, templateCodeLogin: e.target.value })}
+                                onChange={e => setSmsConfig({ ...smsConfig, templateCodeLogin: e.target.value })}
                                 placeholder="SMS_XXXXXXX"
                                 className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               />
@@ -753,7 +753,7 @@ export default function AdminSettings() {
                               <input
                                 type="tel"
                                 value={testPhone}
-                                onChange={(e) => setTestPhone(e.target.value)}
+                                onChange={e => setTestPhone(e.target.value)}
                                 placeholder="输入测试手机号"
                                 className="flex-1 px-4 py-2 border border-green-200 dark:border-green-800 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                               />
@@ -832,7 +832,7 @@ export default function AdminSettings() {
                               <input
                                 type="text"
                                 value={wechatConfig.appId}
-                                onChange={(e) => setWechatConfig({ ...wechatConfig, appId: e.target.value })}
+                                onChange={e => setWechatConfig({ ...wechatConfig, appId: e.target.value })}
                                 placeholder="wxXXXXXXXXXXXXXX"
                                 className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               />
@@ -844,7 +844,7 @@ export default function AdminSettings() {
                               <input
                                 type="password"
                                 value={wechatConfig.appSecret}
-                                onChange={(e) => setWechatConfig({ ...wechatConfig, appSecret: e.target.value })}
+                                onChange={e => setWechatConfig({ ...wechatConfig, appSecret: e.target.value })}
                                 placeholder="请输入AppSecret"
                                 className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               />
@@ -859,7 +859,7 @@ export default function AdminSettings() {
                               <input
                                 type="text"
                                 value={wechatConfig.token}
-                                onChange={(e) => setWechatConfig({ ...wechatConfig, token: e.target.value })}
+                                onChange={e => setWechatConfig({ ...wechatConfig, token: e.target.value })}
                                 placeholder="请输入Token"
                                 className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               />
@@ -871,7 +871,7 @@ export default function AdminSettings() {
                               <input
                                 type="password"
                                 value={wechatConfig.aesKey}
-                                onChange={(e) => setWechatConfig({ ...wechatConfig, aesKey: e.target.value })}
+                                onChange={e => setWechatConfig({ ...wechatConfig, aesKey: e.target.value })}
                                 placeholder="43位AES密钥"
                                 className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               />
@@ -885,7 +885,7 @@ export default function AdminSettings() {
                             <input
                               type="text"
                               value={wechatConfig.qrcodeUrl}
-                              onChange={(e) => setWechatConfig({ ...wechatConfig, qrcodeUrl: e.target.value })}
+                              onChange={e => setWechatConfig({ ...wechatConfig, qrcodeUrl: e.target.value })}
                               placeholder="用于展示公众号二维码的页面URL"
                               className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
@@ -922,7 +922,7 @@ export default function AdminSettings() {
                       <input
                         type="text"
                         value={shumaiConfig.appId}
-                        onChange={(e) => setShumaiConfig({ ...shumaiConfig, appId: e.target.value })}
+                        onChange={e => setShumaiConfig({ ...shumaiConfig, appId: e.target.value })}
                         placeholder="服务商分配的唯一标识"
                         className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
@@ -935,7 +935,7 @@ export default function AdminSettings() {
                       <input
                         type="text"
                         value={shumaiConfig.appSecurity}
-                        onChange={(e) => setShumaiConfig({ ...shumaiConfig, appSecurity: e.target.value })}
+                        onChange={e => setShumaiConfig({ ...shumaiConfig, appSecurity: e.target.value })}
                         placeholder="商户分配的app_security"
                         className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />

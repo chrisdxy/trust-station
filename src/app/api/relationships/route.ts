@@ -50,8 +50,8 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit),
-      },
+        totalPages: Math.ceil(total / limit)
+      }
     });
   } catch (error) {
     console.error('获取合作关系错误:', error);
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: '添加成功',
-      id,
+      id
     });
   } catch (error) {
     console.error('添加合作关系错误:', error);
@@ -179,7 +179,7 @@ export async function PUT(request: NextRequest) {
       success: true,
       message: '更新成功',
       version: currentVersion + 1,
-      archivedVersion: currentVersion,
+      archivedVersion: currentVersion
     });
   } catch (error) {
     console.error('更新合作关系错误:', error);

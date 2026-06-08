@@ -15,7 +15,7 @@ export const consensusItems: ConsensusItem[] = [
     description:
       '我们坚信，商业的本质是人与人的连接。正心正念是我们一切行为的根基，只有真诚对待每一个合作伙伴，才能建立长久的信任关系，互相成就。',
     icon: 'Heart',
-    color: 'from-red-400 to-orange-400',
+    color: 'from-red-400 to-orange-400'
   },
   {
     id: 'communication',
@@ -24,7 +24,7 @@ export const consensusItems: ConsensusItem[] = [
     description:
       '沟通是解决一切问题的基础。我们倡导正向思考，以建设性的方式表达观点，在指出问题的同时提出改进建议。改过责善，互相督促，共同成长。',
     icon: 'MessageCircle',
-    color: 'from-blue-400 to-cyan-400',
+    color: 'from-blue-400 to-cyan-400'
   },
   {
     id: 'mindset',
@@ -33,7 +33,7 @@ export const consensusItems: ConsensusItem[] = [
     description:
       '商业成功的根本在于心性的成长。通过正念训练，观察心念而不执着，安住于当下，成为更好的自己，才能做出更智慧与向善的商业决策。',
     icon: 'Brain',
-    color: 'from-purple-400 to-pink-400',
+    color: 'from-purple-400 to-pink-400'
   },
   {
     id: 'traceability',
@@ -42,7 +42,7 @@ export const consensusItems: ConsensusItem[] = [
     description:
       '每一个行为都在塑造你的商业信誉。我们鼓励用户敢于行为留痕，让可靠被看见、被验证、被传播。',
     icon: 'Fingerprint',
-    color: 'from-green-400 to-teal-400',
+    color: 'from-green-400 to-teal-400'
   },
   {
     id: 'partner',
@@ -51,7 +51,7 @@ export const consensusItems: ConsensusItem[] = [
     description:
       '通过平台沉淀的沟通记录，映射出真正值得信赖的商业伙伴，降低合作风险，提高合作效率。',
     icon: 'Users',
-    color: 'from-amber-400 to-orange-400',
+    color: 'from-amber-400 to-orange-400'
   },
   {
     id: 'archive',
@@ -60,6 +60,6 @@ export const consensusItems: ConsensusItem[] = [
     description:
       '平台为用户提供自主记录、授权查询的功能，同时建立恶行曝光机制，让不诚信的行为无所遁形，共同维护商业环境的清澈。',
     icon: 'Database',
-    color: 'from-indigo-400 to-blue-400',
-  },
+    color: 'from-indigo-400 to-blue-400'
+  }
 ];

@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json({
         isAdmin,
-        userId: decoded.userId,
+        userId: decoded.userId
       });
 
     } catch (jwtError) {

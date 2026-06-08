@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
       items: rows,
       total,
       page,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.ceil(total / limit)
     });
   } catch (error) {
     console.error('获取发布列表失败:', error);
@@ -243,7 +243,7 @@ export async function PUT(request: NextRequest) {
     if (error?.message?.includes('Unknown column')) {
       return NextResponse.json({
         success: false,
-        error: '数据库缺少排序字段，请在管理后台执行数据库迁移后使用此功能',
+        error: '数据库缺少排序字段，请在管理后台执行数据库迁移后使用此功能'
       }, { status: 500 });
     }
     return NextResponse.json({ success: false, error: error?.message || '操作失败' }, { status: 500 });

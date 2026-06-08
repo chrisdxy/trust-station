@@ -42,7 +42,7 @@ export default function AdminFeedbacksPage() {
   const handleStatusChange = async (id: string, status: string) => {
     await fetch('/api/feedbacks', {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, status }),
+      body: JSON.stringify({ id, status })
     });
     fetchItems();
   };
@@ -66,12 +66,12 @@ export default function AdminFeedbacksPage() {
     try {
       await fetch('/api/feedbacks', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: adminId, userName: '管理员', content: replyText.trim(), parentId }),
+        body: JSON.stringify({ userId: adminId, userName: '管理员', content: replyText.trim(), parentId })
       });
       // 同时标记为已解决
       await fetch('/api/feedbacks', {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: parentId, status: 'resolved' }),
+        body: JSON.stringify({ id: parentId, status: 'resolved' })
       });
       setReplyingId(null);
       setReplyText('');
@@ -116,7 +116,7 @@ export default function AdminFeedbacksPage() {
           {[
             { key: 'all', label: '全部', count: 0 },
             { key: 'complaint', label: '投诉', count: unreadCounts.complaint || 0 },
-            { key: 'suggestion', label: '建议', count: unreadCounts.suggestion || 0 },
+            { key: 'suggestion', label: '建议', count: unreadCounts.suggestion || 0 }
           ].map(tab => (
             <button
               key={tab.key}

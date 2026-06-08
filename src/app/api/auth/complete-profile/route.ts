@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
         phone,
         display_name: display_name || '用户' + phone.slice(-4),
         real_name,
-        user_type: user_type || 'individual',
+        user_type: user_type || 'individual'
       }
     });
   } catch (error) {

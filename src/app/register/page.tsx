@@ -22,7 +22,7 @@ export default function RegisterPage() {
     verifyCode: '',
     agreedToTerms: false,
     agreedToPrivacy: false,
-    agreedConsensus: false,
+    agreedConsensus: false
   });
   const [loading, setLoading] = useState(false);
   const [sendingCode, setSendingCode] = useState(false);
@@ -43,7 +43,7 @@ export default function RegisterPage() {
       const response = await fetch('/api/auth/send-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: formData.phone, type: 'register' }),
+        body: JSON.stringify({ phone: formData.phone, type: 'register' })
       });
       
       const data = await response.json();
@@ -114,8 +114,8 @@ export default function RegisterPage() {
         body: JSON.stringify({
           phone: formData.phone,
           password: registerMethod === 'password' ? formData.password : undefined,
-          verifyCode: registerMethod === 'sms' ? formData.verifyCode : undefined,
-        }),
+          verifyCode: registerMethod === 'sms' ? formData.verifyCode : undefined
+        })
       });
       
       const data = await response.json();
@@ -128,7 +128,7 @@ export default function RegisterPage() {
           password: registerMethod === 'password' ? formData.password : 'sms_verified',
           display_name: data.newUser?.display_name || '用户' + formData.phone.slice(-4),
           real_name: data.newUser?.real_name || null,
-          user_type: data.newUser?.user_type || 'individual',
+          user_type: data.newUser?.user_type || 'individual'
         };
         
         localStorage.setItem('auth_token', data.token);
@@ -197,7 +197,7 @@ export default function RegisterPage() {
                   <input
                     type="tel"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 11) })}
+                    onChange={e => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 11) })}
                     className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                     placeholder="请输入11位手机号"
                   />
@@ -240,7 +240,7 @@ export default function RegisterPage() {
                       <input
                         type="password"
                         value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        onChange={e => setFormData({ ...formData, password: e.target.value })}
                         className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                         placeholder="至少6位字符"
                       />
@@ -255,7 +255,7 @@ export default function RegisterPage() {
                       <input
                         type="password"
                         value={formData.confirmPassword}
-                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                        onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })}
                         className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                         placeholder="再次输入密码"
                       />
@@ -277,7 +277,7 @@ export default function RegisterPage() {
                         <input
                           type="text"
                           value={formData.verifyCode}
-                          onChange={(e) => setFormData({ ...formData, verifyCode: e.target.value.replace(/\D/g, '').slice(0, 6) })}
+                          onChange={e => setFormData({ ...formData, verifyCode: e.target.value.replace(/\D/g, '').slice(0, 6) })}
                           className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                           placeholder="6位验证码"
                         />
@@ -325,7 +325,7 @@ export default function RegisterPage() {
                 <input
                   type="checkbox"
                   checked={formData.agreedToTerms}
-                  onChange={(e) => setFormData({ ...formData, agreedToTerms: e.target.checked })}
+                  onChange={e => setFormData({ ...formData, agreedToTerms: e.target.checked })}
                   className="w-5 h-5 mt-0.5 rounded border-slate-300"
                 />
                 <span className="text-sm text-slate-600 dark:text-slate-400">
@@ -367,7 +367,7 @@ export default function RegisterPage() {
                 <input
                   type="checkbox"
                   checked={formData.agreedToPrivacy}
-                  onChange={(e) => setFormData({ ...formData, agreedToPrivacy: e.target.checked })}
+                  onChange={e => setFormData({ ...formData, agreedToPrivacy: e.target.checked })}
                   className="w-5 h-5 mt-0.5 rounded border-slate-300"
                 />
                 <span className="text-sm text-slate-600 dark:text-slate-400">
@@ -379,7 +379,7 @@ export default function RegisterPage() {
                 <input
                   type="checkbox"
                   checked={formData.agreedConsensus}
-                  onChange={(e) => setFormData({ ...formData, agreedConsensus: e.target.checked })}
+                  onChange={e => setFormData({ ...formData, agreedConsensus: e.target.checked })}
                   className="w-5 h-5 mt-0.5 rounded border-slate-300"
                 />
                 <span className="text-sm text-slate-600 dark:text-slate-400">

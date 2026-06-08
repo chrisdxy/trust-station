@@ -22,14 +22,14 @@ const scopeOptions = [
   { value: 'records', label: '关系记录', color: 'blue' },
   { value: 'mediation', label: '协调记录', color: 'amber' },
   { value: 'mindset', label: '心性档案', color: 'green' },
-  { value: 'all', label: '全部权限', color: 'purple' },
+  { value: 'all', label: '全部权限', color: 'purple' }
 ];
 
 const statusConfig: Record<string, { icon: React.ReactNode; color: string; bg: string; label: string }> = {
   granted: { icon: <CheckCircle className="w-4 h-4" />, color: 'text-green-600', bg: 'bg-green-100 dark:bg-green-900/30', label: '已授权' },
   pending: { icon: <Clock className="w-4 h-4" />, color: 'text-amber-600', bg: 'bg-amber-100 dark:bg-amber-900/30', label: '待确认' },
   expired: { icon: <XCircle className="w-4 h-4" />, color: 'text-slate-400', bg: 'bg-slate-100 dark:bg-slate-800', label: '已过期' },
-  revoked: { icon: <XCircle className="w-4 h-4" />, color: 'text-red-500', bg: 'bg-red-100 dark:bg-red-900/30', label: '已撤销' },
+  revoked: { icon: <XCircle className="w-4 h-4" />, color: 'text-red-500', bg: 'bg-red-100 dark:bg-red-900/30', label: '已撤销' }
 };
 
 export default function AuthorizationPage() {
@@ -47,7 +47,7 @@ export default function AuthorizationPage() {
     granteeName: '',
     scope: 'records',
     description: '',
-    expiryDate: '',
+    expiryDate: ''
   });
   const [saving, setSaving] = useState(false);
 
@@ -89,8 +89,8 @@ export default function AuthorizationPage() {
           granteeName: formData.granteeName,
           scope: formData.scope,
           description: formData.description,
-          expiryDate: formData.expiryDate,
-        }),
+          expiryDate: formData.expiryDate
+        })
       });
       const data = await response.json();
       if (data.success) {
@@ -111,7 +111,7 @@ export default function AuthorizationPage() {
       const response = await fetch('/api/authorizations', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status: 'revoked' }),
+        body: JSON.stringify({ id, status: 'revoked' })
       });
       const data = await response.json();
       if (data.success) {
@@ -135,7 +135,7 @@ export default function AuthorizationPage() {
     }
   };
 
-  const filteredAuthorizations = authorizations.filter((a) => {
+  const filteredAuthorizations = authorizations.filter(a => {
     const matchesSearch = !searchTerm || 
       a.grantee_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       a.grantee_name?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -187,13 +187,13 @@ export default function AuthorizationPage() {
                 type="text"
                 placeholder="搜索被授权人..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800"
               />
             </div>
             <select
               value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
+              onChange={e => setFilterStatus(e.target.value)}
               className="px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800"
             >
               <option value="">全部状态</option>
@@ -277,7 +277,7 @@ export default function AuthorizationPage() {
                         )}
                         {auth.status === 'granted' && (
                           <button
-                            onClick={(e) => {
+                            onClick={e => {
                               e.stopPropagation();
                               handleRevoke(auth.id);
                             }}
@@ -288,7 +288,7 @@ export default function AuthorizationPage() {
                           </button>
                         )}
                         <button
-                          onClick={(e) => {
+                          onClick={e => {
                             e.stopPropagation();
                             handleDelete(auth.id);
                           }}
@@ -325,7 +325,7 @@ export default function AuthorizationPage() {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
                 className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-lg"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white">授予授权</h3>
@@ -341,7 +341,7 @@ export default function AuthorizationPage() {
                     <input
                       type="email"
                       value={formData.granteeEmail}
-                      onChange={(e) => setFormData(f => ({ ...f, granteeEmail: e.target.value }))}
+                      onChange={e => setFormData(f => ({ ...f, granteeEmail: e.target.value }))}
                       className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900"
                       placeholder="对方邮箱地址"
                     />
@@ -353,7 +353,7 @@ export default function AuthorizationPage() {
                     <input
                       type="text"
                       value={formData.granteeName}
-                      onChange={(e) => setFormData(f => ({ ...f, granteeName: e.target.value }))}
+                      onChange={e => setFormData(f => ({ ...f, granteeName: e.target.value }))}
                       className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900"
                       placeholder="对方姓名（选填）"
                     />
@@ -364,7 +364,7 @@ export default function AuthorizationPage() {
                     </label>
                     <select
                       value={formData.scope}
-                      onChange={(e) => setFormData(f => ({ ...f, scope: e.target.value }))}
+                      onChange={e => setFormData(f => ({ ...f, scope: e.target.value }))}
                       className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900"
                     >
                       {scopeOptions.map(opt => (
@@ -379,7 +379,7 @@ export default function AuthorizationPage() {
                     <input
                       type="date"
                       value={formData.expiryDate}
-                      onChange={(e) => setFormData(f => ({ ...f, expiryDate: e.target.value }))}
+                      onChange={e => setFormData(f => ({ ...f, expiryDate: e.target.value }))}
                       className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900"
                     />
                   </div>
@@ -389,7 +389,7 @@ export default function AuthorizationPage() {
                     </label>
                     <textarea
                       value={formData.description}
-                      onChange={(e) => setFormData(f => ({ ...f, description: e.target.value }))}
+                      onChange={e => setFormData(f => ({ ...f, description: e.target.value }))}
                       className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900"
                       rows={3}
                       placeholder="简要说明授权内容..."
@@ -431,7 +431,7 @@ export default function AuthorizationPage() {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
                 className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-lg"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white">授权详情</h3>

@@ -12,7 +12,7 @@ async function getSmtpConfig() {
     pass: process.env.SMTP_PASS || '',
     fromEmail: process.env.SMTP_FROM || '',
     fromName: process.env.SMTP_FROM_NAME || '正道驿站',
-    enabled: process.env.SMTP_ENABLED === 'true',
+    enabled: process.env.SMTP_ENABLED === 'true'
   };
 }
 
@@ -25,13 +25,13 @@ async function sendEmail(to: string, subject: string, html: string, smtpConfig?:
     host: config.host,
     port: parseInt(config.port) || 587,
     secure: config.secure,
-    auth: { user: config.user, pass: config.pass },
+    auth: { user: config.user, pass: config.pass }
   });
   await transporter.sendMail({
     from: `"${config.fromName}" <${config.fromEmail}>`,
     to: to,
     subject: subject,
-    html: html,
+    html: html
   });
 }
 

@@ -17,7 +17,7 @@ interface Profile {
 }
 
 interface AuthContextType {
-  user: { id: string; phone?: string; email?: string; user_type?: string; display_name?: string | null; real_name?: string | null } | null;
+  user: { id: string; phone?: string; email?: string; user_type?: string; display_name?: string | null; real_name?: string | null; nickname?: string } | null;
   profile: Profile | null;
   loading: boolean;
   isAuthenticated: boolean;
@@ -131,7 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, password }),
+        body: JSON.stringify({ phone, password })
       });
 
       const data = await response.json();
@@ -170,7 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         identity_verified: false,
         wallet_address: null,
         avatar_url: null,
-        phone: phone,
+        phone: phone
       };
       
       localStorage.setItem('user', JSON.stringify(mockUser));
@@ -242,7 +242,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut,
       refreshProfile,
       updateProfile,
-      revalidateSession,
+      revalidateSession
     }}>
       {children}
     </AuthContext.Provider>

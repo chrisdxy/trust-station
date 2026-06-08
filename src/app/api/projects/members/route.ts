@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: '添加成功',
-      id,
+      id
     });
   } catch (error) {
     console.error('添加项目成员错误:', error);
@@ -108,7 +108,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: '移除成功',
+      message: '移除成功'
     });
   } catch (error) {
     console.error('移除项目成员错误:', error);
@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      members: members || [],
+      members: members || []
     });
   } catch (error) {
     console.error('获取项目成员错误:', error);

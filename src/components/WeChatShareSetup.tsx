@@ -10,7 +10,7 @@ export function WeChatShareSetup({
   title,
   description,
   link,
-  imageUrl,
+  imageUrl
 }: {
   title: string;
   description?: string;
@@ -30,7 +30,7 @@ export function WeChatShareSetup({
         title: shareTitle,
         desc: shareDesc,
         link: shareLink,
-        imgUrl: shareImg,
+        imgUrl: shareImg
       };
       try {
         window.wx?.updateAppMessageShareData?.(shareData);
@@ -58,8 +58,8 @@ export function WeChatShareSetup({
               "updateAppMessageShareData",
               "updateTimelineShareData",
               "onMenuShareAppMessage",
-              "onMenuShareTimeline",
-            ],
+              "onMenuShareTimeline"
+            ]
           });
           window.wx.ready(configShare);
           window.wx.error((err: any) => console.warn("wx.config error:", err));

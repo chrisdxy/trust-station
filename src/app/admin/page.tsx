@@ -26,19 +26,19 @@ export default function AdminDashboard() {
     { label: '注册用户', value: data.stats.userCount.toLocaleString(), change: '+' + data.stats.newUsers, icon: Users, color: 'bg-blue-500' },
     { label: '合作关系', value: data.stats.relationCount.toLocaleString(), change: data.stats.growthRate, icon: FileText, color: 'bg-green-500' },
     { label: '进行中协调', value: data.stats.ongoingMediation.toString(), change: '-', icon: Scale, color: 'bg-amber-500' },
-    { label: '本月新增', value: '+' + data.stats.newUsers, change: data.stats.growthRate, icon: TrendingUp, color: 'bg-purple-500' },
+    { label: '本月新增', value: '+' + data.stats.newUsers, change: data.stats.growthRate, icon: TrendingUp, color: 'bg-purple-500' }
   ] : [];
 
   const pendingTasks = data ? [
     { id: 1, title: '待审核协调申请', count: data.pending.mediation, priority: data.pending.mediation > 0 ? 'high' : 'low', icon: Scale },
     { id: 2, title: '待审核共同体', count: data.pending.community, priority: data.pending.community > 0 ? 'medium' : 'low', icon: UsersRound },
-    { id: 3, title: '待处理投诉', count: data.pending.feedback, priority: data.pending.feedback > 0 ? 'high' : 'low', icon: MessageSquare },
+    { id: 3, title: '待处理投诉', count: data.pending.feedback, priority: data.pending.feedback > 0 ? 'high' : 'low', icon: MessageSquare }
   ] : [];
 
   const priorityColors: Record<string, string> = {
     high: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
     medium: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-    low: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    low: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
   };
 
   const renderActivities = () => {
@@ -109,7 +109,7 @@ export default function AdminDashboard() {
           >
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">待办事项</h2>
             <div className="space-y-3">
-              {pendingTasks.map((task) => (
+              {pendingTasks.map(task => (
                 <div key={task.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <task.icon className="w-5 h-5 text-slate-400" />

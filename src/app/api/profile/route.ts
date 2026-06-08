@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
                       company_name, identity_verified, avatar_url, created_at
                  FROM users WHERE 1=1`;
     const params: any[] = [];
-    let paramIndex = 1;
+    const paramIndex = 1;
 
     if (userId) {
       query += ` AND id = ?`;

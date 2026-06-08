@@ -36,8 +36,8 @@ export async function GET(
         isPublic: row.is_public === 1,
         shareCode: row.share_code,
         createdAt: row.created_at,
-        updatedAt: row.updated_at,
-      },
+        updatedAt: row.updated_at
+      }
     });
   } catch (error) {
     console.error('获取名片详情错误:', error);
@@ -112,7 +112,7 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
-      message: '名片更新成功',
+      message: '名片更新成功'
     });
   } catch (error) {
     console.error('更新名片错误:', error);
@@ -138,7 +138,7 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: '名片删除成功',
+      message: '名片删除成功'
     });
   } catch (error) {
     console.error('删除名片错误:', error);

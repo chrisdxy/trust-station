@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: '报名成功',
-      id,
+      id
     });
   } catch (error) {
     console.error('活动报名错误:', error);
@@ -103,7 +103,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: '已取消报名',
+      message: '已取消报名'
     });
   } catch (error) {
     console.error('取消参与错误:', error);

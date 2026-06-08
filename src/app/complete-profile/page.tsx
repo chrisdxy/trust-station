@@ -27,7 +27,7 @@ function CompleteProfileContent() {
     phone: '',
     avatar_url: '',
     privacyAgreed: false,
-    consensusAgreed: false,
+    consensusAgreed: false
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -54,7 +54,7 @@ function CompleteProfileContent() {
             ...prev,
             nickname: user.nickname || "",
             realName: user.real_name || "",
-            avatar_url: user.headimgurl || "",
+            avatar_url: user.headimgurl || ""
           }));
         } catch (e) {
           console.error('Failed to parse wechat user:', e);
@@ -78,8 +78,8 @@ function CompleteProfileContent() {
             openid: openidFromUrl,
             nickname: '',
             realName: '',
-            phone: undefined,
-          }),
+            phone: undefined
+          })
         });
 
         const loginData = await loginResponse.json();
@@ -99,7 +99,7 @@ function CompleteProfileContent() {
             display_name: loginData.user.display_name || wxUser.nickname || '微信用户',
             real_name: loginData.user.realName || wxUser.real_name || '',
             avatar_url: wxUser.headimgurl || '',
-            isWechatUser: true,
+            isWechatUser: true
           };
 
           localStorage.setItem('auth_token', loginData.token);
@@ -147,7 +147,7 @@ function CompleteProfileContent() {
 
     try {
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = event => {
         const base64 = event.target?.result as string;
 setFormData(prev => ({ ...prev, avatar_url: base64 }));
         setUploadingAvatar(false);
@@ -194,7 +194,7 @@ setFormData(prev => ({ ...prev, avatar_url: base64 }));
     try {
       // 构建请求头
       const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
 };
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
@@ -227,8 +227,8 @@ setFormData(prev => ({ ...prev, avatar_url: base64 }));
             phone: formData.phone || undefined,
             avatarUrl: formData.avatar_url || undefined,
             privacyAgreed: formData.privacyAgreed,
-            consensusAgreed: formData.consensusAgreed,
-          }),
+            consensusAgreed: formData.consensusAgreed
+          })
         });
         
         const loginData = await loginResponse.json();
@@ -242,7 +242,7 @@ setFormData(prev => ({ ...prev, avatar_url: base64 }));
             display_name: formData.nickname,
             real_name: formData.realName,
             avatar_url: formData.avatar_url,
-            isWechatUser: true,
+            isWechatUser: true
           };
           
           localStorage.setItem('auth_token', loginData.token);
@@ -279,8 +279,8 @@ setFormData(prev => ({ ...prev, avatar_url: base64 }));
             user_type: 'individual',
             company_name: null,
             privacy_agreed: formData.privacyAgreed ? 1 : 0,
-            consensus_agreed: formData.consensusAgreed ? 1 : 0,
-          }),
+            consensus_agreed: formData.consensusAgreed ? 1 : 0
+          })
         });
         
         const data = await response.json();
@@ -289,7 +289,7 @@ setFormData(prev => ({ ...prev, avatar_url: base64 }));
           // 更新本地 profile
           await updateProfile({
             display_name: formData.nickname,
-            real_name: formData.realName,
+            real_name: formData.realName
           });
           setIsCompleted(true);
           // 3秒后跳转到发现页面
@@ -472,7 +472,7 @@ setFormData(prev => ({ ...prev, avatar_url: base64 }));
                   <input
                     type="tel"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 11) })}
+                    onChange={e => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 11) })}
                     className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                     placeholder={isFromWeChat ? "请输入手机号（必填）" : "请输入手机号（选填）"}
                   />
@@ -488,7 +488,7 @@ setFormData(prev => ({ ...prev, avatar_url: base64 }));
                   <input
                     type="text"
                     value={formData.nickname}
-                    onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
+                    onChange={e => setFormData({ ...formData, nickname: e.target.value })}
                     className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                     placeholder="您希望被如何称呼"
                   />
@@ -504,7 +504,7 @@ setFormData(prev => ({ ...prev, avatar_url: base64 }));
                   <input
                     type="text"
                     value={formData.realName}
-                    onChange={(e) => setFormData({ ...formData, realName: e.target.value })}
+                    onChange={e => setFormData({ ...formData, realName: e.target.value })}
                     className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                     placeholder="请输入您的真实姓名"
                   />
@@ -523,7 +523,7 @@ setFormData(prev => ({ ...prev, avatar_url: base64 }));
                 <input
                   type="checkbox"
                   checked={formData.privacyAgreed}
-                  onChange={(e) => setFormData({ ...formData, privacyAgreed: e.target.checked })}
+                  onChange={e => setFormData({ ...formData, privacyAgreed: e.target.checked })}
                   className="w-5 h-5 mt-0.5 rounded border-slate-300 text-amber-500 focus:ring-amber-400"
                 />
                 <span className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
@@ -536,7 +536,7 @@ setFormData(prev => ({ ...prev, avatar_url: base64 }));
                 <input
                   type="checkbox"
                   checked={formData.consensusAgreed}
-                  onChange={(e) => setFormData({ ...formData, consensusAgreed: e.target.checked })}
+                  onChange={e => setFormData({ ...formData, consensusAgreed: e.target.checked })}
                   className="w-5 h-5 mt-0.5 rounded border-slate-300 text-amber-500 focus:ring-amber-400"
                 />
                 <span className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">

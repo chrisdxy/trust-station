@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      tools: result || [],
+      tools: result || []
     });
   } catch (error) {
     console.error('获取AI工具列表错误:', error);
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: '提交成功，请等待审核',
+      message: '提交成功，请等待审核'
     });
   } catch (error) {
     console.error('提交工具申请错误:', error);

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Shield, Users, ArrowRight, Lock, Scale, Database, Brain, Sparkles, Globe } from 'lucide-react';
+import { Shield, Users, Lock, Scale, Database, Brain, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -26,16 +26,16 @@ export default function HomePage() {
   const featureGroups = [
     [
       { icon: Shield, titleKey: 'home.feature.consensus', descKey: 'home.feature.consensus.desc' },
-      { icon: Users, titleKey: 'home.feature.communication', descKey: 'home.feature.communication.desc' },
+      { icon: Users, titleKey: 'home.feature.communication', descKey: 'home.feature.communication.desc' }
     ],
     [
       { icon: Brain, titleKey: 'home.feature.mindset', descKey: 'home.feature.mindset.desc' },
-      { icon: Database, titleKey: 'home.highlight.blockchain', descKey: 'home.highlight.blockchain.desc' },
+      { icon: Database, titleKey: 'home.highlight.blockchain', descKey: 'home.highlight.blockchain.desc' }
     ],
     [
       { icon: Lock, titleKey: 'home.highlight.privacy', descKey: 'home.highlight.privacy.desc' },
-      { icon: Scale, titleKey: 'home.highlight.neutral', descKey: 'home.highlight.neutral.desc' },
-    ],
+      { icon: Scale, titleKey: 'home.highlight.neutral', descKey: 'home.highlight.neutral.desc' }
+    ]
   ];
 
   return (
@@ -123,7 +123,7 @@ export default function HomePage() {
               key={groupIdx} 
               className="grid grid-cols-2 gap-4"
             >
-              {group.map((item, itemIdx) => (
+              {group.map((item, _itemIdx) => (
                 <div
                   key={item.titleKey}
                   className="text-center p-5 rounded-xl bg-white dark:bg-slate-800 shadow-sm hover:shadow-lg transition-all border border-slate-100 dark:border-slate-700"

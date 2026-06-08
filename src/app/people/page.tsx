@@ -59,7 +59,7 @@ const typeIcons: Record<string, React.ReactNode> = {
   enterprise: <Building className="w-5 h-5" />,
   expert: <Award className="w-5 h-5" />,
   coach: <TrendingUp className="w-5 h-5" />,
-  partner: <Handshake className="w-5 h-5" />,
+  partner: <Handshake className="w-5 h-5" />
 };
 
 const typeColors: Record<string, string> = {
@@ -67,7 +67,7 @@ const typeColors: Record<string, string> = {
   enterprise: 'bg-purple-50 dark:bg-purple-900/20 text-purple-600',
   expert: 'bg-amber-50 dark:bg-amber-900/20 text-amber-600',
   coach: 'bg-teal-50 dark:bg-teal-900/20 text-teal-600',
-  partner: 'bg-green-50 dark:bg-green-900/20 text-green-600',
+  partner: 'bg-green-50 dark:bg-green-900/20 text-green-600'
 };
 
 const typeLabels: Record<string, string> = {
@@ -75,7 +75,7 @@ const typeLabels: Record<string, string> = {
   enterprise: '企业',
   expert: '专家',
   coach: '陪跑专家',
-  partner: '合伙人',
+  partner: '合伙人'
 };
 
 export default function PeoplePage() {
@@ -160,7 +160,7 @@ function PeopleContent() {
     try {
       const [receivedRes, sentRes] = await Promise.all([
         fetch(`/api/friends?userId=${user.id}&type=received`),
-        fetch(`/api/friends?userId=${user.id}&type=sent`),
+        fetch(`/api/friends?userId=${user.id}&type=sent`)
       ]);
       const receivedData = await receivedRes.json();
       const sentData = await sentRes.json();
@@ -184,7 +184,7 @@ function PeopleContent() {
   }, [pageTab, fetchFriendRequests]);
 
   // 前端搜索过滤 + 排除已好友
-  const filteredCards = cards.filter((c) => {
+  const filteredCards = cards.filter(c => {
     // 已是好友的不显示在浏览清单
     if (friends.some(f => f.user_id === c.id || f.friend_id === c.id)) return false;
     if (!searchTerm) return true;
@@ -226,8 +226,8 @@ function PeopleContent() {
         body: JSON.stringify({
           userId: user.id,
           friendId,
-          message: friendMessage || null,
-        }),
+          message: friendMessage || null
+        })
       });
       const data = await res.json();
       if (data.success) {
@@ -251,7 +251,7 @@ function PeopleContent() {
       const res = await fetch(`/api/friends/${requestId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, userId: user.id }),
+        body: JSON.stringify({ action, userId: user.id })
       });
       const data = await res.json();
       if (data.success) {
@@ -339,7 +339,7 @@ function PeopleContent() {
                 type="text"
                 placeholder="搜索姓名、公司、领域、合作意向..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
               />
               {searchTerm && (
@@ -355,7 +355,7 @@ function PeopleContent() {
                 { key: '', label: '全部' },
                 { key: 'personal', label: '个人' },
                 { key: 'expert', label: '专家' },
-                { key: 'partner', label: '合伙人' },
+                { key: 'partner', label: '合伙人' }
               ].map(tab => (
                 <button
                   key={tab.key}
@@ -441,7 +441,7 @@ function PeopleContent() {
                           return (
                             <button
                               className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-white text-sm rounded-lg transition-colors flex items-center gap-1"
-                              onClick={(e) => {
+                              onClick={e => {
                                 e.stopPropagation();
                                 sendFriendRequest(c.id);
                               }}
@@ -701,7 +701,7 @@ function PeopleContent() {
               </div>
             ) : (
               <div className="space-y-3">
-                {friends.map((item) => (
+                {friends.map(item => (
                   <div key={item.id} className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
@@ -733,7 +733,7 @@ function PeopleContent() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-md max-h-[85vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">名片详情</h3>

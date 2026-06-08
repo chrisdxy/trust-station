@@ -26,8 +26,8 @@ export async function GET(request: NextRequest) {
       stats: {
         communities: communities || 0,
         activities: activities || 0,
-        projects: projects || 0,
-      },
+        projects: projects || 0
+      }
     });
   } catch (error: any) {
     console.error('获取组织统计失败:', error?.message || error);

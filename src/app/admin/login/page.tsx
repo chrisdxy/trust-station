@@ -38,8 +38,8 @@ export default function AdminLoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           phone,
-          password,
-        }),
+          password
+        })
       });
 
       const data = await response.json();
@@ -109,7 +109,7 @@ export default function AdminLoginPage() {
                   <input
                     type="tel"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={e => setPhone(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-400 focus:border-transparent"
                     placeholder="请输入管理员手机号"
                     required
@@ -126,7 +126,7 @@ export default function AdminLoginPage() {
                   <input
                     type="password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={e => setPassword(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-400 focus:border-transparent"
                     placeholder="请输入登录密码"
                     required

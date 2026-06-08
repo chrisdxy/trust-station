@@ -44,7 +44,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = 'image/*';
-      input.onchange = async (e) => {
+      input.onchange = async e => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (!file) return;
         // 上传到服务器
@@ -87,7 +87,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = '.ppt,.pptx,.pdf,.doc,.docx,.xls,.xlsx,.zip';
-      input.onchange = async (e) => {
+      input.onchange = async e => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (!file) return;
         const fd = new FormData();

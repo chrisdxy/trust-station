@@ -7,7 +7,7 @@ import {
   Scale, ChevronRight, ChevronLeft, Home, Building2,
   FileText, Briefcase, Lock, Key, Eye, Calendar,
   Search, Copy, CheckCircle, Heart, AlertTriangle,
-  Sparkles, ArrowRight, Star, Zap,
+  Sparkles, ArrowRight, Star, Zap
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -38,9 +38,9 @@ const steps: Step[] = [
         { text: '正念训练，安住当下', highlight: '心性成长' },
         { text: '敢于留痕，可靠看得见', highlight: '行为留痕' },
         { text: '协作共识，择优合作', highlight: '伙伴优选' },
-        { text: '数据安全，永久存档', highlight: '平台存档' },
-      ],
-    },
+        { text: '数据安全，永久存档', highlight: '平台存档' }
+      ]
+    }
   },
   {
     id: 'sidebar',
@@ -58,9 +58,9 @@ const steps: Step[] = [
         { icon: FileText, text: '记录中心 — 认知留痕与可看记录', highlight: '' },
         { icon: Calendar, text: '活动中心 — 发起/参与活动', highlight: '' },
         { icon: Shield, text: '协调中心 — 申请/处理协调', highlight: '' },
-        { icon: Users, text: '个人中心 — 账户与档案管理', highlight: '' },
-      ],
-    },
+        { icon: Users, text: '个人中心 — 账户与档案管理', highlight: '' }
+      ]
+    }
   },
   {
     id: 'records',
@@ -76,9 +76,9 @@ const steps: Step[] = [
         { text: '每个事项都有唯一ID（如 CMTxxx, PRJ-xxx）', highlight: '3' },
         { text: '点击ID可复制，粘贴到记录中心搜索', highlight: '4' },
         { text: '记录中心「添加认知留痕」关联事项', highlight: '5' },
-        { text: '他人可通过授权查看你的认知留痕', highlight: '6' },
-      ],
-    },
+        { text: '他人可通过授权查看你的认知留痕', highlight: '6' }
+      ]
+    }
   },
   {
     id: 'id-system',
@@ -94,9 +94,9 @@ const steps: Step[] = [
         { text: '活动ID=ACTxxxxxxxx → 记录中心查', highlight: '📅' },
         { text: '合作ID=RELxxxxxxxx → 记录中心查', highlight: '🤝' },
         { text: '记录ID=RCDxxxxxxxx → 记录中心查', highlight: '📝' },
-        { text: '点击任意ID徽章自动复制，可粘贴搜索', highlight: '📋' },
-      ],
-    },
+        { text: '点击任意ID徽章自动复制，可粘贴搜索', highlight: '📋' }
+      ]
+    }
   },
   {
     id: 'flow',
@@ -112,10 +112,10 @@ const steps: Step[] = [
         { text: '建立合作 → 正式合作或意向合作', highlight: '信任' },
         { text: '认知留痕 → 在记录中心记录心得', highlight: '沉淀' },
         { text: '授权可看 → 允许他人查看你的留痕', highlight: '透明' },
-        { text: '协调申请 → 有分歧时申请协调', highlight: '化解' },
-      ],
-    },
-  },
+        { text: '协调申请 → 有分歧时申请协调', highlight: '化解' }
+      ]
+    }
+  }
 ];
 
 export default function SiteGuide() {

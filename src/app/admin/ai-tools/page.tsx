@@ -51,7 +51,7 @@ export default function AIToolsPage() {
       const response = await fetch('/api/admin/ai-tools', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'approve', id: tool.id }),
+        body: JSON.stringify({ action: 'approve', id: tool.id })
       });
       const data = await response.json();
       if (data.success) {
@@ -68,7 +68,7 @@ export default function AIToolsPage() {
       const response = await fetch('/api/admin/ai-tools', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'reject', id: tool.id }),
+        body: JSON.stringify({ action: 'reject', id: tool.id })
       });
       const data = await response.json();
       if (data.success) {
@@ -99,7 +99,7 @@ export default function AIToolsPage() {
       const response = await fetch('/api/admin/ai-tools', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: editingTool.id, ...editForm }),
+        body: JSON.stringify({ id: editingTool.id, ...editForm })
       });
       const data = await response.json();
       if (data.success) {
@@ -119,7 +119,7 @@ export default function AIToolsPage() {
       doubao: '🔵',
       deepseek: '🟣',
       kimi: '🟠',
-      chatgpt: '🟢',
+      chatgpt: '🟢'
     };
     return icons[icon || ''] || '✨';
   };
@@ -128,7 +128,7 @@ export default function AIToolsPage() {
     const labels: Record<string, string> = {
       pending: '待审批',
       approved: '已批准',
-      rejected: '已拒绝',
+      rejected: '已拒绝'
     };
     return labels[status] || status;
   };
@@ -137,7 +137,7 @@ export default function AIToolsPage() {
     const colors: Record<string, string> = {
       pending: 'bg-yellow-100 text-yellow-700',
       approved: 'bg-green-100 text-green-700',
-      rejected: 'bg-red-100 text-red-700',
+      rejected: 'bg-red-100 text-red-700'
     };
     return colors[status] || 'bg-gray-100 text-gray-700';
   };
@@ -215,13 +215,13 @@ export default function AIToolsPage() {
                     <input
                       type="text"
                       value={editForm.name || ''}
-                      onChange={(e) => setEditForm(f => ({ ...f, name: e.target.value }))}
+                      onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
                       className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900"
                       placeholder="工具名称"
                     />
                     <textarea
                       value={editForm.description || ''}
-                      onChange={(e) => setEditForm(f => ({ ...f, description: e.target.value }))}
+                      onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))}
                       className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900"
                       rows={2}
                       placeholder="工具描述"
@@ -229,7 +229,7 @@ export default function AIToolsPage() {
                     <input
                       type="text"
                       value={editForm.url || ''}
-                      onChange={(e) => setEditForm(f => ({ ...f, url: e.target.value }))}
+                      onChange={e => setEditForm(f => ({ ...f, url: e.target.value }))}
                       className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900"
                       placeholder="工具链接"
                     />

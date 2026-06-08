@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: '密码重置成功',
+      message: '密码重置成功'
     });
   } catch (error) {
     console.error('密码重置错误:', error);

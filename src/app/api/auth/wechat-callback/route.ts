@@ -6,7 +6,7 @@ async function getWechatConfig() {
   return {
     enabled: true,
     appId: process.env.WECHAT_APPID || 'wx132561151d9c6e02',
-    appSecret: process.env.WECHAT_APPSECRET || '29a8031c6984cdc43b6a4664ae57a37b',
+    appSecret: process.env.WECHAT_APPSECRET || '29a8031c6984cdc43b6a4664ae57a37b'
   };
 }
 
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
           openid,
           nickname: '微信用户',
           headimgurl: '',
-          unionid: userInfo.unionid || '',
+          unionid: userInfo.unionid || ''
         }
       });
     }
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
         sex: userInfo.sex,
         province: userInfo.province,
         city: userInfo.city,
-        country: userInfo.country,
+        country: userInfo.country
       }
     });
   } catch (error) {

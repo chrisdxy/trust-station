@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     if (!smtpConfig) {
       return NextResponse.json({
         success: false,
-        error: '请先在管理后台配置SMTP并保存',
+        error: '请先在管理后台配置SMTP并保存'
       });
     }
 
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     if (!smtpConfig.enabled) {
       return NextResponse.json({
         success: false,
-        error: '邮件服务未启用，请在设置中开启"启用邮件服务"开关',
+        error: '邮件服务未启用，请在设置中开启"启用邮件服务"开关'
       });
     }
 
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     if (missingFields.length > 0) {
       return NextResponse.json({
         success: false,
-        error: `SMTP配置不完整，请填写以下字段：${missingFields.join('、')}`,
+        error: `SMTP配置不完整，请填写以下字段：${missingFields.join('、')}`
       });
     }
 
@@ -59,11 +59,11 @@ export async function POST(request: NextRequest) {
       secure: smtpConfig.secure,
       auth: {
         user: smtpConfig.user,
-        pass: smtpConfig.pass,
+        pass: smtpConfig.pass
       },
       connectionTimeout: 10000,
       greetingTimeout: 10000,
-      socketTimeout: 10000,
+      socketTimeout: 10000
     });
 
     // 发送测试邮件
@@ -97,12 +97,12 @@ export async function POST(request: NextRequest) {
             </p>
           </div>
         </div>
-      `,
+      `
     });
 
     return NextResponse.json({
       success: true,
-      message: '测试邮件已发送，请检查收件箱',
+      message: '测试邮件已发送，请检查收件箱'
     });
 
   } catch (error: any) {
