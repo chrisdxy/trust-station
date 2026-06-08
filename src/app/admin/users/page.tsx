@@ -12,6 +12,7 @@ interface User {
   user_type: string;
   company_name?: string;
   identity_verified: boolean;
+  id_number?: string;
   avatar_url?: string;
   created_at: string;
 }
@@ -24,26 +25,26 @@ interface Pagination {
 }
 
 export default function UsersPage() {
-  const [activeTab, setActiveTab] = useState<string>('admin');
+  const [activeTab, setActiveTab] = useState<string>('all');
   const [searchTerms, setSearchTerms] = useState<Record<string, string>>({
+    all: '',
     admin: '',
-    user: '',
     coordinator: '',
     partner: '',
   });
   const [statusFilters, setStatusFilters] = useState<Record<string, string>>({
     coordinator: 'pending',
-    partner: 'pending',
+    partner: '',
   });
   const [usersData, setUsersData] = useState<Record<string, User[]>>({
+    all: [],
     admin: [],
-    user: [],
     coordinator: [],
     partner: [],
   });
   const [paginationData, setPaginationData] = useState<Record<string, Pagination>>({
+    all: { page: 1, limit: 20, total: 0, totalPages: 0 },
     admin: { page: 1, limit: 20, total: 0, totalPages: 0 },
-    user: { page: 1, limit: 20, total: 0, totalPages: 0 },
     coordinator: { page: 1, limit: 20, total: 0, totalPages: 0 },
     partner: { page: 1, limit: 20, total: 0, totalPages: 0 },
   });
@@ -83,6 +84,10 @@ export default function UsersPage() {
 
   useEffect(() => {
     fetchUsersByType(activeTab);
+    // 预加载所有标签页的数据，使计数准确
+    ['admin', 'partner'].forEach(t => {
+      if (t !== activeTab) fetchUsersByType(t);
+    });
   }, [activeTab, statusFilters.coordinator, statusFilters.partner]);
 
   // 搜索处理
@@ -127,9 +132,11 @@ export default function UsersPage() {
   // 获取用户类型标签
   const getUserTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
+      all: '全体用户',
       admin: '管理员',
       user: '普通用户',
       coordinator: '协调专家',
+      coach: '陪跑专家',
       partner: '合伙人',
     };
     return labels[type] || type;
@@ -138,9 +145,11 @@ export default function UsersPage() {
   // 获取标签颜色
   const getTabColor = (type: string) => {
     const colors: Record<string, { active: string; inactive: string }> = {
+      all: { active: 'bg-blue-500 text-white', inactive: 'bg-blue-100 text-blue-700 hover:bg-blue-200' },
       admin: { active: 'bg-green-500 text-white', inactive: 'bg-green-100 text-green-700 hover:bg-green-200' },
       user: { active: 'bg-gray-500 text-white', inactive: 'bg-gray-100 text-gray-700 hover:bg-gray-200' },
       coordinator: { active: 'bg-green-500 text-white', inactive: 'bg-green-100 text-green-700 hover:bg-green-200' },
+      coach: { active: 'bg-amber-500 text-white', inactive: 'bg-amber-100 text-amber-700 hover:bg-amber-200' },
       partner: { active: 'bg-cyan-500 text-white', inactive: 'bg-cyan-100 text-cyan-700 hover:bg-cyan-200' },
     };
     return colors[type] || { active: 'bg-blue-500 text-white', inactive: 'bg-slate-100 text-slate-700 hover:bg-slate-200' };
@@ -185,10 +194,11 @@ export default function UsersPage() {
         }
         break;
       case 'approve':
+        const targetType = activeTab === 'coordinator' ? 'coordinator' : activeTab === 'coach' ? 'coach' : 'partner';
         const resApprove = await fetch(`/api/admin/users`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user.id, updates: { user_type: activeTab === 'coordinator' ? 'coordinator' : 'partner' } }),
+          body: JSON.stringify({ userId: user.id, appType: activeTab, updates: { user_type: targetType } }),
         });
         const dataApprove = await resApprove.json();
         if (dataApprove.success) {
@@ -227,6 +237,7 @@ export default function UsersPage() {
             <button onClick={() => handleUserAction('delete', user)} className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs rounded-lg transition-colors">删除</button>
           </div>
         );
+      case 'all':
       case 'user':
         return (
           <div className="flex items-center gap-2">
@@ -235,11 +246,20 @@ export default function UsersPage() {
           </div>
         );
       case 'coordinator':
+      case 'coach':
       case 'partner':
+        const approved = user.user_type === 'coordinator' || user.user_type === 'coach' || user.user_type === 'partner';
         return (
           <div className="flex items-center gap-2">
-            <button onClick={() => handleUserAction('approve', user)} className="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs rounded-lg transition-colors">审批</button>
-            <button onClick={() => handleUserAction('reject', user)} className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs rounded-lg transition-colors">拒绝</button>
+            {!approved && (
+              <>
+                <button onClick={() => handleUserAction('approve', user)} className="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs rounded-lg transition-colors">审批</button>
+                <button onClick={() => handleUserAction('reject', user)} className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs rounded-lg transition-colors">拒绝</button>
+              </>
+            )}
+            {approved && (
+              <span className="px-2 py-1 text-xs text-green-600 bg-green-50 dark:bg-green-900/20 rounded">已认证</span>
+            )}
             <button onClick={() => handleUserAction('delete', user)} className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs rounded-lg transition-colors">删除</button>
           </div>
         );
@@ -272,7 +292,7 @@ export default function UsersPage() {
 
         {/* 用户类型标签切换 */}
         <div className="flex flex-wrap gap-2">
-          {['admin', 'user', 'coordinator', 'partner'].map((type) => {
+          {['all', 'admin', 'coach', 'partner'].map((type) => {
             const colors = getTabColor(type);
             const isActive = activeTab === type;
             const total = paginationData[type]?.total || 0;
@@ -303,6 +323,16 @@ export default function UsersPage() {
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-sm text-slate-600 dark:text-slate-300">状态筛选：</span>
                 <div className="flex gap-2">
+                  <button
+                    onClick={() => handleStatusChange(activeTab, '')}
+                    className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-colors flex items-center gap-1 ${
+                      currentStatus === ''
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-500'
+                    }`}
+                  >
+                    全部
+                  </button>
                   <button
                     onClick={() => handleStatusChange(activeTab, 'pending')}
                     className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-colors flex items-center gap-1 ${
@@ -382,13 +412,14 @@ export default function UsersPage() {
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">用户信息</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">注册时间</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">人证</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">操作</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                 {loading ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center">
+                    <td colSpan={5} className="px-6 py-12 text-center">
                       <Loader2 className="w-8 h-8 mx-auto text-blue-500 animate-spin" />
                       <p className="mt-2 text-slate-500">加载中...</p>
                     </td>
@@ -427,6 +458,17 @@ export default function UsersPage() {
                       </td>
                       <td className="px-6 py-4 text-sm text-slate-500">
                         {user.created_at ? new Date(user.created_at).toLocaleDateString('zh-CN') : '-'}
+                      </td>
+                      <td className="px-6 py-4">
+                        {user.identity_verified ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-medium cursor-help"
+                            title={user.id_number ? `认证身份证尾号 ${user.id_number.slice(-4)}` : '已认证'}>
+                            <CheckCircle className="w-3 h-3" />
+                            已认证
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-400">未认证</span>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         {renderUserActions(user)}
@@ -509,6 +551,27 @@ export default function UsersPage() {
                     <input type="checkbox" className="w-5 h-5 rounded border-slate-300 text-blue-500 focus:ring-blue-500" defaultChecked />
                     <span className="text-slate-700 dark:text-slate-300">分类设置</span>
                   </label>
+                  {/* 发布管理 - 含子权限 */}
+                  <div className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input type="checkbox" className="w-5 h-5 rounded border-slate-300 text-blue-500 focus:ring-blue-500" defaultChecked />
+                      <span className="text-slate-700 dark:text-slate-300 font-medium">发布管理</span>
+                    </label>
+                    <div className="ml-8 mt-2 space-y-2">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-blue-500 focus:ring-blue-500" defaultChecked />
+                        <span className="text-sm text-slate-600 dark:text-slate-400">共同体管理</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-blue-500 focus:ring-blue-500" defaultChecked />
+                        <span className="text-sm text-slate-600 dark:text-slate-400">活动管理</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-blue-500 focus:ring-blue-500" defaultChecked />
+                        <span className="text-sm text-slate-600 dark:text-slate-400">项目管理</span>
+                      </label>
+                    </div>
+                  </div>
                   <label className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700">
                     <input type="checkbox" className="w-5 h-5 rounded border-slate-300 text-blue-500 focus:ring-blue-500" defaultChecked />
                     <span className="text-slate-700 dark:text-slate-300">协调管理</span>
@@ -516,6 +579,10 @@ export default function UsersPage() {
                   <label className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700">
                     <input type="checkbox" className="w-5 h-5 rounded border-slate-300 text-blue-500 focus:ring-blue-500" defaultChecked />
                     <span className="text-slate-700 dark:text-slate-300">AI工具管理</span>
+                  </label>
+                  <label className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700">
+                    <input type="checkbox" className="w-5 h-5 rounded border-slate-300 text-blue-500 focus:ring-blue-500" defaultChecked />
+                    <span className="text-slate-700 dark:text-slate-300">投诉与建议</span>
                   </label>
                 </div>
               </div>

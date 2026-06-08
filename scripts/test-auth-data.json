@@ -1,0 +1,9 @@
+{
+  "userId": "UID15502105726",
+  "partner_id": "UID19155449102",
+  "authorized_record_id": 1,
+  "scope": "view",
+  "description": "测试授权",
+  "partner_name": "测试用户",
+  "grantee_email": "test@example.com"
+}

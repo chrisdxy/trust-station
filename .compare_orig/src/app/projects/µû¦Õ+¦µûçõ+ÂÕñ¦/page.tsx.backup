@@ -1,0 +1,963 @@
+"use client";
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Briefcase, Plus, MapPin, Calendar, X, Bold, Italic, List, Link, Image, Upload, Users, UserPlus, Trash2, Edit, Pause, Play, CheckCircle, Search, Star, ChevronDown, Copy } from 'lucide-react';
+import Layout from '@/components/Layout';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useCategories, Category } from '@/hooks/useCategories';
+import { UserSelect, UserSearchResult } from '@/components/UserSelect';
+import { ShareButton } from '@/components/ShareButton';
+
+// Simple Toast Component
+function Toast({ message, visible }: { message: string; visible: boolean }) {
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 50 }}
+          className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[100] bg-slate-800 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2"
+        >
+          <CheckCircle className="w-5 h-5 text-green-400" />
+          {message}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+interface Project {
+  id: string;
+  title: string;
+  status: string;
+  location: string;
+  industry: string;
+  type: string;
+  description: string;
+  images: string[];
+  date: string;
+  members: string[];
+  creatorId?: string;
+  paused?: boolean; // 暂停状态
+  isDueDiligence?: boolean; // 是否尽调
+  dueDiligenceDetails?: string; // 尽调详情
+}
+
+export default function ProjectsPage() {
+  const { t } = useLanguage();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const editorImageRef = useRef<HTMLInputElement>(null);
+  
+  // 标签页状态
+  const [activeTab, setActiveTab] = useState<'all' | 'created' | 'participating' | 'following'>('all');
+  const [ddFilter, setDdFilter] = useState<'all' | 'verified' | 'unverified'>('unverified'); // 尽调筛选，默认未经尽调
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]); // 多选项目类型，默认全选
+  const [showTypeFilter, setShowTypeFilter] = useState(false);
+  const typeFilterRef = useRef<HTMLDivElement>(null);
+  const [typeFilterPos, setTypeFilterPos] = useState({ top: 0, left: 0, width: 0 });
+  useEffect(() => {
+    if (showTypeFilter && typeFilterRef.current) {
+      const rect = typeFilterRef.current.getBoundingClientRect();
+      setTypeFilterPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+    }
+  }, [showTypeFilter]);
+  
+  // 我关注的项目
+  const [followingProjects, setFollowingProjects] = useState<string[]>(['3']);
+  
+  // 当前用户ID（模拟，实际从 auth context 获取）
+  const currentUserId = 'user_1';
+  
+  // 从后台设置获取项目分类
+  const adminCategories = useCategories();
+  const projectIndustries = adminCategories.project_industry || [];
+  const projectTypes = adminCategories.project_type || [];
+  
+  const industryOptions = projectIndustries.length > 0 
+    ? projectIndustries.map((c: Category) => c.name)
+    : ['科技', '能源', '农业', '金融', '制造', '服务', '教育', '医疗', '建筑', '其他'];
+  
+  const typeOptions = projectTypes.length > 0 
+    ? projectTypes.map((c: Category) => c.name)
+    : ['合作', '投资', '合伙', '咨询', '服务'];
+  
+  // 初始化项目类型为全选
+  useEffect(() => {
+    if (typeOptions.length > 0 && selectedTypes.length === 0) {
+      setSelectedTypes(typeOptions);
+    }
+  }, [typeOptions.length]);
+  
+  // 模拟数据：关注的项目ID（改为状态）
+// 移除关注相关逻辑
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Toast 状态
+  const [toastMessage, setToastMessage] = useState('');
+  const [showToast, setShowToast] = useState(false);
+  
+  const toast = (message: string) => {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
+  // 生成简短的项目ID（显示用）
+  const getShortProjectId = (id: string) => {
+    return 'PRJ' + id.replace(/-/g, '').slice(0, 8).toUpperCase();
+  };
+  
+  // 判断项目是否由我创建
+  const isCreatedByMe = (project: Project) => {
+    return project.creatorId === currentUserId;
+  };
+
+  // 判断项目我是否作为成员参与（但不是我创建的）
+  const isParticipating = (project: Project) => {
+    if (isCreatedByMe(project)) return false;
+    const currentUserName = '张三'; // 模拟当前用户姓名
+    return project.members.some(m => m === currentUserName);
+  };
+
+  // 判断项目是否被我关注
+  const isFollowing = (project: Project) => {
+    return followingProjects.includes(project.id);
+  };
+
+  // 切换关注状态
+  const toggleFollow = (projectId: string) => {
+    if (followingProjects.includes(projectId)) {
+      setFollowingProjects(followingProjects.filter(id => id !== projectId));
+      toast('已取消关注');
+    } else {
+      setFollowingProjects([...followingProjects, projectId]);
+      toast('已关注');
+    }
+  };
+
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // 从数据库加载项目列表
+  const loadProjects = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/projects');
+      const data = await res.json();
+      if (data.success && data.projects) {
+        // 转换数据库字段为前端格式
+        const mappedProjects = data.projects.map((p: any) => ({
+          id: p.id,
+          title: p.title,
+          status: p.status || 'ongoing',
+          location: p.location || '',
+          industry: p.industry || p.project_type || '',
+          type: p.project_type || p.type || '',
+          description: p.description || '',
+          images: p.images ? (Array.isArray(p.images) ? p.images : (() => { try { return JSON.parse(p.images); } catch { return []; } })()) : [],
+          date: p.created_at ? new Date(p.created_at).toISOString().split('T')[0] : '',
+          members: p.members ? (Array.isArray(p.members) ? p.members : (() => { try { return JSON.parse(p.members); } catch { return []; } })()) : [],
+          creatorId: p.user_id || '',
+          paused: p.status === 'paused',
+        }));
+        setProjects(mappedProjects);
+      }
+    } catch (err) {
+      console.error('加载项目失败:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProjects();
+  }, []);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    location: '',
+    industry: '',
+    type: '合作',
+    description: '',
+    coverImage: '',
+    images: [] as string[],
+    members: [] as string[],
+    isDueDiligence: false,
+    dueDiligenceDetails: '',
+  });
+  const [selectedMember, setSelectedMember] = useState<UserSearchResult | null>(null);
+
+  // 封面图片上传
+  const coverImageRef = React.useRef<HTMLInputElement>(null);
+  const [coverImagePreview, setCoverImagePreview] = useState<string>('');
+
+  const handleCoverImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      setCoverImagePreview(result);
+      setFormData({ ...formData, coverImage: result });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeCoverImage = () => {
+    setCoverImagePreview('');
+    setFormData({ ...formData, coverImage: '' });
+    if (coverImageRef.current) coverImageRef.current.value = '';
+  };
+
+  // 添加成员
+  const addMember = () => {
+    if (!selectedMember) return;
+    const memberName = selectedMember.display_name || selectedMember.real_name || '未知用户';
+    if (formData.members.includes(memberName)) {
+      alert('该成员已添加');
+      return;
+    }
+    setFormData({
+      ...formData,
+      members: [...formData.members, memberName],
+    });
+    setSelectedMember(null);
+  };
+
+  // 移除成员
+  const removeMember = (name: string) => {
+    setFormData({
+      ...formData,
+      members: formData.members.filter(m => m !== name),
+    });
+  };
+
+  const statusLabels: Record<string, string> = {
+    ongoing: '进行中',
+    recruiting: '招募中',
+    completed: '已完成',
+  };
+
+  const statusColors: Record<string, string> = {
+    ongoing: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+    recruiting: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    completed: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400',
+  };
+
+  // 富文本格式化
+  const formatText = (format: 'bold' | 'italic' | 'list' | 'link') => {
+    const textarea = document.getElementById('project-description') as HTMLTextAreaElement;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    const selectedText = text.substring(start, end);
+
+    let newText = '';
+    let cursorOffset = 0;
+
+    switch (format) {
+      case 'bold':
+        newText = `**${selectedText}**`;
+        cursorOffset = 2;
+        break;
+      case 'italic':
+        newText = `*${selectedText}*`;
+        cursorOffset = 1;
+        break;
+      case 'list':
+        newText = `\n- ${selectedText}`;
+        cursorOffset = 3;
+        break;
+      case 'link':
+        newText = `[${selectedText}](url)`;
+        cursorOffset = 1;
+        break;
+    }
+
+    setFormData({
+      ...formData,
+      description: text.substring(0, start) + newText + text.substring(end),
+    });
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + cursorOffset, start + cursorOffset + selectedText.length);
+    }, 0);
+  };
+
+  // 处理编辑器内图片上传
+  const handleEditorImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        const textarea = document.getElementById('project-description') as HTMLTextAreaElement;
+        if (textarea) {
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          const text = textarea.value;
+          const imageMarkdown = `\n![图片](${result})\n`;
+          setFormData({
+            ...formData,
+            description: text.substring(0, start) + imageMarkdown + text.substring(end),
+          });
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+    // 清空input，允许重复选择同一文件
+    e.target.value = '';
+  };
+
+  // 处理图片上传
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        setFormData((prev) => ({
+          ...prev,
+          images: [...prev.images, result],
+        }));
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // 移除图片
+  const removeImage = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleCreateProject = async () => {
+    if (!formData.title.trim()) return;
+
+    if (editingProject) {
+      // 编辑模式：更新项目
+      try {
+        const res = await fetch(`/api/projects?id=${editingProject.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: formData.title,
+            description: formData.description,
+            coverImage: formData.coverImage,
+            projectType: formData.type,
+            industry: formData.industry,
+            location: formData.location,
+          }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          setProjects(projects.map(p => 
+            p.id === editingProject.id 
+              ? { ...p, ...formData }
+              : p
+          ));
+          setSelectedProject(projects.find(p => p.id === editingProject.id) ? { ...projects.find(p => p.id === editingProject.id)!, ...formData } : null);
+          setEditingProject(null);
+          toast('项目已更新');
+        } else {
+          toast(data.error || '更新失败');
+        }
+      } catch (err) {
+        console.error('更新项目失败:', err);
+        toast('更新失败');
+      }
+    } else {
+      // 创建模式
+      try {
+        const res = await fetch('/api/projects', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: currentUserId,
+            title: formData.title,
+            description: formData.description,
+            coverImage: formData.coverImage,
+            projectType: formData.type,
+            industry: formData.industry,
+            location: formData.location,
+          }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          // 重新加载项目列表
+          await loadProjects();
+          // 显示项目ID
+          setCreatedProjectId(data.id);
+        } else {
+          toast(data.error || '创建失败');
+        }
+      } catch (err) {
+        console.error('创建项目失败:', err);
+        toast('创建失败');
+      }
+    }
+    
+    setFormData({ title: '', location: '', industry: '', type: '合作', description: '', coverImage: '', images: [], members: [], isDueDiligence: false, dueDiligenceDetails: '' });
+    setShowModal(false);
+  };
+
+  return (
+    <Layout>
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                {t('projects.title')}
+              </h1>
+              <p className="text-slate-500 dark:text-slate-400 mt-1">
+                {t('projects.description')}
+              </p>
+            </div>
+            <button
+              onClick={() => setShowModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium"
+            >
+              <Plus className="w-4 h-4" />
+              {t('common.create')}
+            </button>
+                </div>
+            </motion.div>
+
+        {/* 项目ID创建成功弹窗 */}
+        <AnimatePresence>
+          {createdProjectId && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] p-4"
+              onClick={() => setCreatedProjectId(null)}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-md w-full text-center shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="w-10 h-10 text-green-500" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">项目创建成功！</h3>
+                <p className="text-slate-500 mb-4">您的项目已成功创建</p>
+                <div className="bg-slate-100 dark:bg-slate-700 rounded-xl p-4 mb-6">
+                  <p className="text-xs text-slate-500 mb-1">项目ID</p>
+                  <p className="text-2xl font-mono font-bold text-amber-600 dark:text-amber-400 tracking-wider">
+                    {getShortProjectId(createdProjectId)}
+                  </p>
+                  <p className="text-xs text-slate-400 mt-2">可用于分享和引用</p>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(getShortProjectId(createdProjectId));
+                      toast('ID已复制');
+                    }}
+                    className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 text-sm flex items-center justify-center gap-2"
+                  >
+                    <Copy className="w-4 h-4" />复制ID
+                  </button>
+                  <button
+                    onClick={() => setCreatedProjectId(null)}
+                    className="flex-1 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 text-sm"
+                  >
+                    完成
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* 标签页 */}
+        <div className="flex gap-2 mb-4 flex-wrap">
+          <button
+            onClick={() => setActiveTab('all')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === 'all'
+                ? 'bg-amber-500 text-white'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+            }`}
+          >
+            全部
+          </button>
+          <button
+            onClick={() => setActiveTab('created')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === 'created'
+                ? 'bg-amber-500 text-white'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+            }`}
+          >
+            我创建的
+          </button>
+          <button
+            onClick={() => setActiveTab('participating')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === 'participating'
+                ? 'bg-amber-500 text-white'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+            }`}
+          >
+            我参与的
+          </button>
+          <button
+            onClick={() => setActiveTab('following')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === 'following'
+                ? 'bg-amber-500 text-white'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+            }`}
+          >
+            我关注的
+          </button>
+          
+        </div>
+
+        {/* 搜索栏 - 仅全部标签显示 */}
+        {activeTab === 'all' && (
+          <div className="mb-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="搜索项目名称、地点、行业..."
+                className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* 尽调筛选 */}
+            <div className="flex gap-2 mt-3 flex-wrap items-center">
+              <span className="text-sm text-slate-500 dark:text-slate-400">是否尽调：</span>
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={ddFilter === 'unverified'}
+                  onChange={() => setDdFilter('unverified')}
+                  className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-amber-500 focus:ring-amber-500"
+                />
+                <span className="text-sm text-slate-600 dark:text-slate-400">未经尽调</span>
+              </label>
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={ddFilter === 'verified'}
+                  onChange={() => setDdFilter('verified')}
+                  className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-amber-500 focus:ring-amber-500"
+                />
+                <span className="text-sm text-slate-600 dark:text-slate-400">已经尽调</span>
+              </label>
+            </div>
+
+            {/* 项目类型多选 */}
+            <div className="flex gap-2 mt-2 flex-wrap items-center">
+              <span className="text-sm text-slate-500 dark:text-slate-400">项目类型：</span>
+              {typeOptions.map((opt) => (
+                <label key={opt} className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedTypes.includes(opt)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedTypes([...selectedTypes, opt]);
+                      } else {
+                        setSelectedTypes(selectedTypes.filter(t => t !== opt));
+                      }
+                    }}
+                    className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-amber-500 focus:ring-amber-500"
+                  />
+                  <span className="text-sm text-slate-600 dark:text-slate-400" suppressHydrationWarning>{opt}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Projects Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {projects
+            .filter(project => {
+              if (activeTab === 'created') return isCreatedByMe(project);
+              if (activeTab === 'participating') return isParticipating(project);
+              if (activeTab === 'following') return isFollowing(project);
+              return true; // all
+            })
+            .filter(project => {
+              // 全部标签下的搜索过滤
+              if (activeTab === 'all' && searchQuery) {
+                const query = searchQuery.toLowerCase();
+                return (
+                  project.title.toLowerCase().includes(query) ||
+                  project.location.toLowerCase().includes(query) ||
+                  project.industry.toLowerCase().includes(query) ||
+                  project.type.toLowerCase().includes(query) ||
+                  project.description.toLowerCase().includes(query)
+                );
+              }
+              return true;
+            })
+            .filter(project => {
+              // 项目类型多选筛选
+              if (selectedTypes.length === 0) return true;
+              return selectedTypes.includes(project.type);
+            })
+            .filter(project => {
+              // 尽调筛选
+              if (ddFilter === 'verified') return project.isDueDiligence === true;
+              return project.isDueDiligence !== true;
+            })
+            .map((project, idx) => (
+            <motion.div
+              key={project.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1 }}
+              className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+                  <Briefcase className="w-6 h-6 text-blue-600" />
+                </div>
+                <div className="flex items-center gap-2">
+                  {project.paused && (
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
+                      已暂停
+                    </span>
+                  )}
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[project.status]}`}>
+                    {statusLabels[project.status]}
+                  </span>
+                  {/* 关注按钮 - 右上角 */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFollow(project.id);
+                    }}
+                    className={`p-1.5 rounded-full transition-colors ${
+                      isFollowing(project)
+                        ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-500 hover:bg-amber-200 dark:hover:bg-amber-900/50'
+                        : 'bg-slate-100 dark:bg-slate-700 text-slate-400 hover:text-amber-500 hover:bg-slate-200 dark:hover:bg-slate-600'
+                    }`}
+                    title={isFollowing(project) ? '取消关注' : '关注'}
+                  >
+                    <Star className={`w-4 h-4 ${isFollowing(project) ? 'fill-amber-500' : ''}`} />
+                  </button>
+                </div>
+              </div>
+              <div onClick={() => setSelectedProject(project)} className="cursor-pointer">
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-1">{project.title}</h3>
+                {/* 项目ID标签 */}
+                <p className="text-xs text-slate-400 font-mono mb-2">{getShortProjectId(project.id)}</p>
+                <div className="space-y-2 text-sm text-slate-500 dark:text-slate-400">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    {project.location}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-xs">
+                      {project.industry}
+                    </span>
+                    <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 rounded text-xs text-amber-700 dark:text-amber-400">
+                      {project.type}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  {project.date}
+                </div>
+                {project.members.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    <span className="text-xs">{project.members.join('、')}</span>
+                  </div>
+                )}
+                {project.description && (
+                  <p className="mt-2 text-xs text-slate-400 line-clamp-2">{project.description}</p>
+                )}
+                {project.images.length > 0 && (
+                  <div className="flex gap-2 mt-2 overflow-x-auto">
+                    {project.images.map((img, i) => (
+                      <img key={i} src={img} alt={`图片${i + 1}`} className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              {/* 项目操作按钮 */}
+              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
+                {/* 创建者操作按钮 - 只有我创建的项目才显示 */}
+                {isCreatedByMe(project) && (
+                  <>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingProject(project);
+                        setFormData({
+                          title: project.title,
+                          location: project.location,
+                          industry: project.industry,
+                          type: project.type,
+                          description: project.description,
+                          images: project.images,
+                          members: project.members,
+                          isDueDiligence: project.isDueDiligence || false,
+                          dueDiligenceDetails: project.dueDiligenceDetails || '',
+                        });
+                        setShowModal(true);
+                      }}
+                      className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                      修改
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setProjects(projects.map(p => 
+                          p.id === project.id ? { ...p, paused: !p.paused } : p
+                        ));
+                        setSelectedProject(project.paused ? { ...project, paused: false } : { ...project, paused: true });
+                        toast(project.paused ? '项目已恢复' : '项目已暂停');
+                      }}
+                      className={`flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                        project.paused
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50'
+                          : 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 hover:bg-orange-200 dark:hover:bg-orange-900/50'
+                      }`}
+                    >
+                      {project.paused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
+                      {project.paused ? '恢复' : '暂停'}
+                    </button>
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        if (confirm('确定要删除该项目吗？')) {
+                          try {
+                            const res = await fetch(`/api/projects?id=${project.id}`, {
+                              method: 'DELETE',
+                            });
+                            const data = await res.json();
+                            if (data.success) {
+                              toast('项目已删除');
+                              // 重新加载项目列表
+                              await loadProjects();
+                            } else {
+                              toast(data.error || '删除失败');
+                            }
+                          } catch (err) {
+                            console.error('删除项目失败:', err);
+                            toast('删除失败');
+                          }
+                        }
+                      }}
+                      className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      删除
+                    </button>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {loading && (
+          <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-xl">
+            <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+            <p className="text-slate-500 dark:text-slate-400">加载中...</p>
+          </div>
+        )}
+
+        {!loading && projects.filter(project => {
+          // 标签页筛选
+          if (activeTab === 'created') return isCreatedByMe(project);
+          if (activeTab === 'participating') return isParticipating(project);
+          if (activeTab === 'following') return isFollowing(project);
+          // 尽调筛选
+          if (ddFilter === 'verified') return project.isDueDiligence === true;
+          return project.isDueDiligence !== true;
+        }).length === 0 && (
+          <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-xl">
+            <Briefcase className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
+            <p className="text-slate-500 dark:text-slate-400">
+              {searchQuery ? '未找到匹配的项目' : 
+                activeTab === 'created' ? '暂无我创建的项目' :
+                activeTab === 'participating' ? '暂无我参与的项目' :
+                activeTab === 'following' ? '暂无我关注的关注' : t('common.empty')}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Create Modal */}
+      {/* Project Detail Modal */}
+      <AnimatePresence>
+        {selectedProject && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-50"
+              onClick={() => setSelectedProject(null)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              onClick={() => setSelectedProject(null)}
+            >
+              <div
+                className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="sticky top-0 bg-white dark:bg-slate-800 rounded-t-2xl border-b border-slate-100 dark:border-slate-700 p-4 flex items-center justify-between z-10">
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white">项目详情</h2>
+                  <div className="flex items-center gap-2">
+                    <ShareButton 
+                      targetType="project"
+                      targetId={selectedProject.id}
+                      title={selectedProject.title}
+                      description={selectedProject.description}
+                    />
+                    <button
+                      onClick={() => setSelectedProject(null)}
+                      className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-6 space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+                        <Briefcase className="w-7 h-7 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">{selectedProject.title}</h3>
+                        {/* 项目ID */}
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded text-xs font-mono font-medium">
+                            ID: {getShortProjectId(selectedProject.id)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-slate-500">{selectedProject.date}</p>
+                      </div>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[selectedProject.status]}`}>
+                      {statusLabels[selectedProject.status]}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                      <p className="text-xs text-slate-500 mb-1">地点</p>
+                      <p className="font-medium text-slate-900 dark:text-white flex items-center gap-2">
+                        <MapPin className="w-4 h-4" /> {selectedProject.location}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                      <p className="text-xs text-slate-500 mb-1">行业</p>
+                      <p className="font-medium text-slate-900 dark:text-white">{selectedProject.industry}</p>
+                    </div>
+                    <div className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                      <p className="text-xs text-slate-500 mb-1">类型</p>
+                      <p className="font-medium text-amber-600 dark:text-amber-400">{selectedProject.type}</p>
+                    </div>
+                    <div className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                      <p className="text-xs text-slate-500 mb-1">发布日期</p>
+                      <p className="font-medium text-slate-900 dark:text-white flex items-center gap-2">
+                        <Calendar className="w-4 h-4" /> {selectedProject.date}
+                      </p>
+                    </div>
+                  </div>
+
+                  {selectedProject.description && (
+                    <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                      <p className="text-xs text-slate-500 mb-2">项目描述</p>
+                      <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{selectedProject.description}</p>
+                    </div>
+                  )}
+
+                  {/* 尽调信息 */}
+                  {selectedProject.isDueDiligence && selectedProject.dueDiligenceDetails && (
+                    <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 rounded text-xs font-medium text-orange-700 dark:text-orange-400">
+                          已尽调
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 mb-2">尽调详情</p>
+                      <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{selectedProject.dueDiligenceDetails}</p>
+                    </div>
+                  )}
+
+                  {selectedProject.images.length > 0 && (
+                    <div>
+                      <p className="text-xs text-slate-500 mb-2">项目图片</p>
+                      <div className="grid grid-cols-3 gap-2">
+                        {selectedProject.images.map((img, i) => (
+                          <img key={i} src={img} alt={`图片${i + 1}`} className="w-full aspect-square object-cover rounded-lg" />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-4 border-t border-slate-100 dark:border-slate-700 flex justify-end">
+                  <button
+                    onClick={() => setSelectedProject(null)}
+                    className="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600"
+                  >
+                    关闭
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+      <Toast message={toastMessage} visible={showToast} />
+    </div>
+  </Layout>
+  );
+}

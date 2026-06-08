@@ -9,7 +9,7 @@ function generateToken(openid: string): string {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { openid, nickname, realName, phone, privacyAgreed, consensusAgreed } = body;
+    const { openid, nickname, realName, phone, avatarUrl, privacyAgreed, consensusAgreed } = body;
 
     if (!openid) {
       return NextResponse.json(
@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
     let isNewUser = false;
     let userPhone: string | null = null;
     let userRealName: string | null = null;
+    let userDisplayName: string | null = null;
     let userPrivacyAgreed: number = 0;
     let userConsensusAgreed: number = 0;
 
@@ -44,6 +45,7 @@ export async function POST(request: NextRequest) {
       if (userRows && userRows.length > 0) {
         userPhone = userRows[0].phone;
         userRealName = userRows[0].real_name;
+        userDisplayName = userRows[0].display_name;
         userPrivacyAgreed = userRows[0].privacy_agreed;
         userConsensusAgreed = userRows[0].consensus_agreed;
       }
@@ -77,10 +79,10 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-        userId = 'user-wechat-' + Date.now();
+        userId = 'UID' + phone;
         await pool.query(
-          `INSERT INTO users (id, phone, password, display_name, real_name, user_type) VALUES (?, ?, ?, ?, ?, 'individual')`,
-          [userId, phone, '', nickname || realName || 'Wechat User', realName]
+          `INSERT INTO users (id, phone, password, display_name, real_name, avatar_url, user_type) VALUES (?, ?, ?, ?, ?, ?, 'individual')`,
+          [userId, phone, '', nickname || realName || '微信用户', realName || nickname || '', avatarUrl || '']
         );
       }
 
@@ -96,13 +98,21 @@ export async function POST(request: NextRequest) {
     }
 
     // Update user info when new data is provided
-    if (nickname || realName || phone || privacyAgreed || consensusAgreed) {
+    if (nickname || realName || phone || avatarUrl || privacyAgreed || consensusAgreed) {
       const updates: string[] = [];
       const values: any[] = [];
 
+      // 昵称冲突处理：已有昵称且微信昵称等于真实姓名时，保留原昵称
       if (nickname) {
-        updates.push('display_name = ?');
-        values.push(nickname);
+        if (isNewUser || !userDisplayName) {
+          // 新用户或没有昵称 → 使用微信昵称
+          updates.push('display_name = ?');
+          values.push(nickname);
+        } else if (nickname !== realName && userDisplayName !== realName && nickname !== userDisplayName) {
+          // 微信昵称 ≠ 真实姓名，原昵称 ≠ 真实姓名，且两者不同 → 保留原昵称，不覆盖
+          // 前端后续可通过接口提示用户选择
+        }
+        // 其他情况（微信昵称=真实姓名 或 原昵称=真实姓名 或 两者相同）→ 保留原昵称
       }
       if (realName) {
         updates.push('real_name = ?');
@@ -111,6 +121,10 @@ export async function POST(request: NextRequest) {
       if (phone) {
         updates.push('phone = ?');
         values.push(phone);
+      }
+      if (avatarUrl) {
+        updates.push('avatar_url = ?');
+        values.push(avatarUrl);
       }
       // Save privacy and consensus agreement
       if (privacyAgreed) {
@@ -146,7 +160,8 @@ export async function POST(request: NextRequest) {
       user: {
         id: userId,
         openid,
-        nickname: nickname || realName || 'Wechat User',
+        nickname: nickname || realName || '微信用户',
+        display_name: userDisplayName || nickname || realName || '微信用户',
         realName: userRealName,
         phone: userPhone,
         isNewUser,

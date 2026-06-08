@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 
-// 用户搜索接口
+// 用户搜索接口（仅查询 users 表 — UID+手机号为主ID，company/position 已从 profiles 迁移）
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -15,55 +15,30 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 搜索 profiles 表
-    const [profilesRows]: any = await pool.query(
-      'SELECT id, name, company, position, avatar FROM profiles WHERE name LIKE ? OR company LIKE ? LIMIT 10',
-      [`%${q}%`, `%${q}%`]
-    );
-
-    // 搜索 users 表（补充手机号）
+    // 搜索 users 表（所有字段统一在这里）
     const [usersRows]: any = await pool.query(
-      'SELECT id, phone, display_name, real_name, avatar_url FROM users WHERE display_name LIKE ? OR real_name LIKE ? OR phone LIKE ? LIMIT 10',
+      `SELECT id, phone, display_name, real_name, avatar_url, identity_verified, company, position
+       FROM users
+       WHERE display_name LIKE ? OR real_name LIKE ? OR phone LIKE ?
+       LIMIT 10`,
       [`%${q}%`, `%${q}%`, `%${q}%`]
     );
 
-    // 合并结果
-    const usersMap = new Map();
-    
-    profilesRows.forEach((row: any) => {
-      usersMap.set(row.id, {
-        id: String(row.id),
-        name: row.name,
-        display_name: row.name,
-        real_name: row.name,
-        company: row.company,
-        position: row.position,
-        avatar_url: row.avatar,
-      });
-    });
-
-    usersRows.forEach((row: any) => {
-      if (!usersMap.has(row.id)) {
-        usersMap.set(row.id, {
-          id: String(row.id),
-          phone: row.phone,
-          name: row.display_name || row.real_name,
-          display_name: row.display_name,
-          real_name: row.real_name,
-          avatar_url: row.avatar_url,
-        });
-      } else {
-        // 补充手机号
-        const existing = usersMap.get(row.id);
-        existing.phone = row.phone;
-      }
-    });
-
-    const users = Array.from(usersMap.values()).slice(0, 10);
+    const users = usersRows.map((row: any) => ({
+      id: String(row.id),
+      phone: row.phone,
+      name: row.display_name || row.real_name,
+      display_name: row.display_name,
+      real_name: row.real_name,
+      avatar_url: row.avatar_url,
+      identity_verified: !!row.identity_verified,
+      company: row.company,
+      position: row.position,
+    }));
 
     return NextResponse.json({
       success: true,
-      users: users,
+      users,
     });
   } catch (error: any) {
     console.error('用户搜索错误:', error.message);

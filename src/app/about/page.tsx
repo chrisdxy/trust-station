@@ -72,6 +72,7 @@ export default function AboutPage() {
               </h2>
               <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
                 如有任何问题或建议，欢迎通过以下方式联系我们：<br />
+                电话：18221337054<br />
                 邮箱：admin@globaltrustleders.com
               </p>
             </section>

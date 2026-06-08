@@ -6,7 +6,7 @@ import Layout from '@/components/Layout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCategories, Category } from '@/hooks/useCategories';
 import { UserSelect, UserSearchResult } from '@/components/UserSelect';
-import { ShareButton } from '@/components/ShareButton';
+import { WeChatShareSetup } from '@/components/WeChatShareSetup';
 
 // Simple Toast Component
 function Toast({ message, visible }: { message: string; visible: boolean }) {
@@ -33,16 +33,19 @@ interface Project {
   status: string;
   location: string;
   industry: string;
-  type: string;
+  types: string[];
   description: string;
+  summary?: string;
   images: string[];
   date: string;
+  createdAt?: string;
   members: string[];
   creatorId?: string;
   paused?: boolean;
   isDueDiligence?: boolean;
   dueDiligenceDetails?: string;
   coverImage?: string;
+  qr_code?: string;
 }
 
 export default function ProjectsPage() {
@@ -58,7 +61,7 @@ export default function ProjectsPage() {
   const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const [selectedMember, setSelectedMember] = useState<UserSearchResult | null>(null);
+  const [selectedMembers, setSelectedMembers] = useState<UserSearchResult[]>([]);
   
   // Filter states
   const [activeTab, setActiveTab] = useState<'all' | 'created' | 'following'>('all');
@@ -70,8 +73,9 @@ export default function ProjectsPage() {
     title: '',
     location: '',
     industry: '',
-    type: '' as string,
+    types: [] as string[],
     description: '',
+    summary: '',
     coverImage: '',
     images: [] as string[],
     members: [] as string[],
@@ -81,6 +85,19 @@ export default function ProjectsPage() {
   
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string>('');
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
+  
+  // 安全日期格式化
+  const safeDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? '' : d.toLocaleDateString('zh-CN');
+  };
+
+  // 短项目ID
+  const getShortProjectId = (id: string) => {
+    return 'PRJ-' + id.replace(/-/g, '').slice(0, 8).toUpperCase();
+  };
   
   // Toast helper
   const toast = (msg: string) => {
@@ -104,20 +121,40 @@ export default function ProjectsPage() {
   
   // Load current user
   useEffect(() => {
-    const loadUser = async () => {
+    let userId = '';
+    // 1. 尝试从 localStorage 获取用户信息
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
       try {
-        const res = await fetch('/api/auth/me');
-        const data = await res.json();
-        if (data.success) {
+        const user = JSON.parse(userStr);
+        if (user.id) userId = user.id;
+      } catch {}
+    }
+    
+    if (userId) {
+      setCurrentUserId(userId);
+      setIsAuthChecked(true);
+      return;
+    }
+    
+    // 2. 尝试从 API 获取
+    fetch('/api/auth/me')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.user?.id) {
           setCurrentUserId(data.user.id);
         }
-      } catch (err) {
-        console.error('Failed to load user:', err);
-      }
-    };
-    loadUser();
-    loadProjects();
+      })
+      .catch(err => console.error('Failed to load user:', err))
+      .finally(() => setIsAuthChecked(true));
   }, []);
+  
+  // Load projects only after auth check
+  useEffect(() => {
+    if (isAuthChecked && currentUserId) {
+      loadProjects();
+    }
+  }, [isAuthChecked, currentUserId]);
   
   // Handle cover image upload
   const handleCoverImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,11 +162,11 @@ export default function ProjectsPage() {
     if (!file) return;
     
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setCoverImagePreview(reader.result as string);
+    reader.onload = (e) => {
+      setCoverImagePreview((e.target as FileReader).result as string);
     };
     reader.readAsDataURL(file);
-    
+
     // Upload to server
     const formData = new FormData();
     formData.append('file', file);
@@ -141,12 +178,47 @@ export default function ProjectsPage() {
       const data = await res.json();
       if (data.success) {
         setFormData(prev => ({ ...prev, coverImage: data.url }));
+        // 上传成功后重置文件输入框，防止手机端显示长文件名
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      } else {
+        toast(data.error || '上传失败');
+        console.error('Upload failed:', data.error);
       }
     } catch (err) {
       console.error('Upload failed:', err);
+      toast('图片上传失败，请重试');
     }
   };
-  
+
+  // 安全格式化日期（处理 null/undefined/Invalid Date）
+  const formatSafeDate = (value: string | null | undefined): string => {
+    if (!value) return '—';
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('zh-CN');
+  };
+
+  // 简易 Markdown → HTML（支持图片、链接、粗体）
+  const renderDescription = (text: any) => {
+    if (!text || typeof text !== 'string') return '';
+    let html = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match: string, alt: string, url: string) => {
+      const fullUrl = url.startsWith('/') ? 'https://myfriends.vip' + url : url;
+      return `<img src="${fullUrl}" alt="${alt}" style="max-width:100%;height:auto;margin:8px 0;border-radius:8px" />`;
+    });
+    html = html.replace(/\[([^\]]*)\]\(([^)]+)\)/g, (match: string, text: string, url: string) => {
+      const fullUrl = url.startsWith('/') ? 'https://myfriends.vip' + url : url;
+      return `<a href="${fullUrl}" target="_blank" style="color:#3b82f6;text-decoration:underline">${text}</a>`;
+    });
+    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    html = html.replace(/\n/g, '<br/>');
+    return html;
+  };
+
   // Remove cover image
   const removeCoverImage = () => {
     setCoverImagePreview(null);
@@ -180,11 +252,16 @@ export default function ProjectsPage() {
             const newText = text.substring(0, start) + `![image](${data.url})` + text.substring(end);
             setFormData(prev => ({ ...prev, description: newText }));
           }
+        } else {
+          toast(data.error || '图片上传失败');
         }
       } catch (err) {
         console.error('Upload failed:', err);
+        toast('图片上传失败，请重试');
       }
     }
+    // 重置文件输入框，防止手机端显示长文件名
+    if (editorImageRef.current) editorImageRef.current.value = '';
   };
   
   // Format text helper
@@ -221,20 +298,18 @@ export default function ProjectsPage() {
     setFormData(prev => ({ ...prev, description: newText }));
   };
   
-  // Add member
-  const addMember = () => {
-    const memberName = selectedMember?.real_name || selectedMember?.display_name || '用户';
-    if (selectedMember && !formData.members.includes(memberName)) {
-      setFormData(prev => ({
-        ...prev,
-        members: [...prev.members, memberName],
-      }));
-      setSelectedMember(null);
-    }
+  // Add/remove members via UserSelect multi-select
+  const addMember = (user: UserSearchResult) => {
+    const name = user.real_name || user.display_name || '用户';
+    setSelectedMembers(prev => [...prev, user]);
+    setFormData(prev => ({
+      ...prev,
+      members: prev.members.includes(name) ? prev.members : [...prev.members, name],
+    }));
   };
-  
-  // Remove member
+
   const removeMember = (member: string) => {
+    setSelectedMembers(prev => prev.filter(u => (u.real_name || u.display_name) !== member));
     setFormData(prev => ({
       ...prev,
       members: prev.members.filter(m => m !== member),
@@ -263,21 +338,18 @@ export default function ProjectsPage() {
             title: formData.title,
             description: formData.description,
             coverImage: formData.coverImage,
-            projectType: formData.type,
+            images: formData.images,
+            projectTypes: formData.types,
             industry: formData.industry,
             location: formData.location,
           }),
         });
         const data = await res.json();
         if (data.success) {
-          setProjects(projects.map(p => 
-            p.id === editingProject.id 
-              ? { ...p, ...formData }
-              : p
-          ));
-          setSelectedProject(projects.find(p => p.id === editingProject.id) ? { ...projects.find(p => p.id === editingProject.id)!, ...formData } : null);
+          await loadProjects();
+          setSelectedProject(null);
           setEditingProject(null);
-          setFormData({ title: '', location: '', industry: '', type: '', description: '', coverImage: '', images: [], members: [], isDueDiligence: false, dueDiligenceDetails: '' });
+          setFormData({ title: '', location: '', industry: '', types: [], description: '', summary: '', coverImage: '', images: [], members: [], isDueDiligence: false, dueDiligenceDetails: '' });
           setShowModal(false);
           toast('项目已更新');
         } else {
@@ -298,7 +370,7 @@ export default function ProjectsPage() {
             title: formData.title,
             description: formData.description,
             coverImage: formData.coverImage,
-            projectType: formData.type,
+            projectTypes: formData.types,
             industry: formData.industry,
             location: formData.location,
           }),
@@ -307,7 +379,7 @@ export default function ProjectsPage() {
         if (data.success) {
           await loadProjects();
           setCreatedProjectId(data.id);
-          setFormData({ title: '', location: '', industry: '', type: '', description: '', coverImage: '', images: [], members: [], isDueDiligence: false, dueDiligenceDetails: '' });
+          setFormData({ title: '', location: '', industry: '', types: [], description: '', summary: '', coverImage: '', images: [], members: [], isDueDiligence: false, dueDiligenceDetails: '' });
           setShowModal(false);
         } else {
           toast(data.error || '创建失败');
@@ -338,7 +410,7 @@ export default function ProjectsPage() {
         project.description.toLowerCase().includes(query) ||
         project.location.toLowerCase().includes(query) ||
         project.industry.toLowerCase().includes(query) ||
-        project.type.toLowerCase().includes(query);
+        project.types.some(t => t.toLowerCase().includes(query));
       if (!matchesSearch) return false;
     }
     
@@ -347,13 +419,23 @@ export default function ProjectsPage() {
     if (dueDiligenceFilter === 'not_due' && project.isDueDiligence) return false;
     
     // Project type filter
-    if (selectedTypes.length > 0 && !selectedTypes.includes(project.type)) return false;
+    if (selectedTypes.length > 0 && !project.types.some(t => selectedTypes.includes(t))) return false;
     
     return true;
   });
   
   return (
     <Layout>
+      {!isAuthChecked ? (
+        <div className="max-w-6xl mx-auto py-20 text-center">
+          <p className="text-slate-500">加载中...</p>
+        </div>
+      ) : !currentUserId ? (
+        <div className="max-w-6xl mx-auto py-20 text-center">
+          <h2 className="text-xl font-bold text-slate-700 mb-2">请先登录</h2>
+          <p className="text-slate-500">项目中心需要登录后才能访问</p>
+        </div>
+      ) : (
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <motion.div
@@ -516,7 +598,7 @@ export default function ProjectsPage() {
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">项目创建成功</h3>
                 <p className="text-slate-600 dark:text-slate-400 mb-2">项目ID:</p>
                 <div className="flex items-center gap-2 p-3 bg-slate-100 dark:bg-slate-700 rounded-lg mb-4">
-                  <code className="text-sm text-amber-600 dark:text-amber-400">{createdProjectId}</code>
+                  <code className="text-sm text-amber-600 dark:text-amber-400">{getShortProjectId(createdProjectId)}</code>
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(createdProjectId);
@@ -550,7 +632,7 @@ export default function ProjectsPage() {
               <p>暂无项目，点击上方按钮创建</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {filteredProjects.map((project, idx) => (
                 <motion.div
                   key={project.id}
@@ -579,10 +661,18 @@ export default function ProjectsPage() {
                           尽调
                         </span>
                       )}
+                      {project.types && project.types.map((t: string) => (
+                        <span key={t} className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs rounded-full">
+                          {t}
+                        </span>
+                      ))}
                     </div>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-3">
-                      {project.description}
-                    </p>
+                    <span className="inline-block px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded text-xs font-mono cursor-pointer hover:bg-amber-200 transition-colors mb-2"
+                      onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(getShortProjectId(project.id)).then(() => {}) }}
+                      title="点击复制项目ID，用于记录中心查询">
+                      项目ID: {getShortProjectId(project.id)}
+                    </span>
+                    <div className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-3">{project.summary || ''}</div>
                     <div className="flex items-center gap-4 text-xs text-slate-500">
                       {project.location && (
                         <span className="flex items-center gap-1">
@@ -592,9 +682,34 @@ export default function ProjectsPage() {
                       )}
                       <span className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
-                        {new Date(project.date).toLocaleDateString('zh-CN')}
+                        {safeDate(project.date)}
                       </span>
                     </div>
+                    {/* 删除按钮 — 仅创建者可见 */}
+                    {currentUserId && project.creatorId === currentUserId && (
+                      <div className="flex justify-end mt-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!confirm('确定删除该项目？')) return;
+                            fetch(`/api/projects?id=${project.id}`, { method: 'DELETE' })
+                              .then(r => r.json())
+                              .then(data => {
+                                if (data.success) {
+                                  setProjects(prev => prev.filter(p => p.id !== project.id));
+                                  setSelectedProject(null);
+                                } else alert(data.error || '删除失败');
+                              })
+                              .catch(() => alert('删除失败'));
+                          }}
+                          className="flex items-center gap-1 px-2 py-1 text-xs text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors"
+                          title="删除项目"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          删除
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               ))}
@@ -632,7 +747,7 @@ export default function ProjectsPage() {
                       onClick={() => {
                         setShowModal(false);
                         setEditingProject(null);
-                        setFormData({ title: '', location: '', industry: '', type: '', description: '', coverImage: '', images: [], members: [], isDueDiligence: false, dueDiligenceDetails: '' });
+                        setFormData({ title: '', location: '', industry: '', types: [], description: '', summary: '', coverImage: '', images: [], members: [], isDueDiligence: false, dueDiligenceDetails: '' });
                       }}
                       className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg"
                     >
@@ -690,24 +805,30 @@ export default function ProjectsPage() {
                     {/* Project Type */}
                     <div>
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                        项目类型
+                        项目类型（可多选）
                       </label>
                       <div className="flex flex-wrap gap-2">
                         {typeOptions.map((opt: string) => (
                           <label
                             key={opt}
                             className={`px-3 py-1.5 rounded-lg text-sm cursor-pointer transition-colors ${
-                              formData.type === opt
+                              formData.types.includes(opt)
                                 ? 'bg-amber-500 text-white'
                                 : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
                             }`}
                           >
                             <input
-                              type="radio"
-                              name="projectType"
+                              type="checkbox"
                               value={opt}
-                              checked={formData.type === opt}
-                              onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                              checked={formData.types.includes(opt)}
+                              onChange={() => {
+                                setFormData({
+                                  ...formData,
+                                  types: formData.types.includes(opt)
+                                    ? formData.types.filter((t: string) => t !== opt)
+                                    : [...formData.types, opt]
+                                });
+                              }}
                               className="sr-only"
                             />
                             {opt}
@@ -753,6 +874,12 @@ export default function ProjectsPage() {
                           <span>点击上传封面图片</span>
                         </button>
                       )}
+                    </div>
+
+                    {/* 简介 */}
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">项目简介</label>
+                      <textarea value={formData.summary} onChange={(e) => setFormData(prev => ({ ...prev, summary: e.target.value }))} rows={3} className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 resize-none" placeholder="简短介绍项目亮点，将显示在项目卡片上..." />
                     </div>
 
                     {/* Description */}
@@ -915,20 +1042,15 @@ export default function ProjectsPage() {
                       <div className="flex gap-2">
                         <div className="flex-1">
                           <UserSelect
-                            onSelect={(user: UserSearchResult) => setSelectedMember(user)}
-                            selectedUsers={selectedMember ? [selectedMember] : []}
-                            placeholder="搜索成员..."
+                            onSelect={addMember}
+                            onRemove={(userId) => {
+                              const u = selectedMembers.find(m => m.id === userId);
+                              if (u) removeMember(u.real_name || u.display_name || '用户');
+                            }}
+                            selectedUsers={selectedMembers}
+                            placeholder="搜索成员（支持多选）..."
                           />
                         </div>
-                        <button
-                          type="button"
-                          onClick={addMember}
-                          disabled={!selectedMember}
-                          className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm flex items-center gap-1 disabled:opacity-50"
-                        >
-                          <UserPlus className="w-4 h-4" />
-                          添加
-                        </button>
                       </div>
                       {formData.members.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-2">
@@ -982,6 +1104,7 @@ export default function ProjectsPage() {
         <AnimatePresence>
           {selectedProject && (
             <>
+              <WeChatShareSetup title={selectedProject?.title} description={(selectedProject?.summary || selectedProject?.description || '').replace(/<[^>]*>/g, '').slice(0, 200)} imageUrl={selectedProject?.coverImage || ''} />
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -1000,31 +1123,53 @@ export default function ProjectsPage() {
                   {/* Modal Header */}
                   <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800 z-10">
                     <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-                      {selectedProject.title}
+                      {selectedProject?.title}
                     </h2>
                     <div className="flex items-center gap-2">
-                      <ShareButton targetType="project" targetId={selectedProject.id} title={selectedProject.title} />
                       <button
                         onClick={() => {
                           setEditingProject(selectedProject);
+                          setCoverImagePreview(selectedProject?.coverImage || null);
                           setFormData({
                             title: selectedProject.title,
                             location: selectedProject.location,
                             industry: selectedProject.industry,
-                            type: selectedProject.type,
+                            types: selectedProject.types || [],
                             description: selectedProject.description,
+                            summary: selectedProject.summary || '',
                             coverImage: selectedProject.coverImage || '',
                             images: selectedProject.images || [],
                             members: selectedProject.members || [],
                             isDueDiligence: selectedProject.isDueDiligence || false,
                             dueDiligenceDetails: selectedProject.dueDiligenceDetails || '',
                           });
+                          setSelectedProject(null);
                           setShowModal(true);
                         }}
                         className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg"
                       >
                         <Edit className="w-5 h-5" />
                       </button>
+                      {currentUserId && selectedProject?.creatorId === currentUserId && (
+                        <button
+                          onClick={() => {
+                            if (!confirm('确定删除该项目？')) return;
+                            fetch(`/api/projects?id=${selectedProject?.id}`, { method: 'DELETE' })
+                              .then(r => r.json())
+                              .then(data => {
+                                if (data.success) {
+                                  setProjects(prev => prev.filter(p => p.id !== selectedProject.id));
+                                  setSelectedProject(null);
+                                } else alert(data.error || '删除失败');
+                              })
+                              .catch(() => alert('删除失败'));
+                          }}
+                          className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
+                          title="删除项目"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      )}
                       <button
                         onClick={() => setSelectedProject(null)}
                         className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg"
@@ -1036,60 +1181,58 @@ export default function ProjectsPage() {
                   
                   {/* Modal Body */}
                   <div className="p-6 space-y-6">
-                    {selectedProject.coverImage && (
-                      <div className="h-64 rounded-lg overflow-hidden">
-                        <img 
-                          src={selectedProject.coverImage} 
-                          alt={selectedProject.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
-                    
-                    <div>
-                      <p className="text-sm text-slate-500 mb-2">项目描述</p>
-                      <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{selectedProject.description}</p>
-                    </div>
-                    
                     <div className="grid grid-cols-2 gap-4">
-                      {selectedProject.location && (
+                      {selectedProject?.location && (
                         <div>
                           <p className="text-sm text-slate-500 mb-2">项目地点</p>
                           <p className="text-slate-700 dark:text-slate-300 flex items-center gap-2">
                             <MapPin className="w-4 h-4" />
-                            {selectedProject.location}
+                            {selectedProject?.location}
                           </p>
                         </div>
                       )}
                       <div>
                         <p className="text-sm text-slate-500 mb-2">项目类型</p>
-                        <p className="text-slate-700 dark:text-slate-300">{selectedProject.type}</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {selectedProject?.types && selectedProject?.types.length > 0
+                            ? selectedProject?.types?.map((t: string) => (
+                                <span key={t} className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-xs rounded-full">{t}</span>
+                              ))
+                            : <span className="text-slate-400 text-sm">未设置</span>
+                          }
+                        </div>
                       </div>
                       <div>
                         <p className="text-sm text-slate-500 mb-2">行业</p>
-                        <p className="text-slate-700 dark:text-slate-300">{selectedProject.industry}</p>
+                        <p className="text-slate-700 dark:text-slate-300">{selectedProject?.industry || '—'}</p>
                       </div>
                       <div>
                         <p className="text-sm text-slate-500 mb-2">创建日期</p>
                         <p className="text-slate-700 dark:text-slate-300 flex items-center gap-2">
                           <Calendar className="w-4 h-4" />
-                          {new Date(selectedProject.date).toLocaleDateString('zh-CN')}
+                          {formatSafeDate(selectedProject?.createdAt || (selectedProject as any)?.created_at || selectedProject?.date)}
                         </p>
                       </div>
                     </div>
                     
-                    {selectedProject.isDueDiligence && (
+                    {selectedProject?.isDueDiligence && (
                       <div>
                         <p className="text-xs text-slate-500 mb-2">尽调详情</p>
-                        <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{selectedProject.dueDiligenceDetails}</p>
+                        <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{selectedProject?.dueDiligenceDetails}</p>
                       </div>
                     )}
                     
-                    {selectedProject.images && selectedProject.images.length > 0 && (
+                    
+                    <div>
+                      <p className="text-sm text-slate-500 mb-2">项目描述</p>
+                      <p className="text-slate-700 dark:text-slate-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: renderDescription(selectedProject?.description) }} />
+                    </div>
+                    
+                    {selectedProject?.images && selectedProject?.images.length > 0 && (
                       <div>
-                        <p className="text-xs text-slate-500 mb-2">项目图片</p>
+                        <p className="text-sm text-slate-500 mb-2">项目图片</p>
                         <div className="grid grid-cols-3 gap-2">
-                          {selectedProject.images.map((img, i) => (
+                          {selectedProject?.images?.map((img: string, i: number) => (
                             <img key={i} src={img} alt={`图片${i + 1}`} className="w-full aspect-square object-cover rounded-lg" />
                           ))}
                         </div>
@@ -1097,6 +1240,14 @@ export default function ProjectsPage() {
                     )}
                   </div>
                   
+                  {/* 简介 */}
+                  {selectedProject?.summary && (
+                    <div className="mb-4 px-4 py-3 bg-amber-50 dark:bg-amber-900/10 rounded-xl">
+                      <h4 className="text-sm font-semibold text-amber-700 dark:text-amber-400 mb-2">项目简介</h4>
+                      <p className="text-slate-700 dark:text-slate-300 text-sm">{selectedProject?.summary}</p>
+                    </div>
+                  )}
+
                   {/* Modal Footer */}
                   <div className="p-4 border-t border-slate-100 dark:border-slate-700 flex justify-end">
                     <button
@@ -1114,6 +1265,7 @@ export default function ProjectsPage() {
         
         <Toast message={toastMessage} visible={showToast} />
       </div>
+      )}
     </Layout>
   );
 }

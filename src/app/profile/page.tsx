@@ -1,7 +1,7 @@
 "use client";
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Shield, Edit, FileText, Users2 as UsersIcon, X, Check, Camera, Save, Plus, UserCircle, Building, Award, Globe, EyeOff, Trash2, Share2, Scale, ChevronDown, Loader2, Clock, CheckCircle, Upload, Mail, Smartphone, Sparkles, Handshake, TrendingUp, Briefcase, Calendar, Image as ImageIcon } from 'lucide-react';
+import { User, Shield, Edit, FileText, Users2 as UsersIcon, X, Check, Camera, Save, Plus, UserCircle, Building, Award, Globe, EyeOff, Trash2, Share2, Scale, ChevronDown, Loader2, Clock, CheckCircle, Upload, Mail, Smartphone, Sparkles, Handshake, TrendingUp, Briefcase, Calendar, Image as ImageIcon, Eye } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,20 +10,30 @@ import { useCategories } from '@/hooks/useCategories';
 
 export default function ProfilePage() {
   const { t } = useLanguage();
-  const { profile, updateProfile, user } = useAuth();
+  const { profile, updateProfile, user, revalidateSession } = useAuth();
   const { publicProfiles, setPublicProfiles } = useData();
   const [showEditModal, setShowEditModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState<{
-    type: 'personal' | 'enterprise' | 'expert';
+  const [showCardEditModal, setShowCardEditModal] = useState(false);
+  const [editingCard, setEditingCard] = useState<{
+    id: string;
+    type: 'personal' | 'enterprise' | 'expert' | 'partner';
     fields: Record<string, string>;
     phoneNumbers: string[];
+    isPublic: boolean;
+  } | null>(null);
+  const [createForm, setCreateForm] = useState<{
+    type: 'personal' | 'enterprise' | 'expert' | 'partner';
+    fields: Record<string, string>;
+    phoneNumbers: string[];
+    isPublic: boolean;
   }>({
     type: 'personal',
     fields: {},
     phoneNumbers: [],
+    isPublic: true,
   });
   const [editForm, setEditForm] = useState({
     display_name: '',
@@ -32,36 +42,6 @@ export default function ProfilePage() {
     phone: '',
     email: '',
   });
-
-  // 分享专区数据
-  const [shares, setShares] = useState<Array<{
-    shareCode: string;
-    targetType: 'project' | 'activity' | 'community' | 'card';
-    targetId: string;
-    title: string;
-    description?: string;
-    clickCount: number;
-    createdAt: string;
-  }>>([]);
-
-  // 获取分享记录
-  React.useEffect(() => {
-    if (!user?.id) return;
-    
-    const fetchShares = async () => {
-      try {
-        const res = await fetch(`/api/share?userId=${user.id}`);
-        const data = await res.json();
-        if (data.success) {
-          setShares(data.shares || []);
-        }
-      } catch (err) {
-        console.error('获取分享记录失败:', err);
-      }
-    };
-
-    fetchShares();
-  }, [user?.id]);
 
   // 加载名片数据
   React.useEffect(() => {
@@ -80,6 +60,20 @@ export default function ProfilePage() {
     };
 
     fetchProfiles();
+
+    // 加载组织活动统计
+    const fetchOrgStats = async () => {
+      try {
+        const res = await fetch(`/api/profile/stats?userId=${user.id}`);
+        const data = await res.json();
+        if (data.success) {
+          setOrgStats(data.stats);
+        }
+      } catch (err) {
+        console.error('获取组织统计失败:', err);
+      }
+    };
+    fetchOrgStats();
   }, [user?.id]);
 
   // 富文本编辑器图片上传
@@ -145,6 +139,7 @@ export default function ProfilePage() {
   const [mediatorProfile, setMediatorProfile] = useState<{
     isMediator: boolean;
     status: 'pending' | 'approved' | 'suspended' | 'none';
+    name: string;
     type: string;
     expertise: string[];
     description: string;
@@ -152,6 +147,13 @@ export default function ProfilePage() {
     successRate: number;
   } | null>(null);
   const [showMediatorModal, setShowMediatorModal] = useState(false);
+  const [showCoachModal, setShowCoachModal] = useState(false);
+  const [coachProfile, setCoachProfile] = useState<{
+    isCoach: boolean;
+    status: 'pending' | 'approved' | 'suspended' | 'none';
+    name: string; type: string; expertise: string[]; description: string;
+  } | null>(null);
+  const [coachForm, setCoachForm] = useState({ type: '', expertise: [] as string[], customExpertise: '', description: '' });
   const [mediatorForm, setMediatorForm] = useState({
     type: '',
     expertise: [] as string[],
@@ -166,68 +168,61 @@ export default function ProfilePage() {
     caseNumber: string;
     title: string;
     type: string;
-    status: 'pending' | 'in_progress' | 'completed' | 'archived';
+    status: string;
     progress: number;
     parties: string[];
+    applicant_name: string;
+    respondent_name: string;
+    description: string;
+    relationship: string;
     createTime: string;
     updateTime: string;
     result?: string;
+    feedback?: string;
+    comments?: Array<{ id: string; author: string; content: string; time: string }>;
+    expanded?: boolean;
   }>>([]);
+  const [commentInput, setCommentInput] = useState<Record<string, string>>({});
 
-  // 初始化协调案件数据
+  // 从 API 加载协调专家本人的案件
+  const loadMediationCases = async () => {
+    if (!user?.id || !mediatorProfile?.isMediator) return;
+    try {
+      const res = await fetch(`/api/mediations?assignedTo=${encodeURIComponent(mediatorProfile.name || user.display_name || '')}`);
+      const data = await res.json();
+      if (data.success) {
+        setMediationCases((data.mediations || []).map((m: any) => ({
+          id: m.id,
+          caseNumber: m.id?.slice(0, 8).toUpperCase(),
+          title: m.title || '未命名',
+          type: m.dispute_type || '协调',
+          status: m.status || 'pending',
+          progress: m.status === 'resolved' || m.status === 'archived' ? 100 : m.status === 'ongoing' ? 60 : 10,
+          parties: [m.applicant_name, m.respondent_name].filter(Boolean),
+          applicant_name: m.applicant_name || '',
+          respondent_name: m.respondent_name || '',
+          description: m.description || '',
+          relationship: m.relationship || '',
+          createTime: m.created_at || '',
+          updateTime: m.updated_at || '',
+          result: m.result || '',
+          feedback: m.feedback || '',
+          comments: [],
+          expanded: false,
+        })));
+      }
+    } catch {}
+  };
+  // 加载协调专家本人的案件（从 API）
   React.useEffect(() => {
     if (mediatorProfile?.status === 'approved') {
-      // 模拟加载案件数据
-      setMediationCases([
-        {
-          id: '1',
-          caseNumber: 'MT2024-001',
-          title: '股权转让合同纠纷',
-          type: '商事协调',
-          status: 'in_progress',
-          progress: 65,
-          parties: ['甲方：张明', '乙方：李华'],
-          createTime: '2024-01-15',
-          updateTime: '2024-01-18',
-        },
-        {
-          id: '2',
-          caseNumber: 'MT2024-002',
-          title: '房屋租赁纠纷',
-          type: '民事协调',
-          status: 'pending',
-          progress: 10,
-          parties: ['甲方：王芳', '乙方：陈思'],
-          createTime: '2024-01-17',
-          updateTime: '2024-01-17',
-        },
-        {
-          id: '3',
-          caseNumber: 'MT2024-003',
-          title: '劳动争议协调',
-          type: '劳动协调',
-          status: 'completed',
-          progress: 100,
-          parties: ['员工：刘强', '公司：XX科技'],
-          createTime: '2024-01-10',
-          updateTime: '2024-01-16',
-          result: '达成和解协议',
-        },
-        {
-          id: '4',
-          caseNumber: 'MT2023-088',
-          title: '债务纠纷协调',
-          type: '民事协调',
-          status: 'archived',
-          progress: 100,
-          parties: ['债权人：赵敏', '债务人：周杰'],
-          createTime: '2023-12-20',
-          updateTime: '2024-01-05',
-          result: '协调成功',
-        },
-      ]);
+      loadMediationCases();
     }
-  }, [mediatorProfile?.status]);
+  }, [mediatorProfile?.status, user?.id]);
+
+  const toggleExpand = (id: string) => {
+    setMediationCases(prev => prev.map(c => c.id === id ? { ...c, expanded: !c.expanded } : { ...c, expanded: false }));
+  };
 
   // 合伙人相关状态
   const [partnerProfile, setPartnerProfile] = useState<{
@@ -251,49 +246,130 @@ export default function ProfilePage() {
   const [verifyType, setVerifyType] = useState<'personal'>('personal');
   const [isVerifying, setIsVerifying] = useState(false);
   const [verifyForm, setVerifyForm] = useState({
-    idCardFront: '', // 身份证正面
-    idCardBack: '', // 身份证背面
     realName: '',
+    idNumber: '',
+    facePhoto: '', // 人脸照片 base64
   });
 
   // 个人认证状态
-  const [personalVerified, setPersonalVerified] = useState(profile?.identity_verified || false);
+  const [personalVerified, setPersonalVerified] = useState(!!(user as any)?.identity_verified);
+  const [verifyResult, setVerifyResult] = useState<{ score?: number; message?: string } | null>(null);
+
+  // 页面加载时从 API 拉取最新认证状态
+  React.useEffect(() => {
+    if (!user?.id) return;
+    const fetchLatestStatus = async () => {
+      try {
+        const res = await fetch(`/api/auth/me?userId=${user.id}`);
+        const data = await res.json();
+        if (data.success) {
+          const isVerified = !!(data.user as any)?.identity_verified;
+          setPersonalVerified(isVerified);
+          // 同步到 localStorage
+          if (isVerified) {
+            try {
+              const savedUser = JSON.parse(localStorage.getItem('user') || '{}');
+              if (!savedUser.identity_verified) {
+                savedUser.identity_verified = true;
+                localStorage.setItem('user', JSON.stringify(savedUser));
+              }
+            } catch {}
+          }
+        }
+      } catch {}
+    };
+    fetchLatestStatus();
+  }, [user?.id]);
 
   // 从后台设置获取协调专家类型
   const adminCategories = useCategories();
   const expertTypes = adminCategories.mediator_type?.map(c => c.name) || ['民事协调', '商事协调', '劳动协调'];
   const expertiseAreas = adminCategories.expertise_area?.map(c => c.name) || ['合同纠纷', '债务纠纷', '房产纠纷', '知识产权'];
 
-  // 初始化协调专家数据
+  // 初始化协调专家数据（从 API 获取最新状态）
   React.useEffect(() => {
-    const saved = localStorage.getItem('user_mediator_profile');
-    if (saved) {
+    const loadMediator = async () => {
+      if (!user?.id) return;
       try {
-        setMediatorProfile(JSON.parse(saved));
-      } catch (e) {}
-    }
-  }, []);
+        const res = await fetch(`/api/mediators?userId=${user.id}`);
+        const data = await res.json();
+        if (data.success && data.mediators?.length > 0) {
+          const m = data.mediators[0];
+          setMediatorProfile({
+            isMediator: m.status === 'approved',
+            status: m.status,
+            name: m.name || '',
+            type: m.type || '',
+            expertise: typeof m.expertise === 'string' ? JSON.parse(m.expertise) : (m.expertise || []),
+            description: m.description || '',
+            caseCount: m.case_count || 0,
+            successRate: m.success_rate || 0,
+          });
+        }
+      } catch { /* fallback to localStorage */ }
+    };
+    loadMediator();
+
+    // 加载陪跑专家状态
+    const loadCoach = async () => {
+      try {
+        const res = await fetch(`/api/coach?userId=${user.id}`);
+        const data = await res.json();
+        if (data.success && data.coaches?.length > 0) {
+          const c = data.coaches[0];
+          setCoachProfile({
+            isCoach: c.status === 'approved',
+            status: c.status,
+            name: c.name || '',
+            type: c.type || '',
+            expertise: typeof c.expertise === 'string' ? JSON.parse(c.expertise) : (c.expertise || []),
+            description: c.description || '',
+          });
+        }
+      } catch {}
+    };
+    loadCoach();
+  }, [user?.id]);
 
   // 保存协调专家申请
   const handleSubmitMediator = async () => {
-    if (!mediatorForm.type || !mediatorForm.description) {
-      alert('请填写完整的协调专家申请信息');
+    if (!mediatorForm.type) {
+      alert('请选择协调专家类型');
+      return;
+    }
+    if (!mediatorForm.description.trim()) {
+      alert('请填写个人简介及擅长领域描述');
       return;
     }
 
     setIsSubmittingMediator(true);
     
-    // 合并擅长领域（包含自定义输入的）
     const allExpertise = mediatorForm.customExpertise.trim()
       ? [...mediatorForm.expertise, mediatorForm.customExpertise.trim()]
       : mediatorForm.expertise;
     
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const res = await fetch('/api/mediators', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user?.id,
+          name: user?.real_name || user?.display_name || '',
+          phone: user?.phone || '',
+          email: user?.email || '',
+          type: mediatorForm.type,
+          expertise: allExpertise,
+          description: mediatorForm.description,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) { alert(data.error || '提交失败'); return; }
+    } catch { alert('网络错误，请重试'); return; }
     
     const newProfile = {
       isMediator: true,
       status: 'pending' as const,
+      name: user?.real_name || user?.display_name || '',
       type: mediatorForm.type,
       expertise: allExpertise,
       description: mediatorForm.description,
@@ -302,12 +378,50 @@ export default function ProfilePage() {
     };
     
     setMediatorProfile(newProfile);
-    localStorage.setItem('user_mediator_profile', JSON.stringify(newProfile));
     setIsSubmittingMediator(false);
     setShowMediatorModal(false);
     setMediatorForm({ type: '', expertise: [], customExpertise: '', description: '' });
     
     alert('协调专家申请已提交，请等待管理员审核');
+  };
+
+  // 保存陪跑专家申请
+  const handleSubmitCoach = async () => {
+    if (!coachForm.description.trim()) {
+      alert('请填写个人简介及擅长领域描述');
+      return;
+    }
+    setIsSubmittingMediator(true);
+    const allExpertise = coachForm.customExpertise.trim()
+      ? [...coachForm.expertise, coachForm.customExpertise.trim()]
+      : coachForm.expertise;
+    const res = await fetch('/api/coach', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: user?.id,
+        name: user?.real_name || user?.display_name || '',
+        phone: user?.phone || '',
+        email: user?.email || '',
+        type: coachForm.type || '战略陪跑',
+        expertise: allExpertise,
+        description: coachForm.description,
+      }),
+    });
+    const data = await res.json();
+    if (!data.success) { alert(data.error || '提交失败'); setIsSubmittingMediator(false); return; }
+    setCoachProfile({
+      isCoach: false,
+      status: 'pending',
+      name: user?.real_name || user?.display_name || '',
+      type: coachForm.type || '战略陪跑',
+      expertise: allExpertise,
+      description: coachForm.description,
+    });
+    setIsSubmittingMediator(false);
+    setShowCoachModal(false);
+    setCoachForm({ type: '', expertise: [], customExpertise: '', description: '' });
+    alert('陪跑专家申请已提交，请等待管理员审核');
   };
 
   // 初始化合伙人数据
@@ -355,7 +469,7 @@ export default function ProfilePage() {
     
     fetchPartnerStatus();
     
-    // 加载下线数据
+    // 加载分享数据
     const savedDownline = localStorage.getItem('user_partner_downline');
     if (savedDownline) {
       try {
@@ -364,7 +478,10 @@ export default function ProfilePage() {
     }
   }, [user?.id]);
 
-  // 合伙人下线数据
+  // 组织活动统计
+  const [orgStats, setOrgStats] = useState({ communities: 0, activities: 0, projects: 0 });
+
+  // 合伙人分享数据
   const [downlineData, setDownlineData] = useState<{
     totalCount: number;
     users: Array<{
@@ -376,44 +493,8 @@ export default function ProfilePage() {
     }>;
   }>({ totalCount: 0, users: [] });
 
-  // 分享链接类型
-  type ShareType = 'project' | 'activity' | 'community' | 'ai' | 'personal' | 'enterprise' | 'expert';
-  const [showShareQR, setShowShareQR] = useState(false);
-  const [selectedShareType, setSelectedShareType] = useState<ShareType>('personal');
-  const [shareLink, setShareLink] = useState('');
-
-  // 生成分享链接
-  const generateShareLink = (type: ShareType) => {
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-    const userId = profile?.id || 'demo';
-    const timestamp = Date.now();
-    const params = new URLSearchParams({
-      ref: userId,
-      type,
-      t: timestamp.toString(),
-    });
-    return `${baseUrl}/${type}?${params.toString()}`;
-  };
-
-  // 复制分享链接
-  const copyShareLink = (type: ShareType) => {
-    const link = generateShareLink(type);
-    setShareLink(link);
-    navigator.clipboard.writeText(link);
-    setShowShareQR(true);
-    setSelectedShareType(type);
-  };
-
-  // 分享类型配置
-  const shareTypes: Array<{ key: ShareType; label: string; icon: React.ElementType; color: string }> = [
-    { key: 'project', label: '项目', icon: Briefcase, color: 'from-blue-400 to-blue-500' },
-    { key: 'activity', label: '活动', icon: Calendar, color: 'from-orange-400 to-orange-500' },
-    { key: 'community', label: '共同体', icon: UsersIcon, color: 'from-purple-400 to-purple-500' },
-    { key: 'ai', label: 'AI工具', icon: Sparkles, color: 'from-pink-400 to-pink-500' },
-    { key: 'personal', label: '个人名片', icon: User, color: 'from-green-400 to-green-500' },
-    { key: 'enterprise', label: '企业名片', icon: Building, color: 'from-indigo-400 to-indigo-500' },
-    { key: 'expert', label: '专家名片', icon: Award, color: 'from-amber-400 to-amber-500' },
-  ];
+  const [showOverview, setShowOverview] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   // 提交合伙人申请
   const handleSubmitPartner = async () => {
@@ -486,27 +567,57 @@ export default function ProfilePage() {
 
   // 提交认证
   const handleVerify = async () => {
-    if (!verifyForm.idCardFront || !verifyForm.idCardBack || !verifyForm.realName) {
-      alert('请上传完整的认证材料');
+    if (!verifyForm.realName || !verifyForm.idNumber) {
+      alert('请填写姓名和身份证号');
+      return;
+    }
+    if (!verifyForm.facePhoto) {
+      alert('请现场拍照');
       return;
     }
 
     setIsVerifying(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setPersonalVerified(true);
-    setIsVerifying(false);
-    setShowVerifyModal(false);
-    alert('个人身份认证申请已提交，请等待审核');
+    setVerifyResult(null);
+
+    try {
+      const res = await fetch('/api/auth/verify-face', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: verifyForm.realName,
+          idcard: verifyForm.idNumber,
+          image: verifyForm.facePhoto,
+          userId: user?.id,
+        }),
+      });
+      const data = await res.json();
+
+      if (data.success && data.data?.isMatch) {
+        setPersonalVerified(true);
+        // 持久化认证状态到 localStorage，防止刷新后丢失
+        try {
+          const savedUser = JSON.parse(localStorage.getItem('user') || '{}');
+          savedUser.identity_verified = true;
+          localStorage.setItem('user', JSON.stringify(savedUser));
+          revalidateSession();
+        } catch {}
+        setVerifyResult({ score: data.data.score, message: '✅ ' + data.data.message });
+        setTimeout(() => setShowVerifyModal(false), 2000);
+      } else {
+        setVerifyResult({ score: data.data?.score, message: '❌ ' + (data.data?.message || data.error || '认证失败') });
+      }
+    } catch (e) {
+      setVerifyResult({ message: '❌ 认证服务异常，请稍后重试' });
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   // 打开认证弹窗
   const openVerifyModal = (type: 'personal') => {
     setVerifyType(type);
-    setVerifyForm({
-      idCardFront: '',
-      idCardBack: '',
-      realName: '',
-    });
+    setVerifyForm({ realName: '', idNumber: '', facePhoto: '' });
+    setVerifyResult(null);
     setShowVerifyModal(true);
   };
 
@@ -537,6 +648,26 @@ export default function ProfilePage() {
       { key: 'email', label: '邮箱', placeholder: 'expert@zhengdao.com' },
       { key: 'phone', label: '电话', placeholder: '联系电话' },
       { key: 'bio', label: '简介', placeholder: '详细介绍专业背景...', isRichText: true },
+    ],
+    coach: [
+      { key: 'title', label: '职称/头衔', placeholder: '如：战略顾问、企业教练' },
+      { key: 'field', label: '专业领域', placeholder: '如：战略规划、资源对接' },
+      { key: 'experience', label: '从业经验', placeholder: '如：10年战略咨询经验' },
+      { key: 'education', label: '教育背景', placeholder: '如：北京大学 EMBA' },
+      { key: 'cases', label: '陪跑案例', placeholder: '列举服务过的企业案例' },
+      { key: 'email', label: '邮箱', placeholder: 'coach@zhengdao.com' },
+      { key: 'phone', label: '电话', placeholder: '联系电话' },
+      { key: 'bio', label: '简介', placeholder: '详细介绍陪跑服务内容...', isRichText: true },
+    ],
+    partner: [
+      { key: 'title', label: '合伙人类型', placeholder: '如：城市合伙人、项目合伙人' },
+      { key: 'field', label: '合作领域', placeholder: '如：法律科技、教育培训' },
+      { key: 'resources', label: '核心资源', placeholder: '如：政府关系、行业渠道' },
+      { key: 'experience', label: '从业经验', placeholder: '如：10年行业经验' },
+      { key: 'cooperation', label: '合作意向', placeholder: '希望寻找的合作伙伴...' },
+      { key: 'email', label: '邮箱', placeholder: '联系邮箱' },
+      { key: 'phone', label: '电话', placeholder: '联系电话' },
+      { key: 'bio', label: '个人简介', placeholder: '介绍合伙人背景与愿景...', isRichText: true },
     ],
   };
 
@@ -712,7 +843,7 @@ export default function ProfilePage() {
                 {profile?.phone}
               </p>
               <div className="flex flex-wrap justify-center sm:justify-start gap-3 mt-4">
-                {profile?.identity_verified && (
+                {!!(user as any)?.identity_verified && (
                   <span className="px-3 py-1 bg-green-500/20 rounded-full text-sm flex items-center gap-1">
                     <Shield className="w-3 h-3" />
                     已认证
@@ -720,245 +851,21 @@ export default function ProfilePage() {
                 )}
               </div>
             </div>
-            <button 
-              onClick={handleOpenEdit}
-              className="px-4 py-2 bg-white text-blue-900 rounded-lg font-medium flex items-center gap-2 hover:bg-blue-50 transition-colors"
+            <button
+              onClick={() => setShowOverview(true)}
+              className="px-4 py-2 bg-white/15 backdrop-blur-sm border border-white/20 text-white rounded-xl font-medium flex items-center gap-2 hover:bg-white/25 transition-all"
             >
-              <Edit className="w-4 h-4" />
-              编辑资料
+              <Eye className="w-4 h-4" />
+              资料概览
+            </button>
+            <button
+              onClick={() => setShowProfileModal(true)}
+              className="px-4 py-2 bg-white/15 backdrop-blur-sm border border-white/20 text-white rounded-xl font-medium flex items-center gap-2 hover:bg-white/25 transition-all"
+            >
+              <FileText className="w-4 h-4" />
+              对外展示
             </button>
           </div>
-        </motion.div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-          {[
-            { label: '合作关系', value: 12, icon: UsersIcon },
-            { label: '认知留痕', value: 48, icon: FileText },
-            { label: '对外展示', value: publicProfiles.length, icon: UserCircle },
-            { label: '可信指数', value: 85, icon: Shield },
-          ].map((stat, idx) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              className="bg-white dark:bg-slate-800 rounded-xl p-4 text-center shadow-sm border border-slate-100 dark:border-slate-700"
-            >
-              <stat.icon className="w-6 h-6 mx-auto text-amber-500 mb-2" />
-              <p className="text-2xl font-bold text-slate-900 dark:text-white">{stat.value}</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">{stat.label}</p>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Profile Sections */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-100 dark:border-slate-700"
-        >
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-            {t('profile.overview')}
-          </h2>
-          
-          <div className="space-y-4">
-            <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
-              <span className="text-slate-600 dark:text-slate-400">用户ID</span>
-              <span className="text-slate-900 dark:text-white text-sm font-mono">
-                {profile?.id ? 'UID' + String(profile.id).padStart(10, '0') : '-'}
-              </span>
-            </div>
-            <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
-              <span className="text-slate-600 dark:text-slate-400">{t('auth.register.name')}</span>
-              <span className="text-slate-900 dark:text-white">{profile?.real_name || '-'}</span>
-            </div>
-            <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
-              <span className="text-slate-600 dark:text-slate-400">昵称</span>
-              <span className="text-slate-900 dark:text-white">{profile?.display_name || '-'}</span>
-            </div>
-            <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
-              <span className="text-slate-600 dark:text-slate-400">手机号</span>
-              <span className="text-slate-900 dark:text-white">{profile?.phone || '-'}</span>
-            </div>
-            <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
-              <span className="text-slate-600 dark:text-slate-400">邮箱</span>
-              <span className="text-slate-900 dark:text-white">{profile?.email || '-'}</span>
-            </div>
-
-            {/* 身份认证 */}
-            <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
-              <span className="text-slate-600 dark:text-slate-400">身份认证</span>
-              <div className="flex items-center gap-2">
-                {personalVerified ? (
-                  <span className="text-green-600 flex items-center gap-1">
-                    <CheckCircle className="w-4 h-4" /> 已认证
-                  </span>
-                ) : (
-                  <button
-                    onClick={() => openVerifyModal('personal')}
-                    className="text-sm text-amber-500 hover:text-amber-600 flex items-center gap-1"
-                  >
-                    <Plus className="w-4 h-4" /> 去认证
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* 合伙人类型 - 仅已批准显示 */}
-            {partnerProfile?.status === 'approved' && (
-              <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
-                <span className="text-slate-600 dark:text-slate-400">合伙人类型</span>
-                <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full text-sm font-medium flex items-center gap-1">
-                    <Handshake className="w-4 h-4" />
-                    {partnerProfile.level}
-                  </span>
-                  {partnerProfile.region && (
-                    <span className="text-sm text-slate-500">· {partnerProfile.region}</span>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </motion.div>
-
-        {/* 我的对外展示 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-100 dark:border-slate-700"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-              我的对外展示
-            </h2>
-            <button className="text-sm text-amber-500 hover:text-amber-600">
-              查看全部
-            </button>
-          </div>
-          
-          {publicProfiles.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {publicProfiles.slice(0, 3).map((profile) => {
-                const typeConfig = {
-                  personal: { icon: UserCircle, color: 'bg-green-100 text-green-600', label: '个人' },
-                  enterprise: { icon: Building, color: 'bg-blue-100 text-blue-600', label: '企业' },
-                  expert: { icon: Award, color: 'bg-purple-100 text-purple-600', label: '专家' },
-                }[profile.type];
-                const Icon = typeConfig.icon;
-                return (
-                  <div
-                    key={profile.id}
-                    className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl"
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${typeConfig.color}`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-slate-900 dark:text-white truncate">
-                          {profile.type === 'enterprise' 
-                            ? profile.fields.find(f => f.key === 'industry')?.value || '企业名片'
-                            : profile.fields.find(f => f.key === 'title')?.value || '名片'}
-                        </p>
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className={`text-xs ${typeConfig.color}`}>{typeConfig.label}</span>
-                          {partnerProfile?.status === 'approved' && (
-                            <span className="px-1.5 py-0.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded text-xs font-medium flex items-center gap-0.5">
-                              <Handshake className="w-3 h-3" />
-                              {partnerProfile.level}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex gap-1">
-                        <button
-                          onClick={async () => {
-                            try {
-                              const response = await fetch(`/api/profiles/${profile.id}`, {
-                                method: 'PUT',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ isPublic: !profile.isPublic }),
-                              });
-                              const data = await response.json();
-                              if (data.success) {
-                                setPublicProfiles(prev => prev.map(p =>
-                                  p.id === profile.id ? { ...p, isPublic: !p.isPublic } : p
-                                ));
-                              } else {
-                                alert(data.error || '更新失败');
-                              }
-                            } catch (error) {
-                              console.error('更新名片失败:', error);
-                              alert('更新名片失败，请重试');
-                            }
-                          }}
-                          className={`p-1.5 rounded-lg transition-colors ${
-                            profile.isPublic
-                              ? 'text-green-500 hover:bg-green-100 dark:hover:bg-green-900/30'
-                              : 'text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
-                          }`}
-                          title={profile.isPublic ? '已公开' : '已私密'}
-                        >
-                          {profile.isPublic ? <Globe className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                        </button>
-                        <button
-                          onClick={async () => {
-                            if (!confirm('确定要删除这张名片吗？')) return;
-                            try {
-                              const response = await fetch(`/api/profiles/${profile.id}`, {
-                                method: 'DELETE',
-                              });
-                              const data = await response.json();
-                              if (data.success) {
-                                setPublicProfiles(prev => prev.filter(p => p.id !== profile.id));
-                              } else {
-                                alert(data.error || '删除名片失败');
-                              }
-                            } catch (error) {
-                              console.error('删除名片失败:', error);
-                              alert('删除名片失败，请重试');
-                            }
-                          }}
-                          className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                          title="删除"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-slate-400">分享码: {profile.shareCode}</span>
-                      <button
-                        onClick={() => {
-                          const link = `${window.location.origin}/share/${profile.shareCode}`;
-                          navigator.clipboard.writeText(link);
-                        }}
-                        className="text-xs text-amber-500 hover:text-amber-600 flex items-center gap-1"
-                      >
-                        <Share2 className="w-3 h-3" />
-                        分享
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <UserCircle className="w-12 h-12 mx-auto text-slate-300 mb-3" />
-              <p className="text-slate-500 mb-4">您还没有创建对外展示名片</p>
-              <button 
-                onClick={() => setShowCreateModal(true)}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors"
-              >
-                创建名片
-              </button>
-            </div>
-          )}
         </motion.div>
 
         {/* 申请通道 */}
@@ -1064,6 +971,50 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            {/* 陪跑专家申请卡片 */}
+            <div className={`p-5 rounded-xl border-2 transition-all ${
+              coachProfile?.status === 'approved' 
+                ? 'border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/20'
+                : coachProfile?.isCoach
+                ? 'border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/20'
+                : 'border-slate-200 dark:border-slate-700 hover:border-amber-300 dark:hover:border-amber-600'
+            }`}>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-teal-400 to-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <TrendingUp className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="font-semibold text-slate-900 dark:text-white">陪跑专家</h3>
+                    {coachProfile?.status === 'approved' && (
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">已认证</span>
+                    )}
+                    {coachProfile?.status === 'pending' && (
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">审核中</span>
+                    )}
+                  </div>
+                  <p className="text-sm text-slate-500 mb-3">为企业提供战略陪跑，对接战略资源</p>
+                  
+                  {coachProfile?.isCoach ? (
+                    <div className="space-y-2">
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        <span className="font-medium">{coachProfile.type}</span>
+                        {coachProfile.status === 'pending' && ' - 等待审核'}
+                      </p>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={() => setShowCoachModal(true)}
+                      className="w-full mt-2 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                      申请成为陪跑专家
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* 合伙人申请卡片 */}
             <div className={`p-5 rounded-xl border-2 transition-all ${
               partnerProfile?.status === 'approved' 
@@ -1088,7 +1039,7 @@ export default function ProfilePage() {
                   </div>
                   <p className="text-sm text-slate-500 mb-3">与平台共同发展，共享商业价值</p>
                   
-                  {partnerProfile?.isPartner ? (
+                  {partnerProfile?.isPartner || partnerProfile?.status === 'pending' ? (
                     <div className="space-y-2">
                       <p className="text-sm text-slate-600 dark:text-slate-400">
                         <span className="font-medium">{partnerProfile.level}</span>
@@ -1167,39 +1118,27 @@ export default function ProfilePage() {
                   <div className="text-xs text-slate-500">总案件</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xl font-bold text-green-600">{mediationCases.filter(c => c.status === 'completed').length}</div>
-                  <div className="text-xs text-slate-500">已完成</div>
+                  <div className="text-xl font-bold text-green-600">{mediationCases.filter(c => c.status === 'resolved' || c.status === 'archived').length}</div>
+                  <div className="text-xs text-slate-500">已结束</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xl font-bold text-blue-600">{mediationCases.filter(c => c.status === 'in_progress').length}</div>
-                  <div className="text-xs text-slate-500">进行中</div>
+                  <div className="text-xl font-bold text-blue-600">{mediationCases.filter(c => c.status === 'ongoing').length}</div>
+                  <div className="text-xs text-slate-500">调解中</div>
                 </div>
               </div>
             </div>
 
             {/* 筛选标签 */}
             <div className="flex items-center gap-2 mb-4">
-              {['全部', '进行中', '待处理', '已完成', '已归档'].map((filter) => {
-                const count = filter === '全部' 
-                  ? mediationCases.length 
-                  : filter === '进行中' 
-                    ? mediationCases.filter(c => c.status === 'in_progress').length
-                    : filter === '待处理'
-                      ? mediationCases.filter(c => c.status === 'pending').length
-                      : filter === '已完成'
-                        ? mediationCases.filter(c => c.status === 'completed').length
-                        : mediationCases.filter(c => c.status === 'archived').length;
+              {(['全部', '待调解', '调解中', '调解结束', '已存档'] as const).map((filter) => {
+                const count = filter === '全部' ? mediationCases.length : mediationCases.filter(c => c.status === ({
+                  '待调解': 'pending', '调解中': 'ongoing', '调解结束': 'resolved', '已存档': 'archived'
+                })[filter]).length;
                 return (
-                  <button
-                    key={filter}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                      filter === '全部'
-                        ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                        : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400 hover:bg-amber-50'
-                    }`}
-                  >
-                    {filter} ({count})
-                  </button>
+                  <button key={filter} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    filter === '全部' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                    : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400 hover:bg-amber-50'
+                  }`}>{filter} ({count})</button>
                 );
               })}
             </div>
@@ -1207,84 +1146,103 @@ export default function ProfilePage() {
             {/* 案件列表 */}
             <div className="space-y-3">
               {mediationCases.length > 0 ? mediationCases.map((caseItem) => (
-                <div
-                  key={caseItem.id}
-                  className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                      caseItem.status === 'in_progress' 
-                        ? 'bg-blue-100 dark:bg-blue-900/30' 
-                        : caseItem.status === 'pending'
-                          ? 'bg-amber-100 dark:bg-amber-900/30'
-                          : caseItem.status === 'completed'
-                            ? 'bg-green-100 dark:bg-green-900/30'
-                            : 'bg-slate-200 dark:bg-slate-600'
-                    }`}>
-                      <Scale className={`w-6 h-6 ${
-                        caseItem.status === 'in_progress' 
-                          ? 'text-blue-600' 
-                          : caseItem.status === 'pending'
-                            ? 'text-amber-600'
-                            : caseItem.status === 'completed'
-                              ? 'text-green-600'
-                              : 'text-slate-500'
-                      }`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-slate-900 dark:text-white">{caseItem.title}</span>
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                          caseItem.status === 'in_progress' 
-                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                            : caseItem.status === 'pending'
-                              ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                              : caseItem.status === 'completed'
-                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                : 'bg-slate-200 text-slate-600 dark:bg-slate-600 dark:text-slate-400'
-                        }`}>
-                          {caseItem.status === 'in_progress' ? '进行中' : caseItem.status === 'pending' ? '待处理' : caseItem.status === 'completed' ? '已完成' : '已归档'}
-                        </span>
+                <div key={caseItem.id} className="border rounded-xl overflow-hidden">
+                  <div
+                    onClick={() => toggleExpand(caseItem.id)}
+                    className="p-4 bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                        caseItem.status === 'ongoing' ? 'bg-blue-100 dark:bg-blue-900/30' :
+                        caseItem.status === 'pending' ? 'bg-amber-100 dark:bg-amber-900/30' :
+                        caseItem.status === 'resolved' ? 'bg-green-100 dark:bg-green-900/30' :
+                        caseItem.status === 'archived' ? 'bg-purple-100 dark:bg-purple-900/30' :
+                        'bg-slate-200 dark:bg-slate-600'
+                      }`}>
+                        <Scale className={`w-6 h-6 ${
+                          caseItem.status === 'ongoing' ? 'text-blue-600' :
+                          caseItem.status === 'pending' ? 'text-amber-600' :
+                          caseItem.status === 'resolved' ? 'text-green-600' :
+                          caseItem.status === 'archived' ? 'text-purple-600' : 'text-slate-500'
+                        }`} />
                       </div>
-                      <p className="text-xs text-slate-500 mb-2">
-                        案件编号：{caseItem.caseNumber} · {caseItem.type}
-                      </p>
-                      <div className="flex items-center gap-4 text-xs text-slate-400 mb-2">
-                        <span>当事人：{caseItem.parties.join(' / ')}</span>
-                      </div>
-                      
-                      {/* 进度条 */}
-                      {caseItem.status === 'in_progress' && (
-                        <div className="mt-2">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs text-slate-500">协调进度</span>
-                            <span className="text-xs font-medium text-blue-600">{caseItem.progress}%</span>
-                          </div>
-                          <div className="h-2 bg-slate-200 dark:bg-slate-600 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all"
-                              style={{ width: `${caseItem.progress}%` }}
-                            />
-                          </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium text-slate-900 dark:text-white">{caseItem.title}</span>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                            caseItem.status === 'ongoing' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                            caseItem.status === 'pending' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                            caseItem.status === 'resolved' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                            'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+                          }`}>
+                            {{pending:'待调解',ongoing:'调解中',resolved:'调解结束',archived:'已存档'}[caseItem.status]||caseItem.status}
+                          </span>
                         </div>
-                      )}
-
-                      {/* 结果 */}
-                      {caseItem.result && (
-                        <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                          <p className="text-xs text-green-700 dark:text-green-400">
-                            <CheckCircle className="w-3 h-3 inline mr-1" />
-                            {caseItem.result}
-                          </p>
+                        <p className="text-xs text-slate-500">案件编号：{caseItem.caseNumber} · {caseItem.type} · 当事人：{caseItem.parties.join(' / ')}</p>
+                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-200 dark:border-slate-600">
+                          <div className="flex items-center gap-3 text-xs text-slate-400">
+                            <span>创建：{caseItem.createTime ? new Date(caseItem.createTime).toLocaleDateString() : ''}</span>
+                          </div>
+                          <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${caseItem.expanded ? 'rotate-180' : ''}`} />
                         </div>
-                      )}
-
-                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-200 dark:border-slate-600">
-                        <span className="text-xs text-slate-400">创建：{caseItem.createTime}</span>
-                        <span className="text-xs text-slate-400">更新：{caseItem.updateTime}</span>
                       </div>
                     </div>
                   </div>
+                  {/* 展开详情 */}
+                  {caseItem.expanded && (
+                    <div className="p-4 bg-white dark:bg-slate-800 border-t">
+                      {/* 申请详情 */}
+                      <div className="mb-4 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                        <p className="text-xs font-medium text-slate-500 mb-2">申请详情</p>
+                        <p className="text-sm text-slate-700 dark:text-slate-300 mb-1">申请方：{caseItem.applicant_name}</p>
+                        <p className="text-sm text-slate-700 dark:text-slate-300 mb-1">被协调方：{caseItem.respondent_name}</p>
+                        <p className="text-sm text-slate-700 dark:text-slate-300">关联事项：{caseItem.relationship || '—'}</p>
+                        {caseItem.description && (
+                          <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 bg-white dark:bg-slate-600 rounded p-2">{caseItem.description}</p>
+                        )}
+                      </div>
+                      {/* 对方反馈 */}
+                      {caseItem.feedback && caseItem.feedback !== '' ? (
+                        <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/10 rounded-lg">
+                          <p className="text-xs font-medium text-amber-600 mb-1">对方反馈</p>
+                          <p className="text-sm text-slate-700 dark:text-slate-300">{caseItem.feedback}</p>
+                        </div>
+                      ) : (
+                        <div className="mb-4 p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg text-xs text-slate-400">暂无对方反馈</div>
+                      )}
+                      {/* 协调专家评论 */}
+                      {(caseItem.comments || []).map(c => (
+                        <div key={c.id} className="mb-2 p-2 bg-blue-50 dark:bg-blue-900/10 rounded">
+                          <div className="flex justify-between mb-1"><span className="text-xs font-medium text-blue-600">{c.author}</span><span className="text-xs text-slate-400">{c.time}</span></div>
+                          <p className="text-sm text-slate-700 dark:text-slate-300">{c.content}</p>
+                        </div>
+                      ))}
+                      {/* 发表意见 */}
+                      <div className="flex gap-2 mt-3">
+                        <input type="text" value={commentInput[caseItem.id]||''}
+                          onChange={e => setCommentInput({...commentInput, [caseItem.id]: e.target.value})}
+                          placeholder="发表协调意见或询问..."
+                          onKeyDown={e => { if (e.key === 'Enter') {
+                            const c = commentInput[caseItem.id]?.trim();
+                            if (!c) return;
+                            const now = new Date();
+                            const updated = mediationCases.map(x => x.id===caseItem.id ? {...x, comments: [...(x.comments||[]), {id: Date.now().toString(), author: '协调专家', content: c, time: now.toLocaleString()}]} : x);
+                            setMediationCases(updated);
+                            setCommentInput({...commentInput, [caseItem.id]: ''});
+                          }}}
+                          className="flex-1 px-3 py-2 text-sm border rounded-lg bg-white dark:bg-slate-700 dark:text-white"
+                        />
+                        <button onClick={() => {
+                          const c = commentInput[caseItem.id]?.trim();
+                          if (!c) return;
+                          const now = new Date();
+                          const updated = mediationCases.map(x => x.id===caseItem.id ? {...x, comments: [...(x.comments||[]), {id: Date.now().toString(), author: '协调专家', content: c, time: now.toLocaleString()}]} : x);
+                          setMediationCases(updated);
+                          setCommentInput({...commentInput, [caseItem.id]: ''});
+                        }} className="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm">发表</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )) : (
                 <div className="text-center py-8">
@@ -1312,9 +1270,9 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-                    合伙人业务概览
+                    组织活动统计
                   </h2>
-                  <p className="text-sm text-slate-500">推广链接，追踪业务数据</p>
+                  <p className="text-sm text-slate-500">统计您创建或参与的组织活动</p>
                 </div>
               </div>
               <span className="px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full text-sm font-medium">
@@ -1322,234 +1280,25 @@ export default function ProfilePage() {
               </span>
             </div>
 
-            {/* 分享二维码 */}
-            <div className="mb-6">
-              <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">分享推广链接</h3>
-              <p className="text-xs text-slate-500 mb-3">生成带溯源信息的专属链接，二维码扫描关注自动建立上下线关系</p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {shareTypes.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <button
-                      key={item.key}
-                      onClick={() => copyShareLink(item.key)}
-                      className="flex flex-col items-center gap-2 p-3 rounded-xl border border-slate-200 dark:border-slate-600 hover:border-purple-300 dark:hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all group"
-                    >
-                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform`}>
-                        <Icon className="w-5 h-5 text-white" />
-                      </div>
-                      <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{item.label}</span>
-                    </button>
-                  );
-                })}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="text-center p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                <p className="text-2xl font-bold text-green-600">{orgStats.communities}</p>
+                <p className="text-xs text-slate-500 mt-1">创建的共同体</p>
               </div>
-            </div>
-
-            {/* 下线统计 */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">下线团队</h3>
-                <span className="text-sm text-slate-500">
-                  共 <span className="font-semibold text-purple-600">{downlineData.totalCount}</span> 人
-                </span>
+              <div className="text-center p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                <p className="text-2xl font-bold text-blue-600">{orgStats.activities}</p>
+                <p className="text-xs text-slate-500 mt-1">创建的活动</p>
               </div>
-              
-              {downlineData.users.length > 0 ? (
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {downlineData.users.map((user) => (
-                    <div
-                      key={user.id}
-                      className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl"
-                    >
-                      <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                        {user.name.charAt(0)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{user.name}</p>
-                        <p className="text-xs text-slate-400">通过 {user.source} 加入 · {user.joinTime}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-6 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
-                  <UsersIcon className="w-8 h-8 mx-auto text-slate-300 mb-2" />
-                  <p className="text-sm text-slate-500">暂无下线数据</p>
-                  <p className="text-xs text-slate-400 mt-1">分享您的专属链接获取下线</p>
-                </div>
-              )}
+              <div className="text-center p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                <p className="text-2xl font-bold text-purple-600">{orgStats.projects}</p>
+                <p className="text-xs text-slate-500 mt-1">创建的项目</p>
+              </div>
             </div>
           </motion.div>
         )}
       </div>
 
-      {/* 分享专区 */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8 }}
-        className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-100 dark:border-slate-700"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-sky-400 to-blue-500 rounded-lg flex items-center justify-center">
-              <Share2 className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-                分享专区
-              </h2>
-              <p className="text-sm text-slate-500">查看您的分享记录和效果</p>
-            </div>
-          </div>
-        </div>
-
-        {/* 统计卡片 */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl text-center">
-            <p className="text-2xl font-bold text-slate-900 dark:text-white">{shares.length}</p>
-            <p className="text-xs text-slate-500 mt-1">分享次数</p>
-          </div>
-          <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl text-center">
-            <p className="text-2xl font-bold text-blue-600">
-              {shares.reduce((sum, s) => sum + (s.clickCount || 0), 0)}
-            </p>
-            <p className="text-xs text-slate-500 mt-1">总点击数</p>
-          </div>
-          <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl text-center">
-            <p className="text-2xl font-bold text-green-600">
-              {shares.filter(s => s.clickCount > 0).length}
-            </p>
-            <p className="text-xs text-slate-500 mt-1">有效分享</p>
-          </div>
-        </div>
-
-        {/* 分享列表 */}
-        {shares.length > 0 ? (
-          <div className="space-y-3">
-            {shares.map((share) => (
-              <div
-                key={share.shareCode}
-                className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-slate-900 dark:text-white truncate">
-                      {share.title}
-                    </p>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      {share.targetType === 'project' ? '项目' : 
-                       share.targetType === 'activity' ? '活动' :
-                       share.targetType === 'community' ? '共同体' : '名片'}
-                       · {share.createdAt}
-                    </p>
-                  </div>
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                    share.clickCount > 0 
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                      : 'bg-slate-100 text-slate-500 dark:bg-slate-700'
-                  }`}>
-                    {share.clickCount || 0} 次点击
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={`${typeof window !== 'undefined' ? window.location.origin : ''}/share/${share.shareCode}`}
-                    readOnly
-                    className="flex-1 px-3 py-1.5 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-600 dark:text-slate-400 truncate"
-                  />
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}/share/${share.shareCode}`);
-                    }}
-                    className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-medium whitespace-nowrap"
-                  >
-                    复制链接
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <Share2 className="w-12 h-12 mx-auto text-slate-300 mb-3" />
-            <p className="text-slate-500">暂无分享记录</p>
-            <p className="text-sm text-slate-400 mt-1">在项目、活动、共同体详情页点击分享按钮生成分享链接</p>
-          </div>
-        )}
-      </motion.div>
-
       {/* 二维码弹窗 */}
-      <AnimatePresence>
-        {showShareQR && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
-            onClick={() => setShowShareQR(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-6 w-full max-w-sm"
-            >
-              <div className="text-center mb-4">
-                <div className={`w-12 h-12 mx-auto rounded-xl bg-gradient-to-br ${shareTypes.find(t => t.key === selectedShareType)?.color} flex items-center justify-center mb-3`}>
-                  {React.createElement(shareTypes.find(t => t.key === selectedShareType)?.icon || Sparkles, { className: 'w-6 h-6 text-white' })}
-                </div>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                  {shareTypes.find(t => t.key === selectedShareType)?.label}推广码
-                </h3>
-                <p className="text-sm text-slate-500 mt-1">扫码即建立上下线关系</p>
-              </div>
-              
-              {/* 二维码占位 - 实际项目中需要使用 qrcode 库生成 */}
-              <div className="bg-white p-4 rounded-xl flex items-center justify-center mb-4">
-                <div className="w-48 h-48 bg-slate-100 dark:bg-slate-700 rounded-lg flex flex-col items-center justify-center">
-                  <div className="grid grid-cols-5 gap-1 p-4">
-                    {Array.from({ length: 25 }).map((_, i) => (
-                      <div key={i} className={`w-3 h-3 ${Math.random() > 0.5 ? 'bg-slate-900' : 'bg-white'}`} />
-                    ))}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-2">二维码预览</p>
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <p className="text-xs text-slate-500 mb-2">推广链接</p>
-                <div className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
-                  <input
-                    type="text"
-                    value={shareLink}
-                    readOnly
-                    className="flex-1 text-sm text-slate-600 dark:text-slate-400 bg-transparent outline-none truncate"
-                  />
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(shareLink);
-                    }}
-                    className="px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-xs font-medium whitespace-nowrap"
-                  >
-                    复制
-                  </button>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setShowShareQR(false)}
-                className="w-full py-2.5 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-              >
-                关闭
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Edit Modal */}
       <AnimatePresence>
         {showEditModal && (
@@ -1760,8 +1509,8 @@ export default function ProfilePage() {
                   <div className="grid grid-cols-3 gap-3">
                     {[
                       { type: 'personal' as const, icon: UserCircle, label: '个人名片', color: 'bg-green-500', borderColor: 'border-green-500' },
-                      { type: 'enterprise' as const, icon: Building, label: '企业名片', color: 'bg-blue-500', borderColor: 'border-blue-500' },
                       { type: 'expert' as const, icon: Award, label: '专家名片', color: 'bg-purple-500', borderColor: 'border-purple-500' },
+                      { type: 'partner' as const, icon: Handshake, label: '合伙人名片', color: 'bg-teal-500', borderColor: 'border-teal-500' },
                     ].map(({ type, icon: TypeIcon, label, color, borderColor }) => (
                       <button
                         key={type}
@@ -1770,10 +1519,11 @@ export default function ProfilePage() {
                             type,
                             fields: {},
                             phoneNumbers: profile?.phone ? [profile.phone] : [],
+                            isPublic: true,
                           });
                         }}
                         className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
-                          createForm.type === type
+                          createForm.type === type || (type === 'expert' && (createForm.type === 'expert' || createForm.type === 'coach'))
                             ? `${borderColor} bg-opacity-10`
                             : 'border-slate-200 dark:border-slate-600 hover:border-slate-300'
                         }`}
@@ -1788,7 +1538,28 @@ export default function ProfilePage() {
                     ))}
                   </div>
                 </div>
-                
+
+                {/* 专家子类型选择 */}
+                {createForm.type === 'expert' && (
+                  <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">专家类型</label>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setCreateForm({ ...createForm, type: 'expert' })}
+                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${createForm.type === 'expert' ? 'bg-purple-500 text-white' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-600'}`}
+                      >
+                        协调专家
+                      </button>
+                      <button
+                        onClick={() => setCreateForm({ ...createForm, type: 'coach' })}
+                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${createForm.type === 'coach' ? 'bg-teal-500 text-white' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-600'}`}
+                      >
+                        陪跑专家
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* 姓名提示 */}
                 <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl flex items-center gap-2">
                   <User className="w-5 h-5 text-amber-500" />
@@ -1847,7 +1618,7 @@ export default function ProfilePage() {
                             <span className={`px-2 py-0.5 rounded ${field.key === 'description' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'}`}>
                               {field.key === 'description' ? '企业简介' : field.label}
                             </span>
-                            <span>{field.key === 'description' ? '展示企业实力和主营业务' : createForm.type === 'expert' ? '展示专业能力和学术成就' : '详细描述能让伙伴更好地了解你'}</span>
+                            <span>{field.key === 'description' ? '展示企业实力和主营业务' : createForm.type === 'expert' ? '展示专业能力和学术成就' : createForm.type === 'partner' ? '展示合伙人资源与愿景' : '详细描述能让伙伴更好地了解你'}</span>
                           </div>
                           <div className="border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 overflow-hidden focus-within:ring-2 focus-within:ring-amber-500">
                             <div className="flex items-center gap-1 px-3 py-2 border-b border-slate-100 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50">
@@ -1998,6 +1769,25 @@ export default function ProfilePage() {
                       </p>
                     )}
                   </div>
+
+                  {/* 可见性设置 */}
+                  <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                    <button
+                      type="button"
+                      onClick={() => setCreateForm(prev => ({ ...prev, isPublic: !prev.isPublic }))}
+                      className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 transition-colors ${
+                        createForm.isPublic
+                          ? 'bg-amber-500 text-white'
+                          : 'border-2 border-slate-300 dark:border-slate-500'
+                      }`}
+                    >
+                      {createForm.isPublic && <Check className="w-3.5 h-3.5" />}
+                    </button>
+                    <div>
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300">发现广场可见</p>
+                      <p className="text-xs text-slate-400">勾选后，名片将在发现伙伴页展示给其他用户</p>
+                    </div>
+                  </div>
                 </div>
               </div>
               
@@ -2032,7 +1822,7 @@ export default function ProfilePage() {
                           fields,
                           phoneNumbers: createForm.phoneNumbers,
                           isDefault: publicProfiles.length === 0,
-                          isPublic: true,
+                          isPublic: createForm.isPublic,
                         }),
                       });
 
@@ -2041,7 +1831,7 @@ export default function ProfilePage() {
                       if (data.success) {
                         setPublicProfiles(prev => [data.profile, ...prev]);
                         setShowCreateModal(false);
-                        setCreateForm({ type: 'personal', fields: {}, phoneNumbers: [] });
+                        setCreateForm({ type: 'personal', fields: {}, phoneNumbers: [], isPublic: true });
                       } else {
                         alert(data.error || '创建名片失败');
                       }
@@ -2053,6 +1843,234 @@ export default function ProfilePage() {
                   className="flex-1 py-2.5 px-4 bg-amber-500 hover:bg-amber-600 rounded-xl text-white transition-colors font-medium"
                 >
                   创建名片
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 编辑名片弹窗 */}
+      <AnimatePresence>
+        {showCardEditModal && editingCard && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+            onClick={() => setShowCardEditModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-700">
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">编辑名片</h2>
+                <button
+                  onClick={() => setShowCardEditModal(false)}
+                  className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-slate-400" />
+                </button>
+              </div>
+
+              <div className="p-6 flex-1 overflow-y-auto space-y-4">
+                {/* 名片类型显示（不可修改） */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    名片类型
+                  </label>
+                  <div className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl ${
+                    editingCard.type === 'personal' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600' :
+                    editingCard.type === 'enterprise' ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-600' :
+                    editingCard.type === 'expert' ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600' :
+                    editingCard.type === 'partner' ? 'bg-green-50 dark:bg-green-900/20 text-green-600' :
+                    'bg-slate-100 text-slate-600'
+                  }`}>
+                    {editingCard.type === 'personal' ? <User className="w-5 h-5" /> :
+                     editingCard.type === 'enterprise' ? <Building className="w-5 h-5" /> :
+                     editingCard.type === 'expert' ? <Award className="w-5 h-5" /> :
+                     editingCard.type === 'partner' ? <Handshake className="w-5 h-5" /> :
+                     <User className="w-5 h-5" />}
+                    <span className="text-sm font-medium">{
+                      editingCard.type === 'personal' ? '个人' :
+                      editingCard.type === 'enterprise' ? '企业' :
+                      editingCard.type === 'expert' ? '专家' :
+                      editingCard.type === 'partner' ? '合伙人' :
+                      editingCard.type
+                    }名片</span>
+                  </div>
+                </div>
+
+                {/* 字段编辑 */}
+                {(fieldTemplates[editingCard.type] || []).map((field: any) => (
+                  <div key={field.key}>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                      {field.label}
+                    </label>
+                    {field.isRichText ? (
+                      <div className="border border-slate-200 dark:border-slate-600 rounded-xl overflow-hidden">
+                        <div className="flex items-center gap-1 px-3 py-2 border-b border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700">
+                          <button
+                            onClick={() => handleInsertImage(field.key)}
+                            className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-600 rounded transition-colors"
+                            title="插入图片"
+                          >
+                            {uploadingImage ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
+                            ) : (
+                              <ImageIcon className="w-4 h-4" />
+                            )}
+                          </button>
+                          <input
+                            ref={imageInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleImageUpload(e, field.key)}
+                          />
+                        </div>
+                        <textarea
+                          id={`edit-bio-editor-${editingCard.type}`}
+                          value={editingCard.fields[field.key] || ''}
+                          onChange={(e) => setEditingCard(prev => prev ? ({
+                            ...prev,
+                            fields: { ...prev.fields, [field.key]: e.target.value },
+                          }) : null)}
+                          placeholder={field.placeholder}
+                          rows={6}
+                          className="w-full px-4 py-3 bg-transparent text-slate-900 dark:text-white placeholder:text-slate-400 resize-none focus:outline-none text-sm"
+                        />
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        value={editingCard.fields[field.key] || ''}
+                        onChange={(e) => setEditingCard(prev => prev ? ({
+                          ...prev,
+                          fields: { ...prev.fields, [field.key]: e.target.value },
+                        }) : null)}
+                        placeholder={field.placeholder}
+                        className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                      />
+                    )}
+                  </div>
+                ))}
+
+                {/* 多手机号输入 */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                    手机号码（可添加多个）
+                  </label>
+                  <div className="space-y-2">
+                    {editingCard.phoneNumbers.map((phone, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <input
+                          type="tel"
+                          value={phone}
+                          onChange={(e) => setEditingCard(prev => prev ? ({
+                            ...prev,
+                            phoneNumbers: prev.phoneNumbers.map((p, i) => i === idx ? e.target.value : p),
+                          }) : null)}
+                          placeholder="请输入手机号码"
+                          className="flex-1 px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                        />
+                        <button
+                          onClick={() => setEditingCard(prev => prev ? ({
+                            ...prev,
+                            phoneNumbers: prev.phoneNumbers.filter((_, i) => i !== idx),
+                          }) : null)}
+                          className="p-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => setEditingCard(prev => prev ? ({
+                        ...prev,
+                        phoneNumbers: [...prev.phoneNumbers, ''],
+                      }) : null)}
+                      className="flex items-center gap-2 w-full py-2.5 px-4 border border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors text-sm"
+                    >
+                      <Plus className="w-4 h-4" />
+                      添加手机号码
+                    </button>
+                  </div>
+                </div>
+
+                {/* 可见性设置 */}
+                <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setEditingCard(prev => prev ? ({ ...prev, isPublic: !prev.isPublic }) : null)}
+                    className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 transition-colors ${
+                      editingCard.isPublic
+                        ? 'bg-amber-500 text-white'
+                        : 'border-2 border-slate-300 dark:border-slate-500'
+                    }`}
+                  >
+                    {editingCard.isPublic && <Check className="w-3.5 h-3.5" />}
+                  </button>
+                  <div>
+                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">发现广场可见</p>
+                    <p className="text-xs text-slate-400">勾选后，名片将在发现伙伴页展示给其他用户</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 border-t border-slate-100 dark:border-slate-700 flex gap-3">
+                <button
+                  onClick={() => setShowCardEditModal(false)}
+                  className="flex-1 py-2.5 px-4 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors font-medium"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!user?.id) return;
+                    try {
+                      const fields = Object.entries(editingCard.fields).map(([key, value]) => ({
+                        key,
+                        label: (fieldTemplates[editingCard.type] || []).find((f: any) => f.key === key)?.label || key,
+                        value,
+                        type: 'text',
+                      }));
+
+                      const response = await fetch(`/api/profiles/${editingCard.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          type: editingCard.type,
+                          fields,
+                          phoneNumbers: editingCard.phoneNumbers,
+                          isPublic: editingCard.isPublic,
+                        }),
+                      });
+
+                      const data = await response.json();
+                      if (data.success) {
+                        // 刷新名片列表
+                        const profilesRes = await fetch(`/api/profiles?userId=${user.id}`);
+                        const profilesData = await profilesRes.json();
+                        if (profilesData.success) {
+                          setPublicProfiles(profilesData.profiles || []);
+                        }
+                        setShowCardEditModal(false);
+                        setEditingCard(null);
+                      } else {
+                        alert(data.error || '更新名片失败');
+                      }
+                    } catch (error) {
+                      console.error('更新名片失败:', error);
+                      alert('更新名片失败，请重试');
+                    }
+                  }}
+                  className="flex-1 py-2.5 px-4 bg-amber-500 hover:bg-amber-600 rounded-xl text-white transition-colors font-medium"
+                >
+                  保存修改
                 </button>
               </div>
             </motion.div>
@@ -2102,31 +2120,16 @@ export default function ProfilePage() {
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                     协调专家类型 <span className="text-red-500">*</span>
                   </label>
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => document.getElementById('expertTypeDropdown')?.classList.toggle('hidden')}
-                      className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white flex items-center justify-between"
-                    >
-                      <span>{mediatorForm.type || '请选择协调专家类型'}</span>
-                      <ChevronDown className="w-4 h-4 text-slate-400" />
-                    </button>
-                    <div id="expertTypeDropdown" className="hidden absolute z-10 mt-1 w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl shadow-lg max-h-48 overflow-auto">
-                      {expertTypes.map((type) => (
-                        <button
-                          key={type}
-                          type="button"
-                          onClick={() => {
-                            setMediatorForm({ ...mediatorForm, type });
-                            document.getElementById('expertTypeDropdown')?.classList.add('hidden');
-                          }}
-                          className="w-full px-4 py-2.5 text-left hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300"
-                        >
-                          {type}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  <select
+                    value={mediatorForm.type}
+                    onChange={(e) => setMediatorForm({ ...mediatorForm, type: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                  >
+                    <option value="">请选择协调专家类型</option>
+                    {expertTypes.map((type) => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* 擅长领域 */}
@@ -2135,6 +2138,13 @@ export default function ProfilePage() {
                     擅长领域
                   </label>
                   <div className="flex flex-wrap gap-2">
+                    {/* 已添加的自定义领域标签 */}
+                    {mediatorForm.expertise.filter(e => !expertiseAreas.includes(e)).map(skill => (
+                      <span key={skill} className="inline-flex items-center gap-1 px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-sm">
+                        {skill}
+                        <button type="button" onClick={() => setMediatorForm({ ...mediatorForm, expertise: mediatorForm.expertise.filter(e => e !== skill) })} className="ml-1 hover:text-red-500">&times;</button>
+                      </span>
+                    ))}
                     {expertiseAreas.map((skill) => (
                       <button
                         key={skill}
@@ -2155,43 +2165,34 @@ export default function ProfilePage() {
                       </button>
                     ))}
                     {/* 自定义擅长领域输入 */}
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 w-full">
                       <input
                         type="text"
                         value={mediatorForm.customExpertise}
                         onChange={(e) => setMediatorForm({ ...mediatorForm, customExpertise: e.target.value })}
-                        placeholder="自定义"
-                        className="w-20 px-2 py-1.5 text-sm border border-slate-200 dark:border-slate-600 rounded-full bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        placeholder="输入擅长领域名称，可添加多个"
+                        className="flex-1 px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && mediatorForm.customExpertise.trim()) {
                             e.preventDefault();
                             if (!mediatorForm.expertise.includes(mediatorForm.customExpertise.trim())) {
-                              setMediatorForm({
-                                ...mediatorForm,
-                                expertise: [...mediatorForm.expertise, mediatorForm.customExpertise.trim()],
-                                customExpertise: ''
-                              });
+                              setMediatorForm({...mediatorForm, expertise: [...mediatorForm.expertise, mediatorForm.customExpertise.trim()], customExpertise: ''});
                             }
                           }
                         }}
                       />
-                      {mediatorForm.customExpertise.trim() && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (!mediatorForm.expertise.includes(mediatorForm.customExpertise.trim())) {
-                              setMediatorForm({
-                                ...mediatorForm,
-                                expertise: [...mediatorForm.expertise, mediatorForm.customExpertise.trim()],
-                                customExpertise: ''
-                              });
-                            }
-                          }}
-                          className="p-1 text-amber-500 hover:text-amber-600"
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!mediatorForm.customExpertise.trim()) return;
+                          if (!mediatorForm.expertise.includes(mediatorForm.customExpertise.trim())) {
+                            setMediatorForm({...mediatorForm, expertise: [...mediatorForm.expertise, mediatorForm.customExpertise.trim()], customExpertise: ''});
+                          }
+                        }}
+                        className="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm hover:bg-amber-600 flex-shrink-0"
+                      >
+                        添加
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -2324,7 +2325,7 @@ export default function ProfilePage() {
                 </button>
                 <button 
                   onClick={handleSubmitMediator}
-                  disabled={isSubmittingMediator || !mediatorForm.type || !mediatorForm.description}
+                  disabled={isSubmittingMediator || !mediatorForm.type}
                   className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl flex items-center gap-2 disabled:opacity-50 transition-colors"
                 >
                   {isSubmittingMediator && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -2556,6 +2557,41 @@ export default function ProfilePage() {
         )}
       </AnimatePresence>
 
+      {/* 陪跑专家申请弹窗 */}
+      <AnimatePresence>
+        {showCoachModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+            onClick={() => setShowCoachModal(false)}
+          >
+            <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-700">
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">申请成为陪跑专家</h2>
+                <button onClick={() => setShowCoachModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"><X className="w-5 h-5" /></button>
+              </div>
+              <div className="p-6 space-y-4">
+                <p className="text-sm text-slate-500">为企业提供战略陪跑，对接战略资源。请填写您的专业领域和从业经历。</p>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">简介及擅长领域 <span className="text-red-500">*</span></label>
+                  <textarea value={coachForm.description} onChange={e => setCoachForm({ ...coachForm, description: e.target.value })} rows={5}
+                    className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white resize-none text-sm"
+                    placeholder="请描述您的专业背景、擅长领域和陪跑经验..." />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 p-6 border-t border-slate-100 dark:border-slate-700">
+                <button onClick={() => setShowCoachModal(false)} className="px-6 py-2.5 text-sm text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl">取消</button>
+                <button onClick={handleSubmitCoach} disabled={isSubmittingMediator} className="px-6 py-2.5 text-sm bg-teal-500 hover:bg-teal-600 text-white rounded-xl disabled:opacity-50 flex items-center gap-2">
+                  {isSubmittingMediator && <Loader2 className="w-4 h-4 animate-spin" />}提交申请
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* 身份认证弹窗 */}
       <AnimatePresence>
         {showVerifyModal && (
@@ -2591,8 +2627,8 @@ export default function ProfilePage() {
               </div>
 
               <div className="p-6 space-y-4">
-                <p className="text-sm text-slate-500">请上传您的身份证件进行身份认证</p>
-                    
+                <p className="text-sm text-slate-500">输入姓名和身份证号，并拍摄人脸照片进行公安库比对</p>
+
                     <div>
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                         真实姓名 <span className="text-red-500">*</span>
@@ -2608,51 +2644,73 @@ export default function ProfilePage() {
 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                        身份证正面 <span className="text-red-500">*</span>
+                        身份证号 <span className="text-red-500">*</span>
                       </label>
-                      <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-6 text-center hover:border-amber-400 transition-colors cursor-pointer"
-                        onClick={() => setVerifyForm({ ...verifyForm, idCardFront: 'uploaded' })}
-                      >
-                        {verifyForm.idCardFront ? (
-                          <div className="text-green-600">
-                            <CheckCircle className="w-8 h-8 mx-auto mb-2" />
-                            <p className="text-sm">已上传</p>
-                          </div>
-                        ) : (
-                          <>
-                            <Upload className="w-8 h-8 mx-auto text-slate-400 mb-2" />
-                            <p className="text-sm text-slate-500">点击上传身份证正面</p>
-                          </>
-                        )}
-                      </div>
+                      <input
+                        type="text"
+                        value={verifyForm.idNumber}
+                        onChange={(e) => setVerifyForm({ ...verifyForm, idNumber: e.target.value })}
+                        placeholder="请输入18位身份证号码"
+                        maxLength={18}
+                        className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                      />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                        身份证背面 <span className="text-red-500">*</span>
+                        现场人脸拍照 <span className="text-red-500">*</span>
                       </label>
-                      <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-6 text-center hover:border-amber-400 transition-colors cursor-pointer"
-                        onClick={() => setVerifyForm({ ...verifyForm, idCardBack: 'uploaded' })}
+                      <p className="text-xs text-amber-600 mb-2">⚠️ 必须现场拍照，禁止上传已有照片！请确保五官清晰可见，正脸面对镜头</p>
+                      <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-4 text-center hover:border-amber-400 transition-colors cursor-pointer"
+                        onClick={() => {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'image/jpeg,image/png';
+                          input.capture = 'user'; // 强制调用前置摄像头（移动端）
+                          input.onchange = (e: any) => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+                            // 检查大小 < 5MB
+                            if (file.size > 5 * 1024 * 1024) { alert('图片大小不能超过5MB'); return; }
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                              const base64 = (ev.target?.result as string).split(',')[1];
+                              setVerifyForm({ ...verifyForm, facePhoto: base64 || '' });
+                            };
+                            reader.readAsDataURL(file);
+                          };
+                          input.click();
+                        }}
                       >
-                        {verifyForm.idCardBack ? (
+                        {verifyForm.facePhoto ? (
                           <div className="text-green-600">
-                            <CheckCircle className="w-8 h-8 mx-auto mb-2" />
-                            <p className="text-sm">已上传</p>
+                            <img src={`data:image/jpeg;base64,${verifyForm.facePhoto}`} alt="人脸照片" className="w-24 h-24 object-cover rounded-lg mx-auto mb-2" />
+                            <p className="text-sm">已拍照</p>
+                            <p className="text-xs text-slate-400 mt-1">点击重新拍摄</p>
                           </div>
                         ) : (
                           <>
-                            <Upload className="w-8 h-8 mx-auto text-slate-400 mb-2" />
-                            <p className="text-sm text-slate-500">点击上传身份证背面</p>
+                            <svg className="w-10 h-10 mx-auto text-slate-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+                            </svg>
+                            <p className="text-sm text-slate-500">点击打开摄像头拍照</p>
+                            <p className="text-xs text-slate-400 mt-1">必须现场拍照，禁止上传照片</p>
                           </>
                         )}
                       </div>
                     </div>
 
-                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
-                  <p className="text-sm text-amber-700 dark:text-amber-400">
-                    提交认证材料后，管理员将在1-3个工作日内审核。审核通过后认证状态将更新。
-                  </p>
-                </div>
+                {verifyResult && (
+                  <div className={`p-4 rounded-xl ${verifyResult.score !== undefined && verifyResult.score >= 0.45 ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'}`}>
+                    <p className={`text-sm ${verifyResult.score !== undefined && verifyResult.score >= 0.45 ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
+                      {verifyResult.message}
+                    </p>
+                    {verifyResult.score !== undefined && (
+                      <p className="text-xs text-slate-500 mt-1">匹配度：{Math.round(verifyResult.score * 100)}%</p>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="p-6 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3">
@@ -2673,6 +2731,125 @@ export default function ProfilePage() {
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 资料概览弹窗 */}
+      <AnimatePresence>
+        {showOverview && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowOverview(false)}>
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] overflow-y-auto">
+              <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-800 z-10">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">资料概览</h2>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => { setShowOverview(false); handleOpenEdit(); }} className="px-3 py-1.5 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-1"><Edit className="w-4 h-4" />编辑</button>
+                  {(publicProfiles.length > 0) ? (
+                    <button onClick={() => { setShowOverview(false); setShowProfileModal(true); }} className="px-3 py-1.5 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-700">名片管理</button>
+                  ) : (
+                    <button onClick={() => { setShowOverview(false); setShowCardEditModal(true); }} className="px-3 py-1.5 bg-amber-500 text-white rounded-lg text-sm">创建名片</button>
+                  )}
+                  <button onClick={() => setShowOverview(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"><X className="w-5 h-5" /></button>
+                </div>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
+                  <span className="text-slate-600 dark:text-slate-400">用户ID</span>
+                  <span className="text-slate-900 dark:text-white text-sm font-mono">{profile?.id || '-'}</span>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
+                  <span className="text-slate-600 dark:text-slate-400">{t('auth.register.name')}</span>
+                  <span className="text-slate-900 dark:text-white">{profile?.real_name || '-'}</span>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
+                  <span className="text-slate-600 dark:text-slate-400">昵称</span>
+                  <span className="text-slate-900 dark:text-white">{profile?.display_name || '-'}</span>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
+                  <span className="text-slate-600 dark:text-slate-400">手机号</span>
+                  <span className="text-slate-900 dark:text-white">{profile?.phone || '-'}</span>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
+                  <span className="text-slate-600 dark:text-slate-400">邮箱</span>
+                  <span className="text-slate-900 dark:text-white">{profile?.email || '-'}</span>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
+                  <span className="text-slate-600 dark:text-slate-400">身份认证</span>
+                  {personalVerified ? (
+                    <span className="text-green-600 flex items-center gap-1"><CheckCircle className="w-4 h-4" /> 已认证</span>
+                  ) : (
+                    <button onClick={() => { setShowOverview(false); openVerifyModal('personal'); }} className="text-sm text-amber-500 hover:text-amber-600">去认证</button>
+                  )}
+                </div>
+                {partnerProfile?.status === 'approved' && (
+                  <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
+                    <span className="text-slate-600 dark:text-slate-400">合伙人类型</span>
+                    <span className="px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full text-sm font-medium">{partnerProfile.level}</span>
+                  </div>
+                )}
+                {mediatorProfile?.status === 'approved' && (
+                  <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
+                    <span className="text-slate-600 dark:text-slate-400">协调专家</span>
+                    <span className="px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full text-sm">{mediatorProfile.type}</span>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 对外展示弹窗 */}
+      <AnimatePresence>
+        {showProfileModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowProfileModal(false)}>
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-y-auto">
+              <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-800 z-10">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">我的对外展示</h2>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => { setShowProfileModal(false); setShowCreateModal(true); }} className="px-3 py-1.5 bg-amber-500 text-white rounded-lg text-sm">创建名片</button>
+                  <button onClick={() => setShowProfileModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"><X className="w-5 h-5" /></button>
+                </div>
+              </div>
+              <div className="p-6">
+                {publicProfiles.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {publicProfiles.map((profile) => {
+                      const typeConfig: any = { personal: { icon: UserCircle, color: 'bg-green-100 text-green-600', label: '个人' }, enterprise: { icon: Building, color: 'bg-blue-100 text-blue-600', label: '企业' }, expert: { icon: Award, color: 'bg-purple-100 text-purple-600', label: '专家' }, partner: { icon: Handshake, color: 'bg-teal-100 text-teal-600', label: '合伙人' } }[profile.type] || { icon: UserCircle, color: 'bg-green-100 text-green-600', label: profile.type };
+                      const Icon = typeConfig.icon;
+                      return (
+                        <div key={profile.id} className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${typeConfig.color}`}><Icon className="w-5 h-5" /></div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-slate-900 dark:text-white truncate">{profile.fields?.find((f:any) => f.key === 'title')?.value || '名片'}</p>
+                              <span className={`text-xs ${typeConfig.color}`}>{typeConfig.label}</span>
+                            </div>
+                            <div className="flex gap-1">
+                              <button onClick={() => { const f: any = {}; (profile.fields||[]).forEach((ff: any) => { f[ff.key] = ff.value || '' }); setEditingCard({ id: profile.id, type: profile.type as any, fields: f, phoneNumbers: (profile.phoneNumbers||[]).filter((p:string)=>p), isPublic: profile.isPublic }); setShowProfileModal(false); setShowCardEditModal(true); }} className="p-1.5 text-slate-400 hover:text-amber-500 rounded-lg"><Edit className="w-4 h-4" /></button>
+                              <button onClick={async () => { if(!confirm('确定删除？')) return; try { const r=await fetch('/api/profiles/'+profile.id,{method:'DELETE'});if((await r.json()).success) setPublicProfiles(prev=>prev.filter(p=>p.id!==profile.id)); } catch {} }} className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-slate-400">分享码: {profile.shareCode}</span>
+                            <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/share/${profile.shareCode}`); }} className="text-xs text-amber-500 flex items-center gap-1"><Share2 className="w-3 h-3" />分享</button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <UserCircle className="w-12 h-12 mx-auto text-slate-300 mb-3" />
+                    <p className="text-slate-500 mb-4">您还没有创建对外展示名片</p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </Layout>

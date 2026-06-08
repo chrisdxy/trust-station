@@ -61,6 +61,11 @@ interface WechatConfig {
   qrcodeUrl: string;
 }
 
+interface ShumaiConfig {
+  appId: string;
+  appSecurity: string;
+}
+
 const DEFAULT_GENERAL: GeneralConfig = {
   siteName: '正道驿站',
   siteDescription: '全球商业信任共建社区',
@@ -94,6 +99,11 @@ const DEFAULT_WECHAT: WechatConfig = {
   qrcodeUrl: '',
 };
 
+const DEFAULT_SHUMAI: ShumaiConfig = {
+  appId: '',
+  appSecurity: '',
+};
+
 export default function AdminSettings() {
   const [activeTab, setActiveTab] = useState('general');
   const [saved, setSaved] = useState(false);
@@ -104,6 +114,7 @@ export default function AdminSettings() {
   const [smtpConfig, setSmtpConfig] = useState<SmtpConfig>(DEFAULT_SMTP);
   const [smsConfig, setSmsConfig] = useState<SmsConfig>(DEFAULT_SMS);
   const [wechatConfig, setWechatConfig] = useState<WechatConfig>(DEFAULT_WECHAT);
+  const [shumaiConfig, setShumaiConfig] = useState<ShumaiConfig>(DEFAULT_SHUMAI);
   
   const [testEmail, setTestEmail] = useState('');
   const [testingEmail, setTestingEmail] = useState(false);
@@ -131,6 +142,7 @@ export default function AdminSettings() {
         if (data.smtp_config) setSmtpConfig(data.smtp_config);
         if (data.sms_config) setSmsConfig(data.sms_config);
         if (data.wechat_config) setWechatConfig(data.wechat_config);
+        if (data.shumai_config) setShumaiConfig(data.shumai_config);
       }
     } catch (error) {
       console.error('加载配置失败:', error);
@@ -139,11 +151,12 @@ export default function AdminSettings() {
 
   const tabs = [
     { id: 'general', label: '基本设置', icon: Settings },
-    { id: 'navigation', label: '本站导航', icon: Globe },
+    { id: 'navigation', label: '使用指引', icon: Globe },
     { id: 'security', label: '安全设置', icon: Shield },
     { id: 'email', label: '邮件设置', icon: Mail },
     { id: 'sms', label: '短信设置', icon: MessageSquare },
     { id: 'wechat', label: '公众号配置', icon: Globe },
+    { id: 'shumai', label: '数脉API', icon: Shield },
   ];
 
   const handleSave = async () => {
@@ -158,6 +171,7 @@ export default function AdminSettings() {
           smtp_config: smtpConfig,
           sms_config: smsConfig,
           wechat_config: wechatConfig,
+          shumai_config: shumaiConfig,
         }),
       });
       
@@ -329,12 +343,12 @@ export default function AdminSettings() {
                   </div>
                 )}
 
-                {/* 本站导航配置 */}
+                {/* 使用指引配置 */}
                 {activeTab === 'navigation' && (
                   <div className="p-6">
-                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">本站导航配置</h2>
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">使用指引配置</h2>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-                      支持 HTML 内容，可添加本站的主要栏目导航说明。保存后在社区概览的「本站导航」标签中展示。
+                      支持 HTML 内容，可添加本站的主要栏目导航说明。保存后在社区概览的「使用指引」标签中展示。
                     </p>
                     <textarea
                       value={generalConfig.siteNavigation || ''}
@@ -890,6 +904,53 @@ export default function AdminSettings() {
                       )}
                     </div>
                   </div>
+                )}
+
+                {/* 数脉API配置 */}
+                {activeTab === 'shumai' && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="p-6 space-y-6"
+                  >
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">数脉API配置</h2>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        AppID <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={shumaiConfig.appId}
+                        onChange={(e) => setShumaiConfig({ ...shumaiConfig, appId: e.target.value })}
+                        placeholder="服务商分配的唯一标识"
+                        className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        AppSecurity <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={shumaiConfig.appSecurity}
+                        onChange={(e) => setShumaiConfig({ ...shumaiConfig, appSecurity: e.target.value })}
+                        placeholder="商户分配的app_security"
+                        className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                      <h4 className="font-medium text-amber-700 dark:text-amber-400 mb-2">接口说明</h4>
+                      <ul className="text-sm text-amber-600 dark:text-amber-300 space-y-1">
+                        <li>• 用于人脸身份证比对认证（姓名+身份证号+人脸照片）</li>
+                        <li>• 与公安库照片比对，返回匹配度分值</li>
+                        <li>• 认证成功后用户身份标识将标记为"已认证"</li>
+                        <li>• 如需开通请联系数脉API服务商获取密钥</li>
+                      </ul>
+                    </div>
+                  </motion.div>
                 )}
               </motion.div>
 

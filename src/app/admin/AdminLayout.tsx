@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
   Shield, LayoutDashboard, Users, FileText, Scale, BarChart3,
-  Settings, LogOut, Menu, X, ChevronDown, Bell, Search, TrendingUp, Home, Sparkles, FolderTree
+  Settings, LogOut, Menu, X, ChevronDown, Bell, Search, TrendingUp, Home, Sparkles, FolderTree, Eye, ListOrdered, MessageSquare
 } from 'lucide-react';
 
 const LOGO_URL = "/logo.jpg";
@@ -23,7 +23,10 @@ const superAdminNavItems = [
   { path: '/admin', label: '控制台', icon: LayoutDashboard },
   { path: '/admin/users', label: '用户管理', icon: Users },
   { path: '/admin/categories', label: '分类设置', icon: FolderTree },
+  { path: '/admin/sort', label: '发布管理', icon: ListOrdered },
+  { path: '/admin/public-records', label: '公开记录', icon: Eye },
   { path: '/admin/mediation', label: '协调管理', icon: Scale },
+  { path: '/admin/feedbacks', label: '投诉与建议', icon: MessageSquare },
   { path: '/admin/ai-tools', label: 'AI工具管理', icon: Sparkles },
   { path: '/admin/stats', label: '数据统计', icon: BarChart3 },
   { path: '/admin/settings', label: '系统设置', icon: Settings },
@@ -34,7 +37,10 @@ const adminNavItems = [
   { path: '/admin', label: '控制台', icon: LayoutDashboard },
   { path: '/admin/users', label: '用户管理', icon: Users },
   { path: '/admin/categories', label: '分类设置', icon: FolderTree },
+  { path: '/admin/sort', label: '发布管理', icon: ListOrdered },
+  { path: '/admin/public-records', label: '公开记录', icon: Eye },
   { path: '/admin/mediation', label: '协调管理', icon: Scale },
+  { path: '/admin/feedbacks', label: '投诉与建议', icon: MessageSquare },
   { path: '/admin/ai-tools', label: 'AI工具管理', icon: Sparkles },
   { path: '/admin/stats', label: '数据统计', icon: BarChart3 },
   { path: '/admin/settings', label: '系统设置', icon: Settings },
@@ -45,6 +51,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [admin, setAdmin] = useState<AdminUser | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [feedbackUnread, setFeedbackUnread] = useState(0);
 
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
@@ -62,6 +69,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       router.push('/admin/login');
     }
   }, [router]);
+
+  // 定时获取投诉建议未读数
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const res = await fetch('/api/feedbacks?status=pending&limit=1');
+        const data = await res.json();
+        if (data.success) {
+          const uc = data.unreadCounts || {};
+          setFeedbackUnread((uc.complaint || 0) + (uc.suggestion || 0));
+        }
+      } catch {}
+    };
+    fetchUnread();
+    const timer = setInterval(fetchUnread, 30000); // 每30秒刷新
+    return () => clearInterval(timer);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
@@ -178,12 +202,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {currentNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = typeof window !== 'undefined' && window.location.pathname === item.path;
+              const showBadge = item.path === '/admin/feedbacks' && feedbackUnread > 0;
               return (
                 <Link
                   key={item.path}
                   href={item.path}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all relative ${
                     isActive
                       ? 'bg-gradient-to-r from-amber-400/20 to-transparent border-l-2 border-amber-400 text-white'
                       : 'text-slate-300 hover:bg-white/5 hover:text-white'
@@ -191,6 +216,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 >
                   <Icon size={20} className={isActive ? 'text-amber-400' : ''} />
                   <span className="font-medium">{item.label}</span>
+                  {showBadge && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                      {feedbackUnread > 99 ? '99+' : feedbackUnread}
+                    </span>
+                  )}
                 </Link>
               );
             })}

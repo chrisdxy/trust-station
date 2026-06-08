@@ -64,7 +64,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ success: false, error: '无权限编辑此活动' }, { status: 403 });
     }
 
-    const { title, description, location, start_time, end_time, max_participants, status } = body;
+    const { title, description, location, start_time, end_time, max_participants, status, cover_image, coverImage, qr_code, qrCode, is_paid, isPaid, price } = body;
+    const coverImageUrl = cover_image || coverImage;
+    const qrCodeUrl = qr_code || qrCode;
+    const isPaidVal = is_paid || isPaid ? 1 : 0;
+    const priceVal = price !== undefined ? price : null;
     const startTime = start_time
       ? (() => {
           const d = new Date(start_time);
@@ -87,6 +91,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (endTime !== undefined) { updates.push('end_time = ?'); values.push(endTime); }
     if (max_participants !== undefined) { updates.push('max_participants = ?'); values.push(max_participants); }
     if (status !== undefined) { updates.push('status = ?'); values.push(status); }
+    if (coverImageUrl !== undefined) { updates.push('cover_image = ?'); values.push(coverImageUrl); }
+    if (qrCodeUrl !== undefined) { updates.push('qr_code = ?'); values.push(qrCodeUrl); }
+    if (isPaidVal !== undefined) { updates.push('is_paid = ?'); values.push(isPaidVal); }
+    if (priceVal !== undefined) { updates.push('price = ?'); values.push(priceVal); }
 
     if (updates.length === 0) {
       return NextResponse.json({ success: false, error: '没有要更新的字段' }, { status: 400 });

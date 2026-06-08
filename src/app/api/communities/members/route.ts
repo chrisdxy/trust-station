@@ -58,10 +58,10 @@ export async function POST(request: NextRequest) {
         [id, communityId, userId, userName || '']
       );
 
-      // 更新成员数
+      // 更新成员数和 member_list JSON
       await pool.query(
-        'UPDATE communities SET member_count = member_count + 1 WHERE id = ?',
-        [communityId]
+        'UPDATE communities SET member_count = member_count + 1, member_list = JSON_ARRAY_APPEND(COALESCE(member_list, "[]"), "$", CAST(? AS JSON)) WHERE id = ?',
+        [JSON.stringify({ name: userName || userId, email: 'uid-' + userId, role: 'member', joinedAt: new Date().toISOString().split('T')[0] }), communityId]
       );
 
       return NextResponse.json({
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
         [communityId, userId]
       );
 
-      // 减少成员数
+      // 减少成员数（成员列表 JSON 由 GET API 实时重建）
       await pool.query(
         'UPDATE communities SET member_count = GREATEST(0, member_count - 1) WHERE id = ?',
         [communityId]

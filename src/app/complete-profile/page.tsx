@@ -96,7 +96,7 @@ function CompleteProfileContent() {
             id: loginData.user.id,
             phone: loginData.user.phone || '',
             user_type: 'individual',
-            display_name: loginData.user.nickname || wxUser.nickname || '微信用户',
+            display_name: loginData.user.display_name || wxUser.nickname || '微信用户',
             real_name: loginData.user.realName || wxUser.real_name || '',
             avatar_url: wxUser.headimgurl || '',
             isWechatUser: true,
@@ -179,7 +179,7 @@ setFormData(prev => ({ ...prev, avatar_url: base64 }));
       return;
     }
     if (!formData.consensusAgreed) {
-      setError('请先勾选同意平台六条共识');
+      setError('请先勾选同意平台六项共识');
       return;
     }
     // 微信登录时手机号必填
@@ -225,6 +225,7 @@ setFormData(prev => ({ ...prev, avatar_url: base64 }));
             nickname: formData.nickname,
             realName: formData.realName,
             phone: formData.phone || undefined,
+            avatarUrl: formData.avatar_url || undefined,
             privacyAgreed: formData.privacyAgreed,
             consensusAgreed: formData.consensusAgreed,
           }),
@@ -530,7 +531,7 @@ setFormData(prev => ({ ...prev, avatar_url: base64 }));
                 </span>
               </label>
 
-              {/* 六条共识勾选 */}
+              {/* 六项共识勾选 */}
               <label className="flex items-start gap-3 cursor-pointer p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
                 <input
                   type="checkbox"

@@ -1,14 +1,16 @@
 "use client";
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Users2, Plus, Search, Globe, X, Bold, Italic, List, Link, Image, ImageIcon, Eye, Upload, Calendar, MapPin, Clock, User, Star, Edit, Trash2, ChevronDown, UserPlus, LogOut, CheckCircle, Copy } from 'lucide-react';
+import { Users2, Plus, Search, Globe, X, Bold, Italic, List, Link, Image, ImageIcon, Eye, Upload, Calendar, MapPin, Clock, User, Star, Edit, Trash2, ChevronDown, UserPlus, LogOut, CheckCircle, Copy, Loader2 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useCategories, Category } from '@/hooks/useCategories';
 import { UserSelect, UserSearchResult } from '@/components/UserSelect';
 import { IndustrySelect } from '@/components/IndustrySelect';
-import { ShareButton } from '@/components/ShareButton';
+import { WeChatShareSetup } from '@/components/WeChatShareSetup';
 
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 
 interface Member {
   id?: string;
@@ -39,75 +41,98 @@ interface Community {
   images: string[];
   activities: CommunityActivity[];
   createdAt: string;
+  status?: string;
   isPublic: boolean;
-  isPaid: boolean;  // 是否收费
   qrCode?: string;  // 社群二维码
+  coverImage?: string;  // 封面图片
+  summary?: string;  // 概要
   ownerId?: string;  // 创建者ID
   ownerName?: string;  // 创建者名称
+  isPinned?: number;
+  sortOrder?: number;
+  activityCount?: number;
 }
 
 export default function CommunitiesPage() {
   const { t } = useLanguage();
+  const { user: currentUser, isAuthenticated, loading: authLoading } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const qrCodeInputRef = useRef<HTMLInputElement>(null);
+  const descImageRef = useRef<HTMLInputElement>(null);  // 介绍区图片上传
   const [communities, setCommunities] = useState<Community[]>([]);
   const [joinedCommunities, setJoinedCommunities] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState<any>(null);
-
-  // 从 localStorage 获取当前用户
-  useEffect(() => {
-    try {
-      const token = localStorage.getItem('token');
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        setCurrentUser(user);
-        // 如果用户已加入某些社区，从 API 获取
-      }
-    } catch (e) {}
-  }, []);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // 加载共同体列表
   const fetchCommunities = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/communities');
+      const res = await fetch(`/api/communities${currentUser?.id ? '?userId=' + currentUser.id : ''}`);
       const data = await res.json();
       if (data.success) {
-        setCommunities(data.communities || []);
+        const list = data.communities || [];
+        setCommunities(list);
+        // 同步 joinedCommunities：从 memberList 中找出当前用户已加入的社区
+        if (currentUser?.id) {
+          const joined = list
+            .filter((c: Community) => c.memberList?.some(m => m.email === 'uid-' + currentUser.id))
+            .map((c: Community) => c.id);
+          setJoinedCommunities(joined);
+        }
       }
     } catch (err) {
       console.error('加载共同体列表失败:', err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentUser?.id]);
 
   useEffect(() => {
     fetchCommunities();
   }, [fetchCommunities]);
-  const [activeTab, setActiveTab] = useState<'all' | 'created' | 'joined' | 'free' | 'paid'>('all');
+
+  // 支持从 URL 参数打开编辑（管理员从发布管理跳转）
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const editId = params.get('edit');
+    if (editId && communities.length > 0) {
+      const community = communities.find(c => c.id === editId);
+      if (community) {
+        setEditingCommunity(community);
+        setFormData({
+          name: community.name,
+          summary: community.summary || '',
+          description: community.description || '',
+          category: community.category || 'entrepreneurship',
+          industry: community.industry || '',
+          industryName: (community as any).industryName || '',
+          coverImage: community.coverImage || '',
+          images: community.images || [],
+          isPublic: community.isPublic !== undefined ? community.isPublic : true,
+          qrCode: community.qrCode || '',
+          hosts: community.memberList?.filter((m: any) => m.role === 'admin' || m.role === 'creator') || [],
+        });
+        setShowModal(true);
+      }
+    }
+  }, [communities]);
+  const [activeTab, setActiveTab] = useState<'all' | 'created' | 'joined'>('all');
+  const [subFilter, setSubFilter] = useState<'all' | 'pinned' | 'active' | 'newest'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingCommunity, setEditingCommunity] = useState<Community | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [createdCommunityId, setCreatedCommunityId] = useState<string | null>(null);
-  const [showFeeFilter, setShowFeeFilter] = useState(false);
-  const feeFilterRef = useRef<HTMLDivElement>(null);
-  const [feeFilterPos, setFeeFilterPos] = useState({ top: 0, left: 0, width: 0 });
-  useEffect(() => {
-    if (showFeeFilter && feeFilterRef.current) {
-      const rect = feeFilterRef.current.getBoundingClientRect();
-      setFeeFilterPos({
-        top: rect.bottom + 4,
-        left: rect.left,
-        width: rect.width,
-      });
-    }
-  }, [showFeeFilter]);
+  const [showMembersModal, setShowMembersModal] = useState(false);
   const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
+  const [qrPreviewUrl, setQrPreviewUrl] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
+    summary: '',
     category: 'entrepreneurship',
     industry: '',  // 行业ID
     industryName: '',  // 行业名称
@@ -115,7 +140,6 @@ export default function CommunitiesPage() {
     coverImage: '',
     images: [] as string[],
     isPublic: true,
-    isPaid: false,  // 是否收费
     qrCode: '',  // 社群二维码
     hosts: [] as UserSearchResult[],
   });
@@ -123,23 +147,62 @@ export default function CommunitiesPage() {
   // 封面图片上传
   const coverImageRef = useRef<HTMLInputElement>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string>('');
+  const [qrPreview, setQrPreview] = useState<string>('');
+  const uploadedCoverRef = useRef<string>('');  // 最新上传的图片 URL
 
-  const handleCoverImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setUploading(true);
+    // 先显示本地预览
     const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = event.target?.result as string;
-      setCoverImagePreview(result);
-      setFormData({ ...formData, coverImage: result });
-    };
+    reader.onload = (ev) => setCoverImagePreview(ev.target?.result as string);
     reader.readAsDataURL(file);
+    // 上传到服务器
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      // 最低显示 800ms 确保动画可见
+      await new Promise(r => setTimeout(r, 800));
+      if (data.success) {
+        uploadedCoverRef.current = data.url;
+        setFormData(prev => ({ ...prev, coverImage: data.url }));
+      } else {
+        alert(data.error || '上传失败');
+      }
+    } catch {
+      alert('上传失败');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const removeCoverImage = () => {
     setCoverImagePreview('');
     setFormData({ ...formData, coverImage: '' });
     if (coverImageRef.current) coverImageRef.current.value = '';
+  };
+
+  // 删除共同体（弹出确认后执行）
+  const executeDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/communities?id=${deleteTarget}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        setCommunities(prev => prev.filter(c => c.id !== deleteTarget));
+      } else {
+        alert(data.error || '删除失败');
+      }
+    } catch (err) {
+      alert('删除失败');
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
+    }
   };
 
   // 从后台设置获取共同体分类
@@ -218,6 +281,28 @@ export default function CommunitiesPage() {
     }, 0);
   };
 
+  // 介绍区插入图片（上传后插入 Markdown 语法）
+  const handleDescImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.success) {
+        const md = `\n![${file.name}](${data.url})\n`;
+        setFormData(prev => ({ ...prev, description: prev.description + md }));
+      } else {
+        alert(data.error || '上传图片失败');
+      }
+    } catch {
+      alert('上传失败');
+    }
+    // 重置 input 以便重复上传同一文件
+    if (descImageRef.current) descImageRef.current.value = '';
+  };
+
   // 添加组织者（通过 UserSelect 组件调用）
   const handleAddHost = (user: UserSearchResult) => {
     // 检查是否已经添加过
@@ -238,12 +323,38 @@ export default function CommunitiesPage() {
     });
   };
 
+  // 简易 Markdown → HTML（支持图片、文件链接、粗体、斜体）
+  const renderDescription = (text: string) => {
+    if (!text) return '';
+    let html = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    // 图片 ![alt](url) — 处理相对路径
+    html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, url) => {
+      const fullUrl = url.startsWith('/') ? 'https://myfriends.vip' + url : url;
+      return `<img src="${fullUrl}" alt="${alt}" style="max-width:100%;height:auto;margin:8px 0;border-radius:8px" />`;
+    });
+    // 文件/PPT/PDF 链接 [text](url) — 处理相对路径
+    html = html.replace(/\[([^\]]*)\]\(([^)]+)\)/g, (match, text, url) => {
+      const fullUrl = url.startsWith('/') ? 'https://myfriends.vip' + url : url;
+      return `<a href="${fullUrl}" target="_blank" style="color:#3b82f6;text-decoration:underline">${text}</a>`;
+    });
+    // 粗体 **text**
+    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    // 斜体 *text*
+    html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    // 换行
+    html = html.replace(/\n/g, '<br/>');
+    return html;
+  };
+
   // 处理图片上传
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
-    Array.from(files).forEach((file) => {
+    Array.from(files).forEach(async (file) => {
       const reader = new FileReader();
       reader.onload = (event) => {
         const result = event.target?.result as string;
@@ -253,6 +364,17 @@ export default function CommunitiesPage() {
         }));
       };
       reader.readAsDataURL(file);
+      // 上传到服务器
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.success) {
+        setFormData((prev) => ({
+          ...prev,
+          images: prev.images.map((img, i) => i === prev.images.length - 1 ? data.url : img),
+        }));
+      }
     });
   };
 
@@ -265,19 +387,25 @@ export default function CommunitiesPage() {
   };
 
   // 处理二维码上传
-  const handleQrCodeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleQrCodeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
+    // 本地预览（仅用于UI展示，不存入formData）
     const reader = new FileReader();
     reader.onload = (event) => {
-      const result = event.target?.result as string;
-      setFormData((prev) => ({
-        ...prev,
-        qrCode: result,
-      }));
+      setQrPreview(event.target?.result as string);
     };
     reader.readAsDataURL(file);
+    // 上传到服务器
+    const fd = new FormData();
+    fd.append('file', file);
+    const res = await fetch('/api/upload', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (data.success) {
+      setFormData((prev) => ({ ...prev, qrCode: data.url }));
+    } else {
+      alert(data.error || '上传二维码失败');
+    }
     e.target.value = '';
   };
 
@@ -287,62 +415,32 @@ export default function CommunitiesPage() {
     setShowDetailModal(true);
   };
 
-  // 创建/更新共同体
+  // 创建/更新共同体（通过云 MySQL API，不依赖 localStorage）
   const handleCreateCommunity = async () => {
-    console.log('handleCreateCommunity 被调用');
-    alert('handleCreateCommunity 被调用 - 开始创建流程');
-    console.log('formData:', formData);
-    
     if (!formData.name.trim()) {
       alert('请填写共同体名称');
       return;
     }
-
-    // 直接从 localStorage 获取用户信息
-    const token = localStorage.getItem('token');
-    const userStr = localStorage.getItem('user');
-    
-    console.log('token:', token ? '存在' : '不存在');
-    console.log('userStr:', userStr ? '存在' : '不存在');
-    alert(`token: ${token ? '存在' : '不存在'}, userStr: ${userStr ? '存在' : '不存在'}`);
-    
-    if (!token || !userStr) {
-      alert('请先登录 - 没有token或user信息');
+    if (!currentUser?.id) {
+      alert('请先登录');
       return;
     }
-    
-    let currentUserId: string | undefined;
-    try {
-      const user = JSON.parse(userStr);
-      currentUserId = user.id;
-    } catch (e) {
-      console.error('解析用户信息失败:', e);
-    }
-    
-    if (!currentUserId) {
-      alert('无法获取用户信息，请重新登录');
-      return;
-    }
-    
-    console.log('创建共同体 - 用户ID:', currentUserId);
 
+    setSaving(true);
     if (editingCommunity) {
-      // 编辑模式
+      // 编辑模式 - 调用云数据库 API
       try {
         const res = await fetch(`/api/communities?id=${editingCommunity.id}`, {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: formData.name,
+            summary: formData.summary,
             description: formData.description,
             category: formData.category,
             industry: formData.industry,
-            coverImage: formData.coverImage,
+            coverImage: uploadedCoverRef.current || formData.coverImage,
             isPublic: formData.isPublic,
-            isPaid: formData.isPaid,
             images: formData.images,
             qrCode: formData.qrCode,
             memberList: formData.hosts.map(h => ({
@@ -364,60 +462,44 @@ export default function CommunitiesPage() {
           alert(data.error || '更新失败');
         }
       } catch (err) {
-        console.error('更新共同体失败:', err);
-        alert('更新失败，请重试');
+        alert('更新失败');
+      } finally {
+        setSaving(false);
       }
       return;
     }
 
-    // 创建模式 - 调用 API
+    // 创建模式
     try {
-      const requestBody = {
-        ownerId: currentUserId,
-        name: formData.name,
-        description: formData.description,
-        coverImage: formData.coverImage,
-        category: formData.category,
-        industry: formData.industry,
-        isPublic: formData.isPublic,
-        isPaid: formData.isPaid,
-        images: formData.images,
-        qrCode: formData.qrCode,
-      };
-      console.log('发送创建请求，body:', JSON.stringify(requestBody));
-      
       const res = await fetch('/api/communities', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestBody),
+        headers: { 'Content-Type': 'application/json; charset=utf-8' },
+        body: JSON.stringify({
+          ownerId: currentUser.id,
+          ownerName: (currentUser as any).display_name || (currentUser as any).real_name || '',
+          name: formData.name,
+          summary: formData.summary,
+          description: formData.description,
+          coverImage: formData.coverImage,
+          category: formData.category,
+          industry: formData.industry,
+          isPublic: formData.isPublic,
+          images: formData.images,
+          qrCode: formData.qrCode,
+        }),
       });
 
-      console.log('API 响应状态:', res.status);
       const data = await res.json();
-      console.log('API 响应数据:', data);
-      console.log('data.id:', data.id);
-      console.log('data.success:', data.success);
       
       if (data.success) {
-        console.log('创建成功，准备显示弹窗，ID:', data.id);
-        // 刷新列表
         await fetchCommunities();
-        // 将新创建的社区加入已加入列表
         if (data.id) {
           setJoinedCommunities(prev => [...prev, data.id]);
-          // 显示成功弹窗
           setCreatedCommunityId(data.id);
-          console.log('setCreatedCommunityId 被调用，参数:', data.id);
-        } else {
-          console.error('API 返回成功但缺少 id 字段');
-          alert('创建成功但返回数据异常');
         }
-        // 重置表单并关闭模态框
         setFormData({
           name: '',
+          summary: '',
           category: 'entrepreneurship',
           industry: '',
           industryName: '',
@@ -425,7 +507,6 @@ export default function CommunitiesPage() {
           coverImage: '',
           images: [] as string[],
           isPublic: true,
-          isPaid: false,
           qrCode: '',
           hosts: [] as UserSearchResult[],
         });
@@ -434,72 +515,112 @@ export default function CommunitiesPage() {
         alert(data.error || '创建失败');
       }
     } catch (err) {
-      console.error('创建共同体失败:', err);
-      alert('创建失败，请重试');
+      alert('创建失败');
+    } finally {
+      setSaving(false);
     }
   };
 
   // 加入共同体
-  const handleJoin = (id: string) => {
+  const handleJoin = async (id: string) => {
     const community = communities.find(c => c.id === id);
-    if (!community) return;
+    if (!community || !currentUser?.id) return;
 
-    if (joinedCommunities.includes(id)) {
-      // 退出
-      setJoinedCommunities(joinedCommunities.filter(c => c !== id));
-      setCommunities(communities.map(c => {
-        if (c.id === id) {
-          return {
-            ...c,
-            members: Math.max(1, c.members - 1),
-            memberList: c.memberList.filter(m => m.email !== 'me@zhengdao.com')
-          };
+    const isJoined = joinedCommunities.includes(id);
+    try {
+      const res = await fetch('/api/communities/members', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          communityId: id,
+          userId: currentUser.id,
+          userName: currentUser.display_name || currentUser.phone || '用户',
+          action: isJoined ? 'leave' : 'join',
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (isJoined) {
+          setJoinedCommunities(joinedCommunities.filter(c => c !== id));
+          const updatedList = communities.map(c => {
+            if (c.id === id) return { ...c, members: Math.max(0, c.members - 1), memberList: c.memberList.filter(m => m.email !== ('uid-' + currentUser.id)) };
+            return c;
+          });
+          setCommunities(updatedList);
+          // 同步选中的详情
+          setSelectedCommunity(prev => prev?.id === id ? { ...prev, members: Math.max(0, prev.members - 1), memberList: prev.memberList.filter(m => m.email !== ('uid-' + currentUser.id)) } : prev);
+        } else {
+          setJoinedCommunities([...joinedCommunities, id]);
+          const newMember = { name: currentUser.display_name || currentUser.phone || '用户', email: 'uid-' + currentUser.id, role: 'member' as const, joinedAt: new Date().toISOString().split('T')[0] };
+          const updatedList = communities.map(c => {
+            if (c.id === id) return { ...c, members: c.members + 1, memberList: [...c.memberList, newMember] };
+            return c;
+          });
+          setCommunities(updatedList);
+          // 同步选中的详情
+          setSelectedCommunity(prev => prev?.id === id ? { ...prev, members: prev.members + 1, memberList: [...prev.memberList, newMember] } : prev);
         }
-        return c;
-      }));
-    } else {
-      // 加入
-      setJoinedCommunities([...joinedCommunities, id]);
-      setCommunities(communities.map(c => {
-        if (c.id === id) {
-          return {
-            ...c,
-            members: c.members + 1,
-            memberList: [...c.memberList, { name: '当前用户', email: 'me@zhengdao.com', role: 'member', joinedAt: new Date().toISOString().split('T')[0] }]
-          };
-        }
-        return c;
-      }));
+      } else {
+        alert(data.error || '操作失败');
+      }
+    } catch (e) {
+      console.error('加入/退出失败:', e);
+      alert('网络错误，请重试');
     }
   };
 
   // 判断是否为创建的共同体（创建者角色）
   const isCreatedByMe = (community: Community) => {
-    // 检查当前用户是否是创建者
-    if (!currentUser) {
-      console.log('isCreatedByMe: currentUser is null');
-      return false;
-    }
-    const isOwner = community.ownerId === currentUser.id;
-    const isCreator = community.memberList?.some(m => m.role === 'creator' && m.id === currentUser.id);
-    console.log('isCreatedByMe:', { ownerId: community.ownerId, userId: currentUser.id, isOwner, isCreator });
-    return isOwner || isCreator;
+    if (!currentUser?.id || !community.ownerId) return false;
+    // 兼容 ownerId 可能不带 UID 前缀的情况
+    const currentId = currentUser.id;
+    const ownerId = community.ownerId;
+    return currentId === ownerId || currentId === 'UID' + ownerId || 'UID' + currentId === ownerId;
   };
 
-  // 判断是否为参与的共同体（组织者角色：admin，不是创建者）
+  // 判断是否为参与的共同体（在成员列表中，不是创建者）
   const isJoinedByMe = (community: Community) => {
-    // 判断成员列表中是否有组织者角色（admin），但不是创建者
-    return community.memberList?.some(m => m.role === 'admin') || false;
+    if (!currentUser?.id) return false;
+    return community.memberList?.some(m => m.email === 'uid-' + currentUser.id && m.role !== 'creator') || false;
   };
 
   // 根据标签页过滤共同体
   const filteredCommunities = communities.filter(community => {
     if (activeTab === 'created') return isCreatedByMe(community);
     if (activeTab === 'joined') return isJoinedByMe(community);
-    if (activeTab === 'free') return !community.isPaid;
-    if (activeTab === 'paid') return community.isPaid;
-    return true; // 'all'
+    // 'all' 标签下的子筛选
+    if (subFilter === 'pinned') return community.isPinned || community.sortOrder > 0;
+    if (subFilter === 'active') return community.activityCount >= 2; // 每周2次以上活动
+    if (subFilter === 'newest') return true; // 按时间排序，不需要过滤
+    return true;
+  }).filter(community => {
+    // 搜索过滤
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (community.name?.toLowerCase().includes(q) || community.summary?.toLowerCase().includes(q));
   });
+
+  // 子筛选排序
+  const sortedCommunities = [...filteredCommunities].sort((a, b) => {
+    if (activeTab === 'all' && subFilter === 'newest') {
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    }
+    if (activeTab === 'all' && subFilter === 'active') {
+      return (b.activityCount || 0) - (a.activityCount || 0);
+    }
+    // 默认：置顶的排前面
+    return (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0);
+  });
+
+  if (authLoading) {
+    return (
+      <Layout>
+        <div className="max-w-6xl mx-auto py-20 text-center">
+          <p className="text-slate-500">加载中...</p>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -525,7 +646,9 @@ export default function CommunitiesPage() {
                   <CheckCircle className="w-10 h-10 text-green-500" />
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">共同体创建成功！</h3>
-                <p className="text-slate-500 mb-4">您的共同体已成功创建</p>
+                <p className="text-amber-600 dark:text-amber-400 mb-4 flex items-center justify-center gap-1">
+                  <Clock className="w-4 h-4" />已提交，等待管理员审核通过后公开可见
+                </p>
                 <div className="bg-slate-100 dark:bg-slate-700 rounded-xl p-4 mb-6">
                   <p className="text-xs text-slate-500 mb-1">共同体ID</p>
                   <p className="text-2xl font-mono font-bold text-amber-600 dark:text-amber-400 tracking-wider">
@@ -569,12 +692,7 @@ export default function CommunitiesPage() {
               </p>
             </div>
             <button
-              onClick={() => {
-                console.log('创建共同体按钮点击');
-                console.log('localStorage token:', localStorage.getItem('token') ? '存在' : '不存在');
-                console.log('localStorage user:', localStorage.getItem('user') ? '存在' : '不存在');
-                setShowModal(true);
-              }}
+              onClick={() => setShowModal(true)}
               className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium"
             >
               <Plus className="w-4 h-4" />
@@ -585,52 +703,9 @@ export default function CommunitiesPage() {
 
         {/* Tabs */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2 items-center">
-          {/* 全部 + 免费/收费下拉 */}
-          <div ref={feeFilterRef}>
-            <button
-              onClick={() => setShowFeeFilter(!showFeeFilter)}
-              className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors flex items-center gap-1 ${
-                activeTab === 'all' || activeTab === 'free' || activeTab === 'paid'
-                  ? 'bg-amber-500 text-white'
-                  : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
-              }`}
-            >
-              {activeTab === 'free' ? '免费' : activeTab === 'paid' ? '收费' : '全部'}
-              <ChevronDown className="w-4 h-4" />
-            </button>
-            {showFeeFilter && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowFeeFilter(false)} />
-                <div
-                  className="fixed z-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg shadow-lg overflow-hidden"
-                  style={{ top: feeFilterPos.top, left: feeFilterPos.left, width: feeFilterPos.width || 'auto' }}
-                >
-                  {[
-                    { key: 'all', label: '全部' },
-                    { key: 'free', label: '免费' },
-                    { key: 'paid', label: '收费' },
-                  ].map((opt) => (
-                    <button
-                      key={opt.key}
-                      onClick={() => {
-                        setActiveTab(opt.key as typeof activeTab);
-                        setShowFeeFilter(false);
-                      }}
-                      className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
-                        activeTab === opt.key
-                          ? 'bg-amber-500 text-white'
-                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
 
           {[
+            { key: 'all', label: '全部' },
             { key: 'created', label: '我创建的' },
             { key: 'joined', label: '我参与的' },
           ].map((tab) => (
@@ -638,7 +713,6 @@ export default function CommunitiesPage() {
               key={tab.key}
               onClick={() => {
                 setActiveTab(tab.key as typeof activeTab);
-                setShowFeeFilter(false);
               }}
               className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
                 activeTab === tab.key
@@ -657,11 +731,31 @@ export default function CommunitiesPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
             <input
               type="text"
-              placeholder={t('communities.searchPlaceholder')}
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="搜索共同体..."
               className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
             />
           </div>
         </div>
+
+        {/* 筛选子标签（仅"全部"标签页显示） */}
+        {activeTab === 'all' && (
+          <div className="flex gap-2 mb-4">
+            {[
+              { key: 'all', label: '全部' },
+              { key: 'pinned', label: '置顶' },
+              { key: 'active', label: '最活跃' },
+              { key: 'newest', label: '最新的' },
+            ].map(({ key, label }) => (
+              <button key={key} onClick={() => setSubFilter(key as typeof subFilter)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  subFilter === key ? 'bg-amber-500 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-600'
+                }`}
+              >{label}</button>
+            ))}
+          </div>
+        )}
 
         {/* Loading State */}
         {loading && (
@@ -672,18 +766,22 @@ export default function CommunitiesPage() {
         )}
 
         {/* Communities Grid */}
-        {!loading && filteredCommunities.length > 0 && (
+        {!loading && sortedCommunities.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {filteredCommunities.map((community) => (
+            {sortedCommunities.map((community) => (
             <div
               key={community.id}
               className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => handleViewDetail(community)}
             >
               <div className="flex items-start gap-4">
-                <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Users2 className="w-7 h-7 text-blue-600" />
-                </div>
+                {community.coverImage ? (
+                  <img src={community.coverImage} alt={community.name} className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />
+                ) : (
+                  <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Users2 className="w-7 h-7 text-blue-600" />
+                  </div>
+                )}
                 <div className="flex-1">
                     <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-slate-900 dark:text-white">{community.name}</h3>
@@ -696,42 +794,35 @@ export default function CommunitiesPage() {
                           {community.industryName}
                         </span>
                       )}
-                      <span className={`text-xs px-2 py-0.5 rounded ${
-                        community.isPaid
-                          ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-                          : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                      }`}>
-                        {community.isPaid ? '收费' : '免费'}
-                      </span>
                       {!community.isPublic && (
                         <span className="text-xs px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 rounded text-amber-600 dark:text-amber-400">
                           私密
                         </span>
                       )}
-                    </div>
-                  </div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">
-                    {community.description}
-                  </p>
-                  {community.images.length > 0 && (
-                    <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-                      {community.images.slice(0, 3).map((img, i) => (
-                        <img
-                          key={i}
-                          src={img}
-                          alt={`图片${i + 1}`}
-                          className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
-                        />
-                      ))}
-                      {community.images.length > 3 && (
-                        <span className="flex items-center justify-center w-12 h-12 bg-slate-100 dark:bg-slate-700 rounded-lg text-xs text-slate-500">
-                          +{community.images.length - 3}
+                      {community.status === 'pending' && (
+                        <span className="text-xs px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 rounded text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />待审批
                         </span>
                       )}
                     </div>
+                  </div>
+                  <span className="inline-block px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded text-xs font-mono cursor-pointer hover:bg-amber-200 transition-colors mt-1"
+                    onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(getShortCommunityId(community.id)) }}
+                    title="点击复制共同体ID，用于记录中心查询">
+                    共同体ID: {getShortCommunityId(community.id)}
+                  </span>
+                  {community.summary && (
+                    <p className="text-sm text-slate-700 dark:text-slate-300 mt-2 line-clamp-2 font-medium">
+                      {community.summary}
+                    </p>
                   )}
-                  {/* 操作按钮行 - 图标 only */}
-                  <div className="flex items-center justify-end gap-1 mt-2" onClick={(e) => e.stopPropagation()}>
+                  {community.ownerName && (
+                    <p className="text-xs text-slate-400 mt-1">
+                      创建人：{community.ownerName}
+                    </p>
+                  )}
+                  {/* 操作按钮 */}
+                  <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                     {isCreatedByMe(community) && (
                       <>
                         <button
@@ -741,14 +832,14 @@ export default function CommunitiesPage() {
                             setEditingCommunity(community);
                             setFormData({
                               name: community.name,
+                              summary: community.summary || '',
                               category: community.category,
                               industry: community.industry || '',
                               industryName: community.industryName || '',
                               description: community.description,
-                              coverImage: (community as any).coverImage || '',
+                              coverImage: community.coverImage || '',
                               images: community.images,
                               isPublic: community.isPublic,
-                              isPaid: community.isPaid,
                               qrCode: community.qrCode || '',
                               hosts: community.memberList.filter(m => m.role === 'admin').map(m => ({
                                 id: m.id || m.name,
@@ -758,7 +849,8 @@ export default function CommunitiesPage() {
                                 avatar_url: null,
                               })),
                             });
-                            setCoverImagePreview((community as any).coverImage || '');
+                            setCoverImagePreview(community.coverImage || '');
+                            uploadedCoverRef.current = '';
                             setShowModal(true);
                           }}
                           className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"
@@ -767,30 +859,12 @@ export default function CommunitiesPage() {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={async (e) => {
+                          onClick={(e) => {
                             e.stopPropagation();
-                            console.log('删除按钮点击', community.id);
-                            if (confirm('确定要删除该共同体吗？')) {
-                              try {
-                                const token = localStorage.getItem('token');
-                                const res = await fetch(`/api/communities?id=${community.id}`, {
-                                  method: 'DELETE',
-                                  headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-                                });
-                                const data = await res.json();
-                                if (data.success) {
-                                  setCommunities(communities.filter(c => c.id !== community.id));
-                                  alert('删除成功');
-                                } else {
-                                  alert(data.error || '删除失败');
-                                }
-                              } catch (err) {
-                                console.error('删除失败:', err);
-                                alert('删除失败，请重试');
-                              }
-                            }
+                            setDeleteTarget(community.id);
                           }}
-                          className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
+                          disabled={deleting}
+                          className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg disabled:opacity-40"
                           title="删除"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -824,7 +898,7 @@ export default function CommunitiesPage() {
                   <div className="flex items-center gap-3 text-sm text-slate-500 mt-2" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-1">
                       <Globe className="w-4 h-4 flex-shrink-0" />
-                      <span className="whitespace-nowrap">{community.members}{t('communities.members')}</span>
+                      <span className="whitespace-nowrap">{community.memberList?.length || community.members}{t('communities.members')}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Calendar className="w-4 h-4 flex-shrink-0" />
@@ -838,7 +912,7 @@ export default function CommunitiesPage() {
           </div>
         )}
 
-        {!loading && filteredCommunities.length === 0 && (
+        {!loading && sortedCommunities.length === 0 && (
           <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-xl">
             <Users2 className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
             <p className="text-slate-500 dark:text-slate-400">
@@ -874,6 +948,7 @@ export default function CommunitiesPage() {
                     setCoverImagePreview('');
                     setFormData({
                       name: '',
+                      summary: '',
                       category: 'entrepreneurship',
                       industry: '',
                       industryName: '',
@@ -881,7 +956,6 @@ export default function CommunitiesPage() {
                       coverImage: '',
                       images: [] as string[],
                       isPublic: true,
-                      isPaid: false,
                       qrCode: '',
                       hosts: [] as UserSearchResult[],
                     });
@@ -908,30 +982,15 @@ export default function CommunitiesPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      是否收费
+                      概要
                     </label>
-                    <div className="flex gap-4">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="isPaid"
-                          checked={!formData.isPaid}
-                          onChange={() => setFormData({ ...formData, isPaid: false })}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm text-slate-700 dark:text-slate-300">免费</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="isPaid"
-                          checked={formData.isPaid}
-                          onChange={() => setFormData({ ...formData, isPaid: true })}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm text-slate-700 dark:text-slate-300">收费</span>
-                      </label>
-                    </div>
+                    <textarea
+                      value={formData.summary}
+                      onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
+                      placeholder="简要介绍共同体的宗旨、目标和原则"
+                      rows={2}
+                      className="w-full px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white resize-none"
+                    />
                   </div>
 
                   <div>
@@ -983,7 +1042,12 @@ export default function CommunitiesPage() {
                       className="hidden"
                     />
                     {coverImagePreview ? (
-                      <div className="relative inline-block">
+                      <div className="relative inline-block w-full">
+                        {uploading && (
+                          <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center z-10">
+                            <Loader2 className="w-8 h-8 text-white animate-spin" />
+                          </div>
+                        )}
                         <img
                           src={coverImagePreview}
                           alt="封面预览"
@@ -1001,10 +1065,14 @@ export default function CommunitiesPage() {
                       <button
                         type="button"
                         onClick={() => coverImageRef.current?.click()}
-                        className="flex items-center justify-center gap-2 w-full py-6 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg text-slate-500 hover:border-amber-400 hover:text-amber-600 hover:bg-amber-50/50 dark:hover:bg-amber-900/10 transition-colors"
+                        disabled={uploading}
+                        className="flex items-center justify-center gap-2 w-full py-6 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg text-slate-500 hover:border-amber-400 hover:text-amber-600 hover:bg-amber-50/50 dark:hover:bg-amber-900/10 transition-colors disabled:opacity-60"
                       >
-                        <Image className="w-5 h-5" />
-                        <span>点击上传封面图片</span>
+                        {uploading ? (
+                          <><Loader2 className="w-5 h-5 animate-spin" /><span>上传中...</span></>
+                        ) : (
+                          <><Image className="w-5 h-5" /><span>点击上传封面图片</span></>
+                        )}
                       </button>
                     )}
                   </div>
@@ -1048,6 +1116,15 @@ export default function CommunitiesPage() {
                           <Link className="w-4 h-4" />
                         </button>
                         <div className="w-px h-5 bg-slate-300 dark:bg-slate-500 mx-1" />
+                        <button
+                          type="button"
+                          onClick={() => descImageRef.current?.click()}
+                          className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded transition-colors"
+                          title="上传图片"
+                        >
+                          <ImageIcon className="w-4 h-4" />
+                        </button>
+                        <input ref={descImageRef} type="file" accept="image/*" onChange={handleDescImageUpload} className="hidden" />
                       </div>
                       <textarea
                         id="community-description"
@@ -1059,7 +1136,7 @@ export default function CommunitiesPage() {
                       />
                     </div>
                     <p className="mt-1 text-xs text-slate-400">
-                      支持格式：**加粗**、*斜体*、- 列表、[文字](链接)
+                      🖼️ 插入图片 · **加粗** · *斜体* · [链接](url)
                     </p>
                   </div>
 
@@ -1069,6 +1146,7 @@ export default function CommunitiesPage() {
                     </label>
                     <UserSelect
                       onSelect={handleAddHost}
+                      onRemove={handleRemoveHost}
                       selectedUsers={formData.hosts}
                       placeholder="搜索用户..."
                     />
@@ -1078,12 +1156,12 @@ export default function CommunitiesPage() {
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                       社群二维码
                     </label>
-                    {formData.qrCode ? (
+                    {formData.qrCode || qrPreview ? (
                       <div className="relative inline-block">
-                        <img src={formData.qrCode} alt="社群二维码" className="w-32 h-32 object-cover rounded-lg" />
+                        <img src={qrPreview || formData.qrCode} alt="社群二维码" className="w-32 h-32 object-cover rounded-lg" />
                         <button
                           type="button"
-                          onClick={() => setFormData({ ...formData, qrCode: '' })}
+                          onClick={() => { setFormData({ ...formData, qrCode: '' }); setQrPreview(''); }}
                           className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
                         >
                           <X className="w-3 h-3" />
@@ -1147,13 +1225,11 @@ export default function CommunitiesPage() {
                     取消
                   </button>
                   <button
-                    onClick={() => {
-                      console.log('创建按钮被点击');
-                      handleCreateCommunity();
-                    }}
+                    onClick={handleCreateCommunity}
+                    disabled={saving || uploading}
                     className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {editingCommunity ? '保存修改' : '创建'}
+                    {uploading ? '上传中...' : saving ? '保存中...' : editingCommunity ? '保存修改' : '创建'}
                   </button>
                 </div>
               </div>
@@ -1163,6 +1239,7 @@ export default function CommunitiesPage() {
 
       {showDetailModal && selectedCommunity && (
         <>
+          <WeChatShareSetup title={selectedCommunity.name} description={selectedCommunity.summary || selectedCommunity.description?.replace(/<[^>]*>/g, '').slice(0, 200)} imageUrl={selectedCommunity.icon || ''} />
           <div
             className="fixed inset-0 bg-black/50 z-50"
             onClick={() => setShowDetailModal(false)}
@@ -1178,26 +1255,20 @@ export default function CommunitiesPage() {
                 <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800 rounded-t-2xl z-10">
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-white">共同体详情</h2>
                   <div className="flex items-center gap-2">
-                    <ShareButton 
-                      targetType="community" 
-                      targetId={selectedCommunity.id}
-                      title={selectedCommunity.name}
-                      description={selectedCommunity.description}
-                    />
                     {isCreatedByMe(selectedCommunity) && (
                       <button
                         onClick={() => {
                           setEditingCommunity(selectedCommunity);
                           setFormData({
                             name: selectedCommunity.name,
+                            summary: selectedCommunity.summary || '',
                             category: selectedCommunity.category,
                             industry: selectedCommunity.industry || '',
                             industryName: selectedCommunity.industryName || '',
                             description: selectedCommunity.description,
-                            coverImage: (selectedCommunity as any).coverImage || '',
+                            coverImage: selectedCommunity.coverImage || '',
                             images: selectedCommunity?.images || [] as string[],
                             isPublic: selectedCommunity.isPublic,
-                            isPaid: selectedCommunity.isPaid,
                             qrCode: selectedCommunity.qrCode || '',
                             hosts: selectedCommunity.memberList.filter(m => m.role === 'admin').map(m => ({
                               id: m.id || m.name,
@@ -1207,7 +1278,7 @@ export default function CommunitiesPage() {
                               avatar_url: null,
                             })),
                           });
-                          setCoverImagePreview((selectedCommunity as any).coverImage || '');
+                          setCoverImagePreview(selectedCommunity.coverImage || '');
                           setShowDetailModal(false);
                           setShowModal(true);
                         }}
@@ -1228,9 +1299,13 @@ export default function CommunitiesPage() {
 
                 <div className="p-4">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
-                      <Users2 className="w-8 h-8 text-blue-600" />
-                    </div>
+                    {selectedCommunity.coverImage ? (
+                      <img src={selectedCommunity.coverImage} alt={selectedCommunity.name} className="w-24 h-16 object-cover rounded-lg" />
+                    ) : (
+                      <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+                        <Users2 className="w-8 h-8 text-blue-600" />
+                      </div>
+                    )}
                     <div>
                       <h1 className="text-xl font-bold text-slate-900 dark:text-white">
                         {selectedCommunity.name}
@@ -1250,13 +1325,6 @@ export default function CommunitiesPage() {
                             {selectedCommunity.industryName}
                           </span>
                         )}
-                        <span className={`text-sm px-2 py-0.5 rounded ${
-                          selectedCommunity.isPaid
-                            ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-                            : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                        }`}>
-                          {selectedCommunity.isPaid ? '收费' : '免费'}
-                        </span>
                         {!selectedCommunity.isPublic && (
                           <span className="text-sm px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 rounded text-amber-600 dark:text-amber-400">
                             私密
@@ -1266,11 +1334,31 @@ export default function CommunitiesPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
-                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                      <Globe className="w-5 h-5" />
-                      {selectedCommunity.members}{t('communities.members')}
+                  {/* 创建人 */}
+                  {selectedCommunity.ownerName && (
+                    <div className="flex items-center gap-2 mb-4 px-4 py-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                      <User className="w-5 h-5 text-blue-600" />
+                      <span className="text-sm text-slate-600 dark:text-slate-400">创建人：</span>
+                      <span className="text-sm font-medium text-slate-900 dark:text-white">{selectedCommunity.ownerName}</span>
                     </div>
+                  )}
+
+                  {/* 简介 */}
+                  {selectedCommunity.summary && (
+                    <div className="mb-4 px-4 py-3 bg-amber-50 dark:bg-amber-900/10 rounded-xl">
+                      <h4 className="text-sm font-semibold text-amber-700 dark:text-amber-400 mb-2">简介</h4>
+                      <p className="text-slate-700 dark:text-slate-300 text-sm">{selectedCommunity.summary}</p>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                    <button
+                      onClick={() => setShowMembersModal(true)}
+                      className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    >
+                      <Globe className="w-5 h-5" />
+                      <span>{selectedCommunity.memberList?.length || selectedCommunity.members} 位成员</span>
+                    </button>
                     <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                       <Calendar className="w-5 h-5" />
                       {selectedCommunity.createdAt}
@@ -1280,9 +1368,7 @@ export default function CommunitiesPage() {
                   {selectedCommunity.description && (
                     <div className="mb-6">
                       <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">共同体介绍</h3>
-                      <div className="text-slate-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed">
-                        {selectedCommunity.description}
-                      </div>
+                      <div className="text-slate-600 dark:text-slate-400 leading-relaxed" dangerouslySetInnerHTML={{ __html: renderDescription(selectedCommunity.description) }} />
                     </div>
                   )}
 
@@ -1292,47 +1378,64 @@ export default function CommunitiesPage() {
                         <ImageIcon className="w-5 h-5" />
                         社群二维码
                       </h3>
-                      <div className="flex justify-center">
+                      <div className="flex flex-col items-center gap-3">
                         <img
-                          src={selectedCommunity.qrCode}
+                          id="community-qrcode-img"
+                          src={selectedCommunity.qrCode?.startsWith('/') ? 'https://myfriends.vip' + selectedCommunity.qrCode : selectedCommunity.qrCode}
                           alt="社群二维码"
-                          className="w-48 h-48 object-contain rounded-xl border border-slate-200 dark:border-slate-600"
+                          crossOrigin="anonymous"
+                          onClick={() => setQrPreviewUrl(selectedCommunity.qrCode?.startsWith('/') ? 'https://myfriends.vip' + selectedCommunity.qrCode : selectedCommunity.qrCode)}
+                          className="w-48 h-48 object-contain rounded-xl border border-slate-200 dark:border-slate-600 cursor-pointer hover:opacity-80 transition-opacity"
                         />
                       </div>
                     </div>
                   )}
 
-                  {/* Members Section */}
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                      <User className="w-5 h-5" />
-                      成员列表 ({selectedCommunity.memberList.length})
-                    </h3>
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {selectedCommunity.memberList.map((member, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                              <User className="w-4 h-4 text-blue-600" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-slate-900 dark:text-white">{member.name}</p>
-                              <p className="text-xs text-slate-400">{member.email}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className={`px-2 py-0.5 rounded text-xs ${
-                              member.role === 'creator' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
-                              member.role === 'admin' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
-                              'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'
-                            }`}>
-                              {member.role === 'creator' ? '创建者' : member.role === 'admin' ? '管理员' : '成员'}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  {/* 二维码图片预览弹窗 */}
+                  {qrPreviewUrl && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="fixed inset-0 bg-black/70 z-[70] flex items-center justify-center p-4"
+                      onClick={() => setQrPreviewUrl(null)}
+                    >
+                      <motion.div
+                        initial={{ scale: 0.9 }}
+                        animate={{ scale: 1 }}
+                        className="relative max-w-md w-full bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          onClick={() => setQrPreviewUrl(null)}
+                          className="absolute -top-3 -right-3 p-1.5 bg-slate-700 text-white rounded-full hover:bg-slate-600 z-10"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                        <img
+                          src={qrPreviewUrl}
+                          alt="社群二维码"
+                          className="w-full h-auto object-contain rounded-xl"
+                        />
+                        <button
+                          onClick={() => {
+                            const a = document.createElement('a');
+                            a.href = qrPreviewUrl;
+                            a.download = '社群二维码.png';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                          }}
+                          className="mt-4 w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                          </svg>
+                          下载图片
+                        </button>
+                      </motion.div>
+                    </motion.div>
+                  )}
 
                   {/* Activities Section */}
                   {selectedCommunity.activities.length > 0 && (
@@ -1395,21 +1498,124 @@ export default function CommunitiesPage() {
                   <button
                     onClick={() => {
                       if (selectedCommunity) handleJoin(selectedCommunity.id);
-                      setShowDetailModal(false);
                     }}
                     className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                      selectedCommunity && joinedCommunities.includes(selectedCommunity.id)
+                      isJoinedByMe(selectedCommunity!)
                         ? 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30'
                         : 'bg-blue-600 hover:bg-blue-700 text-white'
                     }`}
                   >
-                    {selectedCommunity && joinedCommunities.includes(selectedCommunity.id) ? '退出共同体' : t('communities.join')}
+                    {isJoinedByMe(selectedCommunity!) ? '退出共同体' : '加入共同体'}
                   </button>
                 </div>
               </div>
             </div>
         </>
           )}
+
+      {/* 成员清单弹窗 */}
+      <AnimatePresence>
+        {showMembersModal && selectedCommunity && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4"
+            onClick={() => setShowMembersModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm max-h-[70vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-700">
+                <h3 className="font-semibold text-slate-900 dark:text-white">
+                  成员清单 ({selectedCommunity.memberList.length})
+                </h3>
+                <button onClick={() => setShowMembersModal(false)} className="text-slate-400 hover:text-slate-600">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                {selectedCommunity.memberList.length > 0 ? (
+                  selectedCommunity.memberList.map((member, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                          <User className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <p className="font-medium text-sm text-slate-900 dark:text-white">{member.name}</p>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded text-xs ${
+                        member.role === 'creator' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                        member.role === 'admin' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                        'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400'
+                      }`}>
+                        {member.role === 'creator' ? '创建者' : member.role === 'admin' ? '管理员' : '成员'}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-slate-500">暂无成员</div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+    {/* 删除确认弹窗 */}
+    <AnimatePresence>
+      {deleteTarget && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          onClick={() => setDeleteTarget(null)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center mb-6">
+              <div className="w-14 h-14 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trash2 className="w-7 h-7 text-red-500" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">确认删除</h3>
+              <p className="text-sm text-slate-500">
+                确定要删除该共同体吗？此操作不可撤销。
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+                className="flex-1 px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={executeDelete}
+                disabled={deleting}
+                className="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {deleting ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" />删除中...</>
+                ) : (
+                  '确认删除'
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
     </Layout>
   );
 }

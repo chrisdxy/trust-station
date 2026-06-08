@@ -8,12 +8,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Home, Users, FileText, Search, Scale, Briefcase,
-  Calendar, Globe, Users2, Menu, X, LogOut, ChevronLeft, User, Key, Layout as LayoutIcon, Sparkles, BarChart3
+  Calendar, Globe, Users2, Menu, X, LogOut, ChevronLeft, User, Key, Layout as LayoutIcon, Sparkles, BarChart3, MessageSquare
 } from 'lucide-react';
 import Footer from './Footer';
 
 const navItems = [
-  { path: '/', labelKey: 'nav.home', icon: Home },
   { path: '/overview', labelKey: 'nav.community', icon: BarChart3 },
   { path: '/profile', labelKey: 'nav.profile', icon: User },
   { path: '/people', labelKey: 'nav.people', icon: Globe },
@@ -23,22 +22,14 @@ const navItems = [
   { path: '/cooperation', labelKey: 'nav.cooperation', icon: Users },
   { path: '/archives', labelKey: 'nav.archives', icon: FileText },
   { path: '/mediation', labelKey: 'nav.mediation', icon: Scale },
-];
-
-// 管理员侧边栏菜单
-const adminNavItems = [
-  { path: '/dashboard', labelKey: 'dashboard.title', icon: Home },
-  { path: '/admin/users', labelKey: 'admin.users', icon: Users },
-  { path: '/admin/categories', labelKey: 'admin.categories', icon: FileText },
-  { path: '/admin/partners', labelKey: 'admin.partners', icon: Users2 },
-  { path: '/admin/stats', labelKey: 'admin.stats', icon: BarChart3 },
-  { path: '/admin/settings', labelKey: 'admin.settings', icon: Key },
+  { path: '/feedbacks', labelKey: '投诉与建议', icon: MessageSquare },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [feedbackUnread, setFeedbackUnread] = useState(0);
   const { user, profile, signOut, loading } = useAuth();
   const { t } = useLanguage();
   const pathname = usePathname();
@@ -48,11 +39,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const currentUser = user;
   const currentProfile = profile;
 
-  // 判断是否为管理员或超级管理员
-  const isAdmin = currentUser && (
+  // 判断是否为管理员或超级管理员（需要同时有 admin_token 才算管理员登录）
+  const hasAdminToken = typeof window !== 'undefined' && localStorage.getItem('admin_token');
+  const isAdmin = !!(currentUser && hasAdminToken && (
     currentUser.user_type === 'admin' || 
     currentUser.user_type === 'super_admin'
-  );
+  ));
 
   // 判断是否为不需要侧边栏的页面（关于我们、隐私政策等公开页面）
   const isPublicPage = pathname === '/about' || pathname === '/privacy' || pathname === '/terms';
@@ -60,8 +52,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   // 未登录时隐藏侧边栏的页面
   const hideSidebarWithoutLogin = isPublicPage && !currentUser;
 
-  // 根据用户类型选择菜单项
-  const currentNavItems = isAdmin ? adminNavItems : navItems;
+  // 获取用户投诉建议未读回复数
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    const fetchUnread = async () => {
+      try {
+        const res = await fetch(`/api/feedbacks?userId=${currentUser.id}&limit=1`);
+        const data = await res.json();
+        if (data.success) setFeedbackUnread(data.userUnreadCount || 0);
+      } catch {}
+    };
+    fetchUnread();
+    const timer = setInterval(fetchUnread, 30000);
+    return () => clearInterval(timer);
+  }, [currentUser?.id]);
+
+  // 统一使用普通菜单（管理员的后台菜单在管理后台侧边栏中）
+  const currentNavItems = navItems;
 
   // 检查当前路径是否激活
   const isActive = (path: string) => pathname === path;
@@ -87,9 +94,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {!hideSidebarWithoutLogin && (
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-white/90 hover:text-white bg-white/10 hover:bg-white/20 rounded-xl transition-all text-sm font-medium"
           >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+            <span>菜单</span>
           </button>
           )}
           <Link href="/" className="flex items-center gap-2">
@@ -149,7 +157,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   )}
                 </div>
                 <span className="text-white/80 text-sm hidden md:block">
-                  {currentProfile?.display_name || currentProfile?.real_name || currentUser.phone?.slice(-4) || '用户'}
+                  {currentProfile?.display_name || currentUser?.display_name || currentProfile?.real_name || currentUser?.nickname || currentUser.phone?.slice(-4) || '用户'}
                 </span>
               </button>
               
@@ -226,6 +234,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </div>
             )}
             {currentNavItems.map((item, index) => {
+              // 分隔线
+              if ('type' in item && item.type === 'divider') {
+                return <div key="admin-divider" className="my-3 mx-4 border-t border-slate-700/50" />;
+              }
               const Icon = item.icon;
               const active = isActive(item.path);
               
@@ -256,14 +268,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   key={item.path}
                   href={item.path}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all relative ${
                     active
                       ? 'bg-gradient-to-r from-amber-400/20 to-transparent border-l-2 border-amber-400 text-white'
                       : 'text-slate-300 hover:bg-white/5 hover:text-white'
                   }`}
                 >
                   <Icon size={20} className={active ? 'text-amber-400' : ''} />
-                  <span className="font-medium">{t(item.labelKey)}</span>
+                  <span className="font-medium">
+                    {item.labelKey.startsWith('nav.') || item.labelKey.startsWith('admin.') ? t(item.labelKey) : item.labelKey}
+                  </span>
+                  {item.path === '/feedbacks' && feedbackUnread > 0 && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 min-w-[18px] h-4 px-1 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                      {feedbackUnread > 99 ? '99+' : feedbackUnread}
+                    </span>
+                  )}
                 </Link>
               );
             })}

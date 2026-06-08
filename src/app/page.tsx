@@ -92,8 +92,8 @@ export default function HomePage() {
             <button
               onClick={() => {
                 if (isAuthenticated) {
-                  // 已登录：直接进入控制台
-                  router.push('/dashboard');
+                  // 已登录：进入发现伙伴
+                  router.push('/people?tab=requests');
                 } else {
                   // 未登录：走正常登录流程
                   if (isWeChat) {
@@ -155,13 +155,17 @@ export default function HomePage() {
             </p>
             <button
               onClick={() => {
-                if (isWeChat) {
-                  const WECHAT_APPID = process.env.NEXT_PUBLIC_WECHAT_APPID || 'wx132561151d9c6e02';
-                  const redirectUri = window.location.origin + '/login';
-                  const authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${WECHAT_APPID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=snsapi_userinfo&state=wechat_login#wechat_redirect`;
-                  window.location.href = authUrl;
+                if (isAuthenticated) {
+                  router.push('/dashboard');
                 } else {
-                  router.push('/login');
+                  if (isWeChat) {
+                    const WECHAT_APPID = process.env.NEXT_PUBLIC_WECHAT_APPID || 'wx132561151d9c6e02';
+                    const redirectUri = window.location.origin + '/login';
+                    const authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${WECHAT_APPID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=snsapi_userinfo&state=wechat_login#wechat_redirect`;
+                    window.location.href = authUrl;
+                  } else {
+                    router.push('/login');
+                  }
                 }
               }}
               className="px-8 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium text-sm"
@@ -180,9 +184,6 @@ export default function HomePage() {
             <Link href="/about" className="hover:text-amber-400 transition-colors">
               关于我们
             </Link>
-            <Link href="/sitemap" className="hover:text-amber-400 transition-colors">
-              本站导航
-            </Link>
             <Link href="/privacy" className="hover:text-amber-400 transition-colors">
               隐私政策
             </Link>
@@ -193,6 +194,11 @@ export default function HomePage() {
           </p>
           <p className="text-center text-slate-400 text-xs">
             © 2026 正道驿站 All Rights Reserved.
+          </p>
+          <p className="text-center text-slate-400 text-xs mt-1">
+            <a href="https://beian.miit.gov.cn" target="_blank" rel="noopener noreferrer" className="hover:text-amber-400 transition-colors">
+              沪ICP备2023009236号-1
+            </a>
           </p>
         </div>
       </footer>

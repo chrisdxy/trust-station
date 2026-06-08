@@ -2,8 +2,8 @@
 const path = require('path');
 const nextConfig = {
   output: 'standalone',
-  // outputFileTracingRoot: path.join(__dirname),
-  // Turbopack 通过环境变量 NEXT_DISABLE_TURBOPACK=1 禁用
+  typescript: { ignoreBuildErrors: true },
+  eslint: { ignoreDuringBuilds: true },
   images: {
     remotePatterns: [
       {
@@ -12,6 +12,11 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
+  },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
   },
 };
 

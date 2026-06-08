@@ -17,7 +17,7 @@ interface Profile {
 }
 
 interface AuthContextType {
-  user: { id: string; phone?: string; user_type?: string } | null;
+  user: { id: string; phone?: string; email?: string; user_type?: string; display_name?: string | null; real_name?: string | null } | null;
   profile: Profile | null;
   loading: boolean;
   isAuthenticated: boolean;
@@ -34,7 +34,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const SESSION_KEY = 'login_session_time';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<{ id: string; phone?: string; user_type?: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; phone?: string; display_name?: string; nickname?: string; user_type?: string } | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -77,20 +77,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // 微信登录用户：只要 user 存在即视为已登录（login.tsx 已设置7天有效期）
         const isWechatUser = parsedUser.isWechatUser === true;
         if (isWechatUser || isSessionValid()) {
-          // 如果 user_type 是管理员，检查是否有对应的普通用户会话
-          const hasIsAdmin = localStorage.getItem('is_admin');
-          if ((parsedUser.user_type === 'admin' || parsedUser.user_type === 'super_admin') && !hasIsAdmin) {
-            // 残留的管理员状态，清除所有数据
-            localStorage.removeItem('user');
-            localStorage.removeItem('user_data');
-            localStorage.removeItem('profile');
-            localStorage.removeItem('is_admin');
-            localStorage.removeItem('admin_role');
-            localStorage.removeItem('admin_token');
-            localStorage.removeItem('admin_user');
-            setLoading(false);
-            return;
-          }
+          // 管理员账号也可以登录前台使用普通功能
+          // 仅当存在 admin_token 时才视为管理员登录，否则按普通用户处理
           setUser(parsedUser);
           if (savedProfile) {
             setProfile(JSON.parse(savedProfile));
@@ -174,8 +162,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const mockProfile: Profile = {
         id: mockUser.id,
         user_type: userData.user_type || 'individual',
-        display_name: userData.display_name || '新用户' + phone.slice(-4),
-        real_name: userData.real_name || null,
+        display_name: userData.real_name || userData.display_name || '新用户' + phone.slice(-4),
+        real_name: userData.real_name || userData.display_name || null,
         company_name: userData.company_name || null,
         legal_rep_name: userData.legal_rep_name || null,
         auth_rep_name: userData.auth_rep_name || null,

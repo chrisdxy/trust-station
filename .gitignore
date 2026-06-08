@@ -49,3 +49,28 @@ temp/
 
 # deploy
 deploy-package.zip
+.workbuddy/ 
+deploy-package-v5/ 
+deploy-update.tar.gz 
+*.bat 
+*.err 
+*.py 
+*.js 
+*.sh 
+nul 
+cd 
+git 
+check_*.js 
+debug_*.js 
+diagnose*.js 
+fix_*.py 
+test_*.js 
+*.txt 
+*.conf 
+pnpm-lock.yaml 
+dev-test.err 
+"\\345\\220\\257\\345\\212\\250\\346\\234\\215\\345\\212\\241\\345\\231\\250.bat" 
+"\\347\\272\\277\\344\\270\\212\\345\\244\\207\\344\\273\\275/" 
+"\\351\\203\\250\\347\\275\\262\\346\\214\\207\\345\\215\\227.md" 
+"\\351\\203\\250\\347\\275\\262\\346\\233\\264\\346\\226\\260\\346\\214\\207\\345\\215\\227.md" 
+public/uploads/ 

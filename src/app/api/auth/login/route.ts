@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
         { expiresIn: '7d' }
       );
 
-      // 检查是否需要完善资料（未填真实姓名 / 未勾选隐私协议 / 未勾选六条共识）
+      // 检查是否需要完善资料（未填真实姓名 / 未勾选隐私协议 / 未勾选六项共识）
       const needsCompletion =
         !user.real_name ||
         user.privacy_agreed === 0 ||

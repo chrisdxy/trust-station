@@ -388,7 +388,7 @@ export default function CategoriesPage() {
     setSaving(true);
     try {
       const response = await fetch('/api/admin/categories', {
-        method: 'POST',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: editingId,

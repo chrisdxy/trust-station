@@ -1,7 +1,7 @@
 const { spawn, execSync } = require('child_process');
 const path = require('path');
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 const root = path.resolve(__dirname, '..');
 const nextCmd = path.join(root, 'node_modules', '.bin', 'next.cmd');
 

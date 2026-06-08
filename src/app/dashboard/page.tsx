@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   User, Shield, FileText, Users2, Scale, Briefcase, Calendar, 
   Globe, Handshake, Sparkles, ChevronRight, BarChart3, Clock,
@@ -30,6 +31,7 @@ interface RecentActivity {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { user: authUser } = useAuth();
   const [user, setUser] = useState<{ name: string; nickname?: string; display_name?: string } | null>(null);
   const [stats, setStats] = useState<UserStats>({
     totalProfiles: 0,
@@ -131,13 +133,12 @@ export default function DashboardPage() {
   const menuItems = [
     { href: '/profile', icon: User, label: '个人中心', color: 'from-green-400 to-green-500', desc: '管理个人信息' },
     { href: '/people', icon: Globe, label: '发现广场', color: 'from-blue-400 to-blue-500', desc: '寻找合作伙伴' },
-    { href: '/mindset', icon: Brain, label: '心性档案', color: 'from-purple-400 to-purple-500', desc: '记录心性成长' },
-    { href: '/relationships', icon: Handshake, label: '合作关系', color: 'from-amber-400 to-amber-500', desc: '管理合作关系' },
-    { href: '/records', icon: FileText, label: '认知留痕', color: 'from-teal-400 to-teal-500', desc: '记录认知历程' },
-    { href: '/mediation', icon: Scale, label: '协调中心', color: 'from-orange-400 to-orange-500', desc: '纠纷协调服务' },
     { href: '/projects', icon: Briefcase, label: '项目中心', color: 'from-indigo-400 to-indigo-500', desc: '发现优质项目' },
     { href: '/activities', icon: Calendar, label: '活动中心', color: 'from-pink-400 to-pink-500', desc: '参与精彩活动' },
     { href: '/communities', icon: Users2, label: '成长共同体', color: 'from-cyan-400 to-cyan-500', desc: '加入成长社群' },
+    { href: '/cooperation', icon: Handshake, label: '合作中心', color: 'from-amber-400 to-amber-500', desc: '管理合作关系' },
+    { href: '/archives', icon: FileText, label: '记录中心', color: 'from-teal-400 to-teal-500', desc: '记录认知历程' },
+    { href: '/mediation', icon: Scale, label: '协调中心', color: 'from-orange-400 to-orange-500', desc: '纠纷协调服务' },
   ];
 
   const quickActions = [
@@ -159,7 +160,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold mb-1">
-                {getGreeting()}，{user?.display_name || user?.name || '用户'}
+                {getGreeting()}，{authUser?.display_name || authUser?.real_name || authUser?.nickname || user?.display_name || user?.name || user?.phone?.replace('UID','').slice(-4) || '用户'}
               </h1>
               <p className="text-amber-100">欢迎回来，开启心性成长与可信合作之旅！</p>
             </div>
@@ -204,32 +205,8 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"
+          className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6"
         >
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-                <FileText className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.totalProfiles}</p>
-                <p className="text-xs text-slate-500">我的名片</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                <Globe className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.publicProfiles}</p>
-                <p className="text-xs text-slate-500">公开名片</p>
-              </div>
-            </div>
-          </div>
-
           {mediatorStatus?.status === 'approved' && (
             <div className="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
               <div className="flex items-center gap-3">
@@ -244,19 +221,6 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {partnerStatus?.status === 'approved' && (
-            <div className="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
-                  <Users2 className="w-5 h-5 text-amber-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.partnerDownline}</p>
-                  <p className="text-xs text-slate-500">下线团队</p>
-                </div>
-              </div>
-            </div>
-          )}
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -1,24 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 
-// 获取微信公众号配置
+// 获取微信公众号配置 - 直接从环境变量读取（不再查数据库）
 async function getWechatConfig() {
-  try {
-    const [result]: any = await pool.query(
-      "SELECT config_value FROM system_config WHERE config_key = 'wechat_config'"
-    );
-    
-    if (result && result.length > 0) {
-      return JSON.parse(result[0].config_value);
-    }
-  } catch (error) {
-    console.error('获取公众号配置失败:', error);
-  }
-  // 返回默认配置
   return {
     enabled: true,
     appId: process.env.WECHAT_APPID || 'wx132561151d9c6e02',
-    appSecret: process.env.WECHAT_APPSECRET || '6e91355d05a72cbf05ea9690789f0e73',
+    appSecret: process.env.WECHAT_APPSECRET || '29a8031c6984cdc43b6a4664ae57a37b',
   };
 }
 
@@ -71,8 +59,15 @@ export async function POST(request: NextRequest) {
     if (userInfo.errcode) {
       console.error('微信用户信息获取失败:', userInfo);
       // 如果用户信息获取失败，仍然可以返回基本openid
+      const [fallback] = await pool.query(
+        `SELECT u.id FROM social_accounts sa JOIN users u ON sa.user_id = u.id WHERE sa.provider = 'wechat' AND sa.openid = ?`,
+        [openid]
+      ) as any[];
+      const isOldUser = fallback && fallback.length > 0;
       return NextResponse.json({
         success: true,
+        isExistingUser: isOldUser,
+        needsProfile: !isOldUser,
         wechatUser: {
           openid,
           nickname: '微信用户',
@@ -82,9 +77,25 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // 检查是否已有注册用户（通过 openid 在 social_accounts 表中查找）
+    const [existing] = await pool.query(
+      `SELECT u.id, u.display_name, u.real_name, u.privacy_agreed, u.consensus_agreed
+       FROM social_accounts sa
+       JOIN users u ON sa.user_id = u.id
+       WHERE sa.provider = 'wechat' AND sa.openid = ?`,
+      [openid]
+    ) as any[];
+
+    const isExistingUser = existing && existing.length > 0;
+    const userProfile = isExistingUser ? existing[0] : null;
+    const needsProfile = !isExistingUser || userProfile?.privacy_agreed !== 1 || userProfile?.consensus_agreed !== 1;
+
     // 返回用户信息
     return NextResponse.json({
       success: true,
+      isExistingUser,
+      existingUserId: isExistingUser ? userProfile.id : null,
+      needsProfile,
       wechatUser: {
         openid,
         nickname: userInfo.nickname || '微信用户',

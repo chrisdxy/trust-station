@@ -9,9 +9,6 @@ export default function Footer() {
           <Link href="/about" className="hover:text-amber-400 transition-colors">
             关于我们
           </Link>
-          <Link href="/sitemap" className="hover:text-amber-400 transition-colors">
-            本站导航
-          </Link>
           <Link href="/privacy" className="hover:text-amber-400 transition-colors">
             隐私政策
           </Link>

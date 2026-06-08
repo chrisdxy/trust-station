@@ -113,7 +113,7 @@ function LoginPageContent() {
         
         // 创建用户数据
         const userData = {
-          id: data.wechatUser.openid,
+          id: data.existingUserId || data.wechatUser.openid,
           phone: '',
           display_name: data.wechatUser.nickname || '微信用户',
           real_name: data.wechatUser.real_name || '',
@@ -126,8 +126,12 @@ function LoginPageContent() {
         // 更新 AuthContext 状态
         revalidateSession();
         
-        // 微信登录：直接跳转至完善资料页（合并了协议勾选+资料填写）
-        router.push(`/complete-profile?source=wechat&openid=${encodeURIComponent(data.wechatUser.openid)}`);
+        // 微信登录：老用户直接进入发现伙伴，新用户引导完善资料
+        if (data.needsProfile) {
+          router.push(`/complete-profile?source=wechat&openid=${encodeURIComponent(data.wechatUser.openid)}`);
+        } else {
+          router.push('/people?tab=requests');
+        }
       } else {
         setWechatError(data.error || '微信授权失败');
       }
@@ -294,14 +298,14 @@ function LoginPageContent() {
         // 更新 AuthContext 状态（此时 login_session_time 已设置，revalidateSession 能正确读取）
         revalidateSession();
 
-        // 检查是否需要完善资料（未填真实姓名/未勾选隐私协议/未勾选六条共识）
+        // 检查是否需要完善资料（未填真实姓名/未勾选隐私协议/未勾选六项共识）
         if (data.needsCompletion) {
           router.push(`/complete-profile?source=login&token=${data.token}`);
           return;
         }
 
-        // 登录成功后跳转到控制台
-        router.push('/dashboard');
+        // 登录成功后跳转：直接到发现伙伴（待处理的好友请求）
+        router.push('/people?tab=requests');
       } else {
         setError(data.error || '登录失败');
       }

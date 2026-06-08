@@ -23,15 +23,22 @@ export async function GET(request: NextRequest) {
       whereConditions.push('a.activity_type = ?');
       params.push(type);
     }
+    // 收费/免费筛选
+    const paid = searchParams.get('paid');
+    if (paid === 'free') {
+      whereConditions.push('a.is_paid = 0');
+    } else if (paid === 'paid') {
+      whereConditions.push('a.is_paid = 1');
+    }
 
     const userId = searchParams.get('userId');
     const organized = searchParams.get('organized') === 'true';
     const joined = searchParams.get('joined') === 'true';
 
-    // 我组织的：我发布的 OR 我作为组织成员的活动
+    // 我发布的：仅创建者
     if (organized && userId) {
-      whereConditions.push('(a.user_id = ? OR a.organizer_id = ?)');
-      params.push(userId, userId);
+      whereConditions.push('a.user_id = ?');
+      params.push(userId);
     }
     // 我报名的：我报名且状态为 registered 的活动
     if (joined && userId) {
@@ -105,6 +112,12 @@ export async function POST(request: NextRequest) {
     // 前端可传 organizer_ids 数组（取第一个）或单个 organizerId
     const organizerIds: string[] = body.organizer_ids || (body.organizerId ? [body.organizerId] : []);
     const organizerId = organizerIds.length > 0 ? organizerIds[0] : null;
+    // 封面图片
+    const coverImage = body.cover_image || body.coverImage || null;
+    const qrCode = body.qr_code || body.qrCode || null;
+    const isPaid = body.is_paid || body.isPaid ? 1 : 0;
+    const price = body.price || null;
+    const communityId = body.community_id || body.communityId || null;
 
     console.log('[活动创建] 收到请求:', { userId, title, description: description?.slice?.(0, 50), location, startTime, maxParticipants, organizerId });
 
@@ -119,9 +132,9 @@ export async function POST(request: NextRequest) {
     const id = uuidv4();
     console.log('[活动创建] 执行 INSERT, id:', id);
     await pool.query(
-      `INSERT INTO activities (id, user_id, title, description, location, start_time, max_participants, organizer_id, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'upcoming')`,
-      [id, userId, title, description || '', location || '', startTime, maxParticipants || null, organizerId]
+      `INSERT INTO activities (id, user_id, title, description, location, start_time, max_participants, organizer_id, cover_image, qr_code, is_paid, price, status, community_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'upcoming', ?)`,
+      [id, userId, title, description || '', location || '', startTime, maxParticipants || null, organizerId, coverImage || null, qrCode || null, isPaid, price, communityId]
     );
     console.log('[活动创建] INSERT 成功, id:', id);
 

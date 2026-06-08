@@ -1,8 +1,9 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Plus, MapPin, Users, Clock, Search, Loader2, X, User, Edit, Trash2, CheckCircle, LogOut, ChevronRight, Image, Copy } from 'lucide-react';
+import { Calendar, Plus, MapPin, Users, Clock, Search, Loader2, X, User, Edit, Trash2, CheckCircle, LogOut, ChevronRight, ChevronDown, Image, Copy } from 'lucide-react';
 import Layout from '@/components/Layout';
+import { WeChatShareSetup } from '@/components/WeChatShareSetup';
 import RichTextEditor from '@/components/RichTextEditor';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,10 +24,13 @@ interface Activity {
   organizer_name?: string;
   organizer_name_selected?: string;
   cover_image?: string;
+  qr_code?: string;
   status?: string;
   user_id?: string;
   my_registration_status?: string;
   is_organizer_member?: number | boolean;
+  is_paid?: number | boolean;
+  price?: number | null;
 }
 
 export default function ActivitiesPage() {
@@ -36,13 +40,21 @@ export default function ActivitiesPage() {
   const [loading, setLoading] = useState(true);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<Activity | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [filter, setFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all'); // 全部、我组织的、我报名的
+  const [typeFilter, setTypeFilter] = useState('all'); // 全部、我发布的、我报名的
+  const [paidFilter, setPaidFilter] = useState('all'); // all, free, paid
+  const [showPaidDropdown, setShowPaidDropdown] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editorContent, setEditorContent] = useState('');
   const [organizers, setOrganizers] = useState<UserSearchResult[]>([]);
+  const [selectedCommunityId, setSelectedCommunityId] = useState('');
+  const [communities, setCommunities] = useState<{ id: string; name: string }[]>([]);
   const [coverImage, setCoverImage] = useState('');
   const [coverImagePreview, setCoverImagePreview] = useState('');
+  const [isPaid, setIsPaid] = useState(false);
+  const [price, setPrice] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [createdActivityId, setCreatedActivityId] = useState<string | null>(null);
 
@@ -52,7 +64,7 @@ export default function ActivitiesPage() {
 
   // 编辑弹窗
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
-  const [editForm, setEditForm] = useState({ title: '', description: '', location: '', start_time: '', max_participants: '' });
+  const [editForm, setEditForm] = useState({ title: '', description: '', location: '', start_time: '', end_time: '', max_participants: '' });
   const [editSubmitting, setEditSubmitting] = useState(false);
 
   // 生成简短的活动 ID（显示用）
@@ -66,10 +78,10 @@ export default function ActivitiesPage() {
     if (user?.id) {
       setDetailLoading(true);
       try {
-        const res = await fetch(`/api/activities/${activity.id}?userId=${user.id}`);
-        const data = await res.json();
-        if (data.success) {
-          setDetailActivity({ ...data.activity, my_registration_status: data.registration?.status, is_organizer_member: data.activity.is_organizer_member });
+        const detailRes = await fetch(`/api/activities/${activity.id}?userId=${user.id}`);
+        const detailData = await detailRes.json();
+        if (detailData.success) {
+          setDetailActivity({ ...detailData.activity, my_registration_status: detailData.registration?.status, is_organizer_member: detailData.activity.is_organizer_member });
         }
       } catch (e) { /* ignore */ }
       setDetailLoading(false);
@@ -159,32 +171,33 @@ export default function ActivitiesPage() {
     } catch (e) { setSuccessMsg('网络错误'); setTimeout(() => setSuccessMsg(''), 3000); }
   };
 
-  // 删除活动
-  const handleDelete = async (activity: Activity): Promise<boolean> => {
-    console.log('[删除活动] 开始', activity.id, activity.title);
-    if (!user?.id) { console.log('[删除活动] 未登录'); return false; }
-    if (!confirm(`确定要删除活动「${activity.title}」吗？`)) { console.log('[删除活动] 用户取消'); return false; }
-    console.log('[删除活动] 确认删除, 发送请求');
+  // 删除活动（两步：先弹确认框，确认后执行）
+  const confirmDelete = (activity: Activity) => {
+    if (!user?.id) { alert('请先登录'); return; }
+    setDeleteTarget(activity);
+  };
+
+  const executeDelete = async () => {
+    if (!deleteTarget || !user?.id) return;
+    setDeleting(true);
     try {
-      const res = await fetch(`/api/activities/${activity.id}?userId=${user.id}`, { method: 'DELETE' });
-      console.log('[删除活动] 响应状态:', res.status);
+      const res = await fetch(`/api/activities/${deleteTarget.id}?userId=${user.id}`, { method: 'DELETE' });
       const data = await res.json();
-      console.log('[删除活动] 响应数据:', data);
       if (data.success) {
         setSuccessMsg('删除成功');
         setTimeout(() => setSuccessMsg(''), 3000);
         fetchActivities();
-        return true;
+        if (detailActivity?.id === deleteTarget.id) closeDetail();
       } else {
         setErrorMsg(data.error || '删除失败');
         setTimeout(() => setErrorMsg(''), 4000);
-        return false;
       }
     } catch (e) {
-      console.error('[删除活动] 异常:', e);
       setErrorMsg('网络错误，请重试');
       setTimeout(() => setErrorMsg(''), 4000);
-      return false;
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
     }
   };
 
@@ -197,8 +210,13 @@ export default function ActivitiesPage() {
       description: activity.description || '',
       location: activity.location || '',
       start_time: fmt(activity.start_time),
+      end_time: fmt(activity.end_time),
       max_participants: activity.max_participants?.toString() || '50',
     });
+    setCoverImage(activity.cover_image || '');
+    setCoverImagePreview(activity.cover_image || '');
+    setIsPaid(!!activity.is_paid);
+    setPrice(activity.price != null ? String(activity.price) : '');
   };
 
   // 提交编辑
@@ -216,7 +234,11 @@ export default function ActivitiesPage() {
           description: editForm.description,
           location: editForm.location,
           start_time: editForm.start_time || null,
+          end_time: editForm.end_time || null,
           max_participants: parseInt(editForm.max_participants) || null,
+          cover_image: coverImage || null,
+          is_paid: isPaid,
+          price: isPaid ? (parseFloat(price) || 0) : null,
         })
       });
       const data = await res.json();
@@ -278,12 +300,35 @@ export default function ActivitiesPage() {
   // 清除封面图片
   const handleRemoveCoverImage = () => {
     setCoverImage('');
+    setIsPaid(false);
+    setPrice('');
     setCoverImagePreview('');
+  };
+
+  const formatDateForInput = (dateStr: string | null | undefined) => {
+    if (!dateStr) return '';
+    try { return new Date(dateStr).toISOString().slice(0, 16); } catch { return ''; }
   };
 
   useEffect(() => {
     fetchActivities();
+    fetch('/api/communities').then(r => r.json()).then(d => {
+      if (d.success) setCommunities((d.communities || []).map((c: any) => ({ id: c.id, name: c.name })));
+    }).catch(() => {});
   }, []);
+
+  // 筛选条件变化时自动刷新
+  useEffect(() => {
+    fetchActivities();
+  }, [typeFilter, paidFilter, filter]);
+
+  // 点击外部关闭收费下拉
+  useEffect(() => {
+    if (!showPaidDropdown) return;
+    const handler = (e: MouseEvent) => setShowPaidDropdown(false);
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [showPaidDropdown]);
 
   const fetchActivities = async () => {
     setLoading(true);
@@ -292,6 +337,8 @@ export default function ActivitiesPage() {
       if (filter) params.set('status', filter);
       if (typeFilter === 'organized') params.set('organized', 'true');
       if (typeFilter === 'joined') params.set('joined', 'true');
+      if (paidFilter === 'free') params.set('paid', 'free');
+      if (paidFilter === 'paid') params.set('paid', 'paid');
       if (user?.id) params.set('userId', user.id);
 
       const response = await fetch(`/api/activities?${params}`);
@@ -344,6 +391,57 @@ export default function ActivitiesPage() {
             {errorMsg}
           </div>
         )}
+
+        {/* 删除确认弹窗 */}
+        <AnimatePresence>
+          {deleteTarget && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+              onClick={() => setDeleteTarget(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm p-6"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="text-center mb-6">
+                  <div className="w-14 h-14 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Trash2 className="w-7 h-7 text-red-500" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">确认删除</h3>
+                  <p className="text-sm text-slate-500">
+                    确定要删除活动「{deleteTarget.title}」吗？此操作不可撤销。
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setDeleteTarget(null)}
+                    disabled={deleting}
+                    className="flex-1 px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                  >
+                    取消
+                  </button>
+                  <button
+                    onClick={executeDelete}
+                    disabled={deleting}
+                    className="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {deleting ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" />删除中...</>
+                    ) : (
+                      '确认删除'
+                    )}
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* 活动ID创建成功弹窗 */}
         <AnimatePresence>
@@ -434,12 +532,32 @@ export default function ActivitiesPage() {
             </select>
           </div>
           <div className="flex gap-2 border-b border-slate-200 dark:border-slate-700">
-            {[['all', '全部'], ['organized', '我组织的'], ['joined', '我报名的']].map(([v, label]) => (
-              <button key={v} onClick={() => { setTypeFilter(v); fetchActivities(); }}
-                className={`px-4 py-2 rounded-t-lg transition-colors ${typeFilter === v ? 'bg-purple-500 text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
-                {label}
-              </button>
-            ))}
+            {[['all', '全部'], ['organized', '我发布的'], ['joined', '我报名的']].map(([v, label]) => {
+              const isActive = typeFilter === v;
+              const paidLabel = paidFilter === 'free' ? '免费' : paidFilter === 'paid' ? '收费' : '全部';
+              return (
+                <div key={v} className="relative">
+                  <button onClick={() => {
+                    if (v === 'all') { setTypeFilter('all'); setShowPaidDropdown(!showPaidDropdown); }
+                    else { setTypeFilter(v); setShowPaidDropdown(false); }
+                  }}
+                    className={`px-4 py-2 rounded-t-lg transition-colors flex items-center gap-1 ${isActive ? 'bg-purple-500 text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                    {v === 'all' ? paidLabel : label}
+                    {v === 'all' && <ChevronDown className={`w-3 h-3 transition-transform ${showPaidDropdown ? 'rotate-180' : ''}`} />}
+                  </button>
+                  {v === 'all' && showPaidDropdown && (
+                    <div className="absolute top-full left-0 mt-0 bg-white dark:bg-slate-800 rounded-b-lg shadow-lg border border-slate-200 dark:border-slate-700 py-1 z-10 min-w-[100px]">
+                      {[['all', '全部'], ['free', '免费'], ['paid', '收费']].map(([pv, plabel]) => (
+                        <button key={pv} onClick={(e) => { e.stopPropagation(); setPaidFilter(pv); setShowPaidDropdown(false); }}
+                          className={`block w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 ${paidFilter === pv ? 'text-orange-500 font-medium' : 'text-slate-600 dark:text-slate-300'}`}>
+                          {plabel}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -484,9 +602,14 @@ export default function ActivitiesPage() {
                       </span>
                       {activity.activity_type && <span className="text-xs text-slate-500">{activity.activity_type}</span>}
                     </div>
-                    <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-2 line-clamp-2">{activity.title}</h3>
+                    <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-1 line-clamp-2">{activity.title}</h3>
+                    <span className="inline-block px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded text-xs font-mono cursor-pointer hover:bg-amber-200 transition-colors mb-2"
+                      onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(getShortActivityId(activity.id)) }}
+                      title="点击复制活动ID，用于记录中心查询">
+                      活动ID: {getShortActivityId(activity.id)}
+                    </span>
                     {activity.description && (
-                      <p className="text-sm text-slate-500 mb-4 line-clamp-2" dangerouslySetInnerHTML={{ __html: activity.description }} />
+                      <p className="text-sm text-slate-500 mb-4 line-clamp-2">{activity.description.replace(/<[^>]*>/g, '').trim()}</p>
                     )}
                     <div className="space-y-2 text-sm text-slate-500">
                       {(activity.organizer_name_selected || activity.organizer_name) && (
@@ -501,6 +624,9 @@ export default function ActivitiesPage() {
                       {activity.max_participants && (
                         <div className="flex items-center gap-2"><Users className="w-4 h-4" />{activity.current_participants || 0} / {activity.max_participants} 人</div>
                       )}
+                      {activity.is_paid && activity.price != null && (
+                        <div className="flex items-center gap-2 text-orange-600 font-medium">¥{Number(activity.price).toFixed(2)}</div>
+                      )}
                     </div>
                     {/* 操作按钮 */}
                     {user && (
@@ -512,18 +638,19 @@ export default function ActivitiesPage() {
                               className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm hover:bg-blue-100 transition-colors">
                               <Edit className="w-4 h-4" />编辑
                             </button>
-                            <button onClick={() => handleDelete(activity)}
-                              className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg text-sm hover:bg-red-100 transition-colors">
+                            <button onClick={() => confirmDelete(activity)}
+                              disabled={deleting}
+                              className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg text-sm hover:bg-red-100 transition-colors disabled:opacity-50">
                               <Trash2 className="w-4 h-4" />删除
                             </button>
                           </>
                         )}
-                        {/* 我作为组织成员（但不是我发布的）：不显示任何操作按钮 */}
+                        {/* 我作为组织成员（但不是我发布的）：显示标识 */}
                         {isOrganizerMember(activity) && !isMyPublished(activity) && (
                           <span className="flex-1 text-center text-xs text-slate-400 py-2">组织成员</span>
                         )}
-                        {/* 既不是我发布的也不是组织成员：显示报名/取消报名 */}
-                        {!isMyPublished(activity) && !isOrganizerMember(activity) && activity.status === 'upcoming' && (
+                        {/* 报名/取消报名：所有用户均可（含发布者），upcoming 状态 */}
+                        {activity.status === 'upcoming' && (
                           isRegistered(activity) ? (
                             <button onClick={() => handleCancelFromCard(activity)}
                               className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-orange-50 text-orange-600 rounded-lg text-sm hover:bg-orange-100 transition-colors">
@@ -562,13 +689,14 @@ export default function ActivitiesPage() {
                 const description = editorContent;
                 const location = (form.elements.namedItem('location') as HTMLInputElement).value;
                 const start_time = (form.elements.namedItem('start_time') as HTMLInputElement).value;
+                const end_time = (form.elements.namedItem('end_time') as HTMLInputElement).value;
                 const max_participants = (form.elements.namedItem('max_participants') as HTMLInputElement).value;
                 if (!title.trim()) { alert('请填写活动标题'); return; }
                 const userId = user?.id;
                 if (!userId) { alert('请先登录'); return; }
                 setSubmitting(true);
                 try {
-                  const payload = { userId, title, description, location, start_time, max_participants: parseInt(max_participants) || 50, organizer_ids: organizers.map(o => o.id), cover_image: coverImage || null };
+                  const payload = { userId, title, description, location, start_time, end_time, max_participants: parseInt(max_participants) || 50, organizer_ids: organizers.map(o => o.id), cover_image: coverImage || null, is_paid: isPaid, price: isPaid ? (parseFloat(price) || 0) : null, community_id: selectedCommunityId || null };
                   console.log('[活动发布] 发送请求:', payload);
                   const response = await fetch('/api/activities', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                   console.log('[活动发布] 响应状态:', response.status, response.statusText);
@@ -583,6 +711,8 @@ export default function ActivitiesPage() {
                     setEditorContent('');
                     setOrganizers([]);
                     setCoverImage('');
+    setIsPaid(false);
+    setPrice('');
                     setCoverImagePreview('');
                     setSuccessMsg('发布成功！');
                     setTimeout(() => setSuccessMsg(''), 3000);
@@ -604,15 +734,44 @@ export default function ActivitiesPage() {
                     <label className="block text-sm font-medium mb-1">组织者</label>
                     <UserSelect onSelect={handleOrganizerSelect} selectedUsers={organizers} placeholder="搜索组织者..." />
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">共同体组织（选填）</label>
+                    <select value={selectedCommunityId} onChange={e => setSelectedCommunityId(e.target.value)}
+                      className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600">
+                      <option value="">选择共同体（个人组织者无需选择）</option>
+                      {communities.map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">是否收费</label>
+                    <div className="flex gap-4">
+                      <button type="button" onClick={() => { setIsPaid(false); setPrice(''); }}
+                        className={`px-4 py-2 rounded-lg text-sm ${!isPaid ? 'bg-green-500 text-white' : 'bg-slate-100 dark:bg-slate-700'}`}>免费</button>
+                      <button type="button" onClick={() => setIsPaid(true)}
+                        className={`px-4 py-2 rounded-lg text-sm ${isPaid ? 'bg-orange-500 text-white' : 'bg-slate-100 dark:bg-slate-700'}`}>收费</button>
+                    </div>
+                  </div>
+                  {isPaid && (
+                    <div>
+                      <label className="block text-sm font-medium mb-1">金额（元）</label>
+                      <input type="number" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="请输入金额" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-1">开始时间</label>
                       <input name="start_time" type="datetime-local" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">人数上限</label>
-                      <input name="max_participants" type="number" min="1" defaultValue="50" placeholder="请输入人数上限" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
+                      <label className="block text-sm font-medium mb-1">结束时间</label>
+                      <input name="end_time" type="datetime-local" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
                     </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">人数上限</label>
+                    <input name="max_participants" type="number" min="1" defaultValue="50" placeholder="请输入人数上限" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">活动地点</label>
@@ -664,6 +823,7 @@ export default function ActivitiesPage() {
               className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
               onClick={closeDetail}
             >
+              <WeChatShareSetup title={detailActivity.title} description={detailActivity.description?.replace(/<[^>]*>/g, '').slice(0, 200)} imageUrl={detailActivity.cover_image || ''} />
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
                 className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 relative"
@@ -726,23 +886,26 @@ export default function ActivitiesPage() {
                       </div>
                     )}
 
+                    {/* 发布人专属操作：编辑和删除（始终可见） */}
+                    {user && String(detailActivity.user_id) === String(user?.id) && (
+                      <div className="flex gap-2 border-t border-slate-100 dark:border-slate-700 pt-4 mb-2">
+                        <button onClick={() => { closeDetail(); openEdit(detailActivity); }}
+                          className="flex-1 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm hover:bg-blue-100 transition-colors flex items-center justify-center gap-1">
+                          <Edit className="w-4 h-4" />编辑活动
+                        </button>
+                        <button onClick={() => confirmDelete(detailActivity)}
+                          disabled={deleting}
+                          className="flex-1 px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm hover:bg-red-100 transition-colors flex items-center justify-center gap-1 disabled:opacity-50">
+                          <Trash2 className="w-4 h-4" />删除活动
+                        </button>
+                      </div>
+                    )}
+
                     {/* 报名状态 */}
                     {user && detailActivity.status === 'upcoming' && (
                       <div className="border-t border-slate-100 dark:border-slate-700 pt-4">
-                        {/* 我发布的：显示编辑和删除 */}
-                        {String(detailActivity.user_id) === String(user?.id) ? (
-                          <div className="flex gap-2">
-                            <button onClick={() => { closeDetail(); openEdit(detailActivity); }}
-                              className="flex-1 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm hover:bg-blue-100 transition-colors flex items-center justify-center gap-1">
-                              <Edit className="w-4 h-4" />编辑活动
-                            </button>
-                            <button onClick={async () => { const ok = await handleDelete(detailActivity); if (ok) closeDetail(); }}
-                              className="flex-1 px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm hover:bg-red-100 transition-colors flex items-center justify-center gap-1">
-                              <Trash2 className="w-4 h-4" />删除活动
-                            </button>
-                          </div>
-                        ) : isOrganizerMember(detailActivity) ? (
-                          /* 我是组织成员（但不是我发布的）：显示组织成员标签 */
+                        {/* 我是组织成员（不是发布人） */}
+                        {isOrganizerMember(detailActivity) ? (
                           <div className="flex items-center justify-center gap-2 text-slate-500 text-sm py-2">
                             <User className="w-4 h-4" />您是此活动的组织成员
                           </div>
@@ -765,6 +928,7 @@ export default function ActivitiesPage() {
                     {!user && detailActivity.status === 'upcoming' && (
                       <p className="text-center text-slate-500 text-sm">登录后可报名此活动</p>
                     )}
+
                   </>
                 )}
               </motion.div>
@@ -792,9 +956,13 @@ export default function ActivitiesPage() {
                       <input value={editForm.start_time} onChange={(e) => setEditForm({ ...editForm, start_time: e.target.value })} type="datetime-local" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">人数上限</label>
-                      <input value={editForm.max_participants} onChange={(e) => setEditForm({ ...editForm, max_participants: e.target.value })} type="number" min="1" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
+                      <label className="block text-sm font-medium mb-1">结束时间</label>
+                      <input value={editForm.end_time} onChange={(e) => setEditForm({ ...editForm, end_time: e.target.value })} type="datetime-local" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
                     </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">人数上限</label>
+                    <input value={editForm.max_participants} onChange={(e) => setEditForm({ ...editForm, max_participants: e.target.value })} type="number" min="1" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">活动地点</label>
@@ -804,6 +972,65 @@ export default function ActivitiesPage() {
                     <label className="block text-sm font-medium mb-1">活动描述</label>
                     <RichTextEditor placeholder="请输入活动描述..." value={editForm.description} onChange={(v) => setEditForm({ ...editForm, description: v })} />
                   </div>
+                  {/* 封面图片 */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1">封面图片</label>
+                    {coverImagePreview ? (
+                      <div className="relative rounded-lg overflow-hidden">
+                        <img src={coverImagePreview} alt="封面预览" className="w-full h-40 object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => { setCoverImage(''); setCoverImagePreview(''); }}
+                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg cursor-pointer hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors">
+                        <Image className="w-8 h-8 text-slate-400 mb-2" />
+                        <span className="text-sm text-slate-500">点击上传封面图片</span>
+                        <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const reader = new FileReader();
+                          reader.onload = (ev) => setCoverImagePreview(ev.target?.result as string);
+                          reader.readAsDataURL(file);
+                          const formData = new FormData();
+                          formData.append('file', file);
+                          try {
+                            const res = await fetch('/api/upload', { method: 'POST', body: formData });
+                            const data = await res.json();
+                            if (data.success && data.url) {
+                              setCoverImage(data.url);
+                            } else {
+                              alert('上传失败：' + (data.error || '未知错误'));
+                            }
+                          } catch (err) {
+                            console.error('上传图片失败:', err);
+                            alert('上传失败，请重试');
+                          }
+                        }} />
+                      </label>
+                    )}
+                  </div>
+                  {/* 是否收费 */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1">是否收费</label>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => setIsPaid(false)}
+                        className={`px-4 py-2 rounded-lg text-sm ${!isPaid ? 'bg-green-500 text-white' : 'bg-slate-100 dark:bg-slate-700'}`}>免费</button>
+                      <button type="button" onClick={() => setIsPaid(true)}
+                        className={`px-4 py-2 rounded-lg text-sm ${isPaid ? 'bg-orange-500 text-white' : 'bg-slate-100 dark:bg-slate-700'}`}>收费</button>
+                    </div>
+                  </div>
+                  {/* 金额 */}
+                  {isPaid && (
+                    <div>
+                      <label className="block text-sm font-medium mb-1">金额（元）</label>
+                      <input type="number" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="请输入金额" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
+                    </div>
+                  )}
                 </div>
                 <div className="flex gap-3 mt-6">
                   <button type="button" onClick={() => setEditingActivity(null)} className="flex-1 px-4 py-2 border rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">取消</button>
