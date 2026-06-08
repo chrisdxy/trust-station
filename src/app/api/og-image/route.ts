@@ -8,7 +8,7 @@ export async function GET() {
     const possiblePaths = [
       path.join(process.cwd(), 'public', 'logo.jpg'),
       path.join(process.cwd(), '..', 'public', 'logo.jpg'),
-      path.join(process.cwd(), '..', '..', 'public', 'logo.jpg'),
+      path.join(process.cwd(), '..', '..', 'public', 'logo.jpg')
     ];
 
     let filePath: string | null = null;
@@ -31,7 +31,7 @@ export async function GET() {
         {
           headers: {
             'Content-Type': 'image/svg+xml',
-            'Cache-Control': 'public, max-age=86400',
+            'Cache-Control': 'public, max-age=86400'
           },
         }
       );
@@ -42,7 +42,7 @@ export async function GET() {
       headers: {
         'Content-Type': 'image/jpeg',
         'Cache-Control': 'public, max-age=86400',
-        'Content-Length': String(buffer.length),
+        'Content-Length': String(buffer.length)
       },
     });
   } catch {
