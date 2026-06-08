@@ -33,7 +33,7 @@ const steps: Step[] = [
     content: {
       type: 'principle',
       items: [
-        { text: '正心正念，互相成就', highlight: '根本共识' },
+        { text: '正心正念，互相成就，共创共享', highlight: '根本共识' },
         { text: '非暴力沟通，真诚协作', highlight: '沟通共识' },
         { text: '正念训练，安住当下，尊道贵德', highlight: '心性成长' },
         { text: '敢于留痕，可靠看得见', highlight: '行为留痕' },

@@ -12,7 +12,7 @@ interface LanguageContextType {
 const translations: Record<Language, Record<string, string>> = {
   zh: {
     'app.name': '正道驿站',
-    'app.subtitle': '正心正念，互相成就',
+    'app.subtitle': '正心正念，互相成就，共创共享',
     'app.slogan': '信任不是评价出来的，而是在真实交往中被记录、被验证、被长期沉淀出来的',
     'nav.home': '首页',
     'nav.community': '本站导航',
@@ -74,7 +74,7 @@ const translations: Record<Language, Record<string, string>> = {
     'home.hero.description': '信任不是评价出来的，而是在真实交往中被记录、被验证、被长期沉淀出来的',
     'home.hero.start': '开始使用',
     'home.feature.consensus': '根本共识',
-    'home.feature.consensus.desc': '正心正念，互相成就',
+    'home.feature.consensus.desc': '正心正念，互相成就，共创共享',
     'home.feature.communication': '沟通共识',
     'home.feature.communication.desc': '正向思考，建设性沟通，改过责善',
     'home.feature.trace': '沟通共识',
@@ -199,7 +199,7 @@ const translations: Record<Language, Record<string, string>> = {
   },
   en: {
     'app.name': 'Trust Station',
-    'app.subtitle': '正心正念，互相成就',
+    'app.subtitle': '正心正念，互相成就，共创共享',
     'app.slogan': 'Trust is not evaluated, but recorded, verified, and accumulated through real interactions',
     'nav.home': 'Home',
     'nav.community': 'Consensus & Guide',

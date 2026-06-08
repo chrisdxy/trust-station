@@ -11,7 +11,7 @@ export const consensusItems: ConsensusItem[] = [
   {
     id: 'root',
     title: '根本共识',
-    subtitle: '正心正念，互相成就',
+    subtitle: '正心正念，互相成就，共创共享',
     description:
       '我们坚信，商业的本质是人与人的连接。正心正念是我们一切行为的根基，只有真诚对待每一个合作伙伴，才能建立长久的信任关系，互相成就。',
     icon: 'Heart',
