@@ -1059,8 +1059,8 @@ export default function ArchivesPage() {
           <div className="max-w-7xl mx-auto px-4 py-12">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold mb-2">记录中心（正心链）v2</h1>
-                <p className="text-white/80">忧人心多变，就上正心链！(已更新)</p>
+                <h1 className="text-3xl font-bold mb-2">记录中心（正心链）</h1>
+                <p className="text-white/80">忧人心多变，就上正心链！</p>
               </div>
               {/* 操作按钮 */}
               <div className="flex items-center gap-3">
