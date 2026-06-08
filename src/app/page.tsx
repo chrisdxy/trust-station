@@ -108,7 +108,7 @@ export default function HomePage() {
               }}
               className="px-10 py-3.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-200"
             >
-              立即登录
+              成功登录后进入dashboard
             </button>
           </div>
         </div>
@@ -170,7 +170,7 @@ export default function HomePage() {
               }}
               className="px-8 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium text-sm"
             >
-              立即登录
+              成功登录后进入dashboard
             </button>
           </div>
         </div>
