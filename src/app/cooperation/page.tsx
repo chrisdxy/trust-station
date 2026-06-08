@@ -338,7 +338,7 @@ export default function CooperationPage() {
           {activeTab === 'relationship' && (
             <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl">
               <p className="text-sm text-green-800 dark:text-green-200">
-                正式合作是合约（合同与协议简称）已签字和/或盖章或以其他形式产生权利义务、形成信赖关系的交集事项。
+                正式合作是合约（如合同与协议等）已签字和/或盖章或以其他形式产生权利义务、形成信赖关系的交集事项。
               </p>
             </div>
           )}
