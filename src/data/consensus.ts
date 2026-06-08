@@ -38,7 +38,7 @@ export const consensusItems: ConsensusItem[] = [
   {
     id: 'traceability',
     title: '行为留痕',
-    subtitle: '敢于留痕，可靠看得见',
+    subtitle: '坦荡者敢于留痕，可靠看得见',
     description:
       '每一个行为都在塑造你的商业信誉。我们鼓励用户敢于行为留痕，让可靠被看见、被验证、被传播。',
     icon: 'Fingerprint',

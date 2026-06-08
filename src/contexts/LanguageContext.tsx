@@ -88,7 +88,7 @@ const translations: Record<Language, Record<string, string>> = {
     'home.highlight.neutral': '平台存档',
     'home.highlight.neutral.desc': '自主记录，授权查询，恶行入档',
     'home.highlight.blockchain': '行为留痕',
-    'home.highlight.blockchain.desc': '敢于留痕，可靠看得见',
+    'home.highlight.blockchain.desc': '坦荡者敢于留痕，可靠看得见',
     'home.cta.title': '构建一个互信的圈子',
     'home.cta.description': '让合作有迹可循，让成长在真实交往中发生',
     'home.cta.button': '立即注册',
