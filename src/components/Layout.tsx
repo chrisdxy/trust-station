@@ -30,6 +30,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [feedbackUnread, setFeedbackUnread] = useState(0);
+  const [messageUnread, setMessageUnread] = useState(0);
   const { user, profile, signOut, loading } = useAuth();
   const { t } = useLanguage();
   const pathname = usePathname();
@@ -64,6 +65,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     };
     fetchUnread();
     const timer = setInterval(fetchUnread, 30000);
+    return () => clearInterval(timer);
+  }, [currentUser?.id]);
+
+  // 获取好友申请未读数
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    const fetchUnreadMessages = async () => {
+      try {
+        const res = await fetch(`/api/friends?userId=${currentUser.id}&type=received`);
+        const data = await res.json();
+        if (data.success) setMessageUnread(data.requests?.length || 0);
+      } catch {}
+    };
+    fetchUnreadMessages();
+    const timer = setInterval(fetchUnreadMessages, 30000);
     return () => clearInterval(timer);
   }, [currentUser?.id]);
 
@@ -127,14 +143,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </Link>
           )}
 
-          {/* AI工具 - 普通用户登录后显示（管理员不显示） */}
+          {/* 消息 - 普通用户登录后显示 */}
           {currentUser && !isAdmin && (
             <Link
-              href="/ai"
-              className="flex items-center gap-2 px-3 py-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all"
+              href="/messages"
+              className="relative flex items-center gap-2 px-3 py-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all"
             >
-              <Sparkles size={16} />
-              <span>AI工具</span>
+              <MessageSquare size={16} />
+              <span>消息</span>
+              {messageUnread > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {messageUnread > 99 ? '99+' : messageUnread}
+                </span>
+              )}
             </Link>
           )}
           

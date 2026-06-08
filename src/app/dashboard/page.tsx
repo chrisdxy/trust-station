@@ -138,7 +138,8 @@ export default function DashboardPage() {
     { href: '/communities', icon: Users2, label: '成长共同体', color: 'from-cyan-400 to-cyan-500', desc: '加入成长社群' },
     { href: '/cooperation', icon: Handshake, label: '合作中心', color: 'from-amber-400 to-amber-500', desc: '管理合作关系' },
     { href: '/archives', icon: FileText, label: '记录中心', color: 'from-teal-400 to-teal-500', desc: '记录认知历程' },
-    { href: '/mediation', icon: Scale, label: '协调中心', color: 'from-orange-400 to-orange-500', desc: '纠纷协调服务' }
+    { href: '/mediation', icon: Scale, label: '协调中心', color: 'from-orange-400 to-orange-500', desc: '纠纷协调服务' },
+    { href: '/ai', icon: Sparkles, label: 'AI工具', color: 'from-indigo-400 to-purple-500', desc: '发现智能工具' }
   ];
 
   const quickActions = [
