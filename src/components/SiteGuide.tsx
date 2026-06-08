@@ -35,7 +35,7 @@ const steps: Step[] = [
       items: [
         { text: '正心正念，互相成就', highlight: '根本共识' },
         { text: '非暴力沟通，真诚协作', highlight: '沟通共识' },
-        { text: '正念训练，安住当下', highlight: '心性成长' },
+        { text: '正念训练，安住当下，尊道贵德', highlight: '心性成长' },
         { text: '敢于留痕，可靠看得见', highlight: '行为留痕' },
         { text: '协作共识，择优合作', highlight: '伙伴优选' },
         { text: '数据安全，永久存档', highlight: '平台存档' }

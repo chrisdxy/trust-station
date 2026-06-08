@@ -82,7 +82,7 @@ const translations: Record<Language, Record<string, string>> = {
     'home.feature.auth': '多方授权',
     'home.feature.auth.desc': '敏感信息需授权访问，保护各方隐私',
     'home.feature.mindset': '心性成长',
-    'home.feature.mindset.desc': '正念训练，安住当下',
+    'home.feature.mindset.desc': '正念训练，安住当下，尊道贵德',
     'home.highlight.privacy': '伙伴优选',
     'home.highlight.privacy.desc': '交往沉淀，成就优质伙伴',
     'home.highlight.neutral': '平台存档',

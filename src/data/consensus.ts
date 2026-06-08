@@ -29,7 +29,7 @@ export const consensusItems: ConsensusItem[] = [
   {
     id: 'mindset',
     title: '心性成长',
-    subtitle: '正念训练，安住当下',
+    subtitle: '正念训练，安住当下，尊道贵德',
     description:
       '商业成功的根本在于心性的成长。通过正念训练，观察心念而不执着，安住于当下，成为更好的自己，才能做出更智慧与向善的商业决策。',
     icon: 'Brain',
