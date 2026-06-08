@@ -2,9 +2,9 @@ name: 🚀 Auto Deploy to Server
 
 on:
   workflow_dispatch:          # GitHub 页面手动点按钮部署
-    branches: [ main ]
+    branches: [ master ]
   push:
-    branches: [ main ]        # 或 push 到 main 自动部署
+    branches: [ master ]      # push 到 master 自动部署
 
 jobs:
   deploy:
