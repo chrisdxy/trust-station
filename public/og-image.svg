@@ -4,29 +4,21 @@
       <stop offset="0%" style="stop-color:#1e3a5f"/>
       <stop offset="100%" style="stop-color:#2d4a6f"/>
     </linearGradient>
-    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#f0b429"/>
-      <stop offset="100%" style="stop-color:#f59e0b"/>
-    </linearGradient>
   </defs>
+  <!-- 深蓝背景 -->
   <rect width="1200" height="630" fill="url(#bg)"/>
-  
-  <!-- 装饰圆 -->
-  <circle cx="100" cy="100" r="200" fill="rgba(240,180,41,0.05)"/>
-  <circle cx="1100" cy="530" r="250" fill="rgba(255,255,255,0.03)"/>
-  
-  <!-- Logo 圆形 -->
-  <circle cx="600" cy="220" r="70" fill="url(#accent)"/>
-  <text x="600" y="250" font-family="Arial, sans-serif" font-size="60" font-weight="bold" fill="#1e3a5f" text-anchor="middle">正</text>
-  
-  <!-- 标题 -->
-  <text x="600" y="340" font-family="Arial, sans-serif" font-size="56" font-weight="bold" fill="#f0b429" text-anchor="middle">正道驿站</text>
-  <text x="600" y="390" font-family="Arial, sans-serif" font-size="24" fill="#94a3b8" text-anchor="middle">Trust Station</text>
-  
-  <!-- 分割线 -->
-  <line x1="400" y1="420" x2="800" y2="420" stroke="rgba(240,180,41,0.3)" stroke-width="1"/>
-  
-  <!-- 标语 -->
-  <text x="600" y="460" font-family="Arial, sans-serif" font-size="18" fill="#cbd5e1" text-anchor="middle">全球商业信任共建社区</text>
-  <text x="600" y="490" font-family="Arial, sans-serif" font-size="14" fill="#64748b" text-anchor="middle">让合作有迹可循 · 让成长和信任在真实交往中沉淀</text>
+  <!-- Logo 红色圆环 -->
+  <circle cx="300" cy="315" r="100" fill="#b91c1c"/>
+  <circle cx="300" cy="315" r="88" fill="none" stroke="#d4af37" stroke-width="3"/>
+  <circle cx="300" cy="315" r="76" fill="#fef3c7"/>
+  <!-- 金色 正 字 -->
+  <text x="300" y="350" font-family="KaiTi, STKaiti, serif" font-size="110" font-weight="bold" fill="#d4af37" text-anchor="middle" font-style="italic">正</text>
+  <!-- 右侧文字 -->
+  <text x="460" y="280" font-family="KaiTi, STKaiti, serif" font-size="56" font-weight="bold" fill="#f0b429">正道驿站</text>
+  <text x="460" y="330" font-family="Arial, sans-serif" font-size="24" fill="#94a3b8">Trust Station</text>
+  <line x1="460" y1="355" x2="800" y2="355" stroke="#d4af37" stroke-width="1.5" opacity="0.4"/>
+  <text x="460" y="390" font-family="KaiTi, STKaiti, serif" font-size="18" fill="#cbd5e1">全球商业信任共建社区</text>
+  <text x="460" y="420" font-family="KaiTi, STKaiti, serif" font-size="13" fill="#64748b">让合作有迹可循 · 让信任和成长在真实交往中沉淀</text>
+  <!-- 底部 -->
+  <text x="600" y="580" font-family="Arial, sans-serif" font-size="11" fill="#475569" text-anchor="middle">正道驿站 · 正心正念 · 互相成就 · 共创共享</text>
 </svg>
