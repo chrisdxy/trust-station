@@ -5,7 +5,7 @@
   "scripts": {
     "build": "next build",
     "dev": "node scripts/dev.cjs",
-    "lint": "eslint",
+    "lint": "eslint src/",
     "start": "node dist/server.js",
     "ts-check": "tsc -p tsconfig.json",
     "prepare": "husky"
