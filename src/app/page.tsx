@@ -41,7 +41,7 @@ export default function HomePage() {
 
   return (
     <>
-      <WeChatShareSetup title="正道驿站 | Trust Station" description="全球商业信任共建社区 — 让合作有迹可循，让成长和信任在真实交往中沉淀" imageUrl="/logo.jpg" />
+      <WeChatShareSetup title="正道驿站 | Trust Station" description="全球商业信任共建社区 — 让合作有迹可循，让成长和信任在真实交往中沉淀" imageUrl="/api/og-image" />
       <div className="min-h-screen bg-white dark:bg-slate-900 overflow-hidden">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-950 via-blue-900 to-slate-900">
