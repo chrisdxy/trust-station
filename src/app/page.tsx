@@ -92,8 +92,8 @@ export default function HomePage() {
             <button
               onClick={() => {
                 if (isAuthenticated) {
-                  // 已登录：进入发现伙伴
-                  router.push('/people?tab=requests');
+                  // 已登录：进入功能中心
+                  router.push('/dashboard');
                 } else {
                   // 未登录：走正常登录流程
                   if (isWeChat) {
@@ -108,7 +108,7 @@ export default function HomePage() {
               }}
               className="px-10 py-3.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-200"
             >
-              成功登录后进入dashboard
+              立即登录
             </button>
           </div>
         </div>
@@ -170,7 +170,7 @@ export default function HomePage() {
               }}
               className="px-8 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium text-sm"
             >
-              成功登录后进入dashboard
+              立即登录
             </button>
           </div>
         </div>
