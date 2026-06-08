@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Shield, Users, Lock, Scale, Database, Brain, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { WeChatShareSetup } from '@/components/WeChatShareSetup';
 
 const LOGO_URL = "/logo.jpg";
 
@@ -39,7 +40,9 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-900 overflow-hidden">
+    <>
+      <WeChatShareSetup title="正道驿站 | Trust Station" description="全球商业信任共建社区 — 让合作有迹可循，让成长和信任在真实交往中沉淀" imageUrl="/logo.jpg" />
+      <div className="min-h-screen bg-white dark:bg-slate-900 overflow-hidden">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-950 via-blue-900 to-slate-900">
         <div className="w-full px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
@@ -202,6 +205,7 @@ export default function HomePage() {
           </p>
         </div>
       </footer>
-    </div>
+      </div>
+    </>
   );
 }
