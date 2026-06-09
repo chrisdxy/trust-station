@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Briefcase, Plus, MapPin, Calendar, X, Bold, Italic, List, Link, Image, Upload, Users, UserPlus, Trash2, Edit, Pause, Play, CheckCircle, Search, Star, ChevronDown, Copy } from 'lucide-react';
+import { Briefcase, Plus, MapPin, Calendar, X, Bold, Italic, List, Link, Image, Upload, Users, UserPlus, Trash2, Edit, Pause, Play, CheckCircle, Search, Star, ChevronDown, Copy, User } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCategories, Category } from '@/hooks/useCategories';
@@ -652,42 +652,56 @@ export default function ProjectsPage() {
                     </div>
                   )}
                   <div className="p-5">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                        {project.title}
-                      </h3>
-                      {project.isDueDiligence && (
-                        <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
-                          尽调
-                        </span>
-                      )}
+                    {/* 标题 */}
+                    <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors text-base mb-2 line-clamp-1">
+                      {project.title}
+                    </h3>
+
+                    {/* 创建人 + 创建时间 */}
+                    <div className="flex items-center gap-3 text-xs text-slate-400 mb-2">
+                      <span className="flex items-center gap-1">
+                        <User size={12} />
+                        {project.creatorName || getShortProjectId(project.creatorId || project.id)}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Calendar size={12} />
+                        {safeDate(project.createdAt || project.date)}
+                      </span>
+                    </div>
+
+                    {/* 地点 */}
+                    {project.location && (
+                      <div className="flex items-center gap-1 text-xs text-slate-400 mb-2">
+                        <MapPin size={12} />
+                        {project.location}
+                      </div>
+                    )}
+
+                    {/* 简介 */}
+                    <div className="text-sm text-slate-600 dark:text-slate-400 line-clamp-3 mb-3">
+                      {project.summary || project.description || ''}
+                    </div>
+
+                    {/* 项目ID + 类型标签 */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="inline-block px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded text-xs font-mono cursor-pointer hover:bg-amber-200 transition-colors"
+                        onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(getShortProjectId(project.id)).then(() => {}); }}
+                        title="点击复制项目ID，用于记录中心查询">
+                        ID: {getShortProjectId(project.id)}
+                      </span>
                       {project.types && project.types.map((t: string) => (
-                        <span key={t} className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs rounded-full">
+                        <span key={t} className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs rounded-full">
                           {t}
                         </span>
                       ))}
-                    </div>
-                    <span className="inline-block px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded text-xs font-mono cursor-pointer hover:bg-amber-200 transition-colors mb-2"
-                      onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(getShortProjectId(project.id)).then(() => {}); }}
-                      title="点击复制项目ID，用于记录中心查询">
-                      项目ID: {getShortProjectId(project.id)}
-                    </span>
-                    <div className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-3">{project.summary || ''}</div>
-                    <div className="flex items-center gap-4 text-xs text-slate-500">
-                      {project.location && (
-                        <span className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          {project.location}
-                        </span>
+                      {project.isDueDiligence && (
+                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">尽调</span>
                       )}
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {safeDate(project.date)}
-                      </span>
                     </div>
+
                     {/* 删除按钮 — 仅创建者可见 */}
                     {currentUserId && project.creatorId === currentUserId && (
-                      <div className="flex justify-end mt-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+                      <div className="flex justify-end mt-3 pt-2 border-t border-slate-100 dark:border-slate-700">
                         <button
                           onClick={e => {
                             e.stopPropagation();

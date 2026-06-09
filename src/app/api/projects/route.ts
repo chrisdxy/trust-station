@@ -110,6 +110,7 @@ export async function GET(request: NextRequest) {
         createdAt: p.created_at || null,
         members: Array.isArray(members) ? members : [],
         creatorId: p.user_id,
+        creatorName: p.creator_name || '',
         paused: p.paused === 1 || p.paused === true,
         coverImage: Array.isArray(images) && images.length > 0 ? images[0] : '',
         qr_code: p.qr_code || ''
