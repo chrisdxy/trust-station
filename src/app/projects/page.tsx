@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Briefcase, Plus, MapPin, Calendar, X, Bold, Italic, List, Link, Image, Upload, Users, UserPlus, Trash2, Edit, Pause, Play, CheckCircle, Search, Star, ChevronDown, Copy, User } from 'lucide-react';
+import { Briefcase, Plus, MapPin, Calendar, X, Bold, Italic, List, Link, Image, Upload, Users, UserPlus, Trash2, Edit, Pause, Play, CheckCircle, Search, Star, ChevronDown, Copy } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCategories, Category } from '@/hooks/useCategories';
@@ -660,7 +660,7 @@ export default function ProjectsPage() {
                     {/* 创建人 + 创建时间 */}
                     <div className="flex items-center gap-3 text-xs text-slate-400 mb-2">
                       <span className="flex items-center gap-1">
-                        <User size={12} />
+                        <Users size={12} />
                         {project.creatorName || getShortProjectId(project.creatorId || project.id)}
                       </span>
                       <span className="flex items-center gap-1">
@@ -1236,17 +1236,9 @@ export default function ProjectsPage() {
                       </div>
                     )}
                     
-
-                    {/* 项目简介 */}
-
-                      <div className="mb-4 px-4 py-3 bg-amber-50 dark:bg-amber-900/10 rounded-xl">
-                        <h4 className="text-sm font-semibold text-amber-700 dark:text-amber-400 mb-2">项目简介</h4>
-                        <p className="text-slate-700 dark:text-slate-300 text-sm">{(selectedProject?.summary || '').replace(/<[^>]*>/g, '')}</p>
-                      </div>
-
-
+                    
                     <div>
-                      <p className="text-sm text-slate-500 mb-2">项目详情</p>
+                      <p className="text-sm text-slate-500 mb-2">项目描述</p>
                       <p className="text-slate-700 dark:text-slate-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: renderDescription(selectedProject?.description) }} />
                     </div>
                     
