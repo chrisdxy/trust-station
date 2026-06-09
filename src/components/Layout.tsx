@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -117,15 +116,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </button>
           )}
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full overflow-hidden bg-transparent">
-              <Image 
-                src="/logo.jpg" 
-                alt="Logo" 
-                width={32} 
-                height={32} 
-                className="w-full h-full object-cover"
-                unoptimized
-              />
+            <div className="w-8 h-8 rounded-full bg-red-700 flex items-center justify-center overflow-hidden">
+              <span className="text-amber-400 font-bold text-sm" style={{ fontFamily: "KaiTi, STKaiti, serif", fontStyle: "italic" }}>正</span>
             </div>
             <span className="text-white font-semibold text-lg hidden sm:block">{t('app.name')}</span>
           </Link>
