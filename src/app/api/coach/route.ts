@@ -1,9 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 
+async function ensureTable() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS coach_applications (
+      id VARCHAR(36) PRIMARY KEY,
+      user_id VARCHAR(100) NOT NULL,
+      name VARCHAR(100) DEFAULT NULL,
+      phone VARCHAR(20) DEFAULT NULL,
+      email VARCHAR(100) DEFAULT NULL,
+      type VARCHAR(50) DEFAULT NULL,
+      expertise TEXT DEFAULT NULL,
+      description TEXT DEFAULT NULL,
+      status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX idx_user_id (user_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
+}
+
 // GET: 获取陪跑专家列表（按用户或状态）
 export async function GET(request: NextRequest) {
   try {
+    await ensureTable();
     const userId = request.nextUrl.searchParams.get('userId');
     const status = request.nextUrl.searchParams.get('status');
     let query = 'SELECT ca.*, u.display_name, u.real_name, u.phone FROM coach_applications ca LEFT JOIN users u ON ca.user_id = u.id WHERE 1=1';
@@ -22,6 +42,7 @@ export async function GET(request: NextRequest) {
 // POST: 创建/更新陪跑专家申请
 export async function POST(request: NextRequest) {
   try {
+    await ensureTable();
     const { userId, name, phone, email, type, expertise, description } = await request.json();
     if (!userId) return NextResponse.json({ success: false, error: '缺少用户ID' }, { status: 400 });
 
@@ -56,6 +77,7 @@ export async function POST(request: NextRequest) {
 // PUT: 审批陪跑专家
 export async function PUT(request: NextRequest) {
   try {
+    await ensureTable();
     const { id, status } = await request.json();
     await pool.query('UPDATE coach_applications SET status=?, updated_at=NOW() WHERE id=?', [status, id]);
     return NextResponse.json({ success: true });
@@ -68,6 +90,7 @@ export async function PUT(request: NextRequest) {
 // DELETE: 删除申请
 export async function DELETE(request: NextRequest) {
   try {
+    await ensureTable();
     const id = request.nextUrl.searchParams.get('id');
     if (!id) return NextResponse.json({ success: false, error: '缺少ID' }, { status: 400 });
     await pool.query('DELETE FROM coach_applications WHERE id = ?', [id]);
