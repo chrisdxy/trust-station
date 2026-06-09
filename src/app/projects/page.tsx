@@ -661,7 +661,7 @@ export default function ProjectsPage() {
                     <div className="flex items-center gap-3 text-xs text-slate-400 mb-2">
                       <span className="flex items-center gap-1">
                         <Users size={12} />
-                        {project.creatorName || getShortProjectId(project.creatorId || project.id)}
+                        {project.creatorName || '未知用户'}
                       </span>
                       <span className="flex items-center gap-1">
                         <Calendar size={12} />
