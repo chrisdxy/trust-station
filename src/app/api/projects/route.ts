@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
 
     // 获取列表
     const [result]: any = await pool.query(
-      `SELECT p.*, u.display_name as creator_name
+      `SELECT p.*, COALESCE(u.display_name, u.real_name, u.nickname, u.phone) as creator_name
        FROM projects p
        LEFT JOIN users u ON p.user_id = u.id
        WHERE ${whereClause}

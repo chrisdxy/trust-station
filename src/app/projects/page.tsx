@@ -337,6 +337,7 @@ export default function ProjectsPage() {
           body: JSON.stringify({
             title: formData.title,
             description: formData.description,
+            summary: formData.summary || '',
             coverImage: formData.coverImage,
             images: formData.images,
             projectTypes: formData.types,
@@ -369,6 +370,7 @@ export default function ProjectsPage() {
             userId: currentUserId,
             title: formData.title,
             description: formData.description,
+            summary: formData.summary || '',
             coverImage: formData.coverImage,
             projectTypes: formData.types,
             industry: formData.industry,
