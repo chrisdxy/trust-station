@@ -32,7 +32,12 @@ export async function GET(request: NextRequest) {
     if (status) { query += ' AND ca.status = ?'; params.push(status); }
     query += ' ORDER BY ca.created_at DESC';
     const [rows]: any = await pool.query(query, params);
-    return NextResponse.json({ success: true, coaches: rows });
+    // 返回时将 expertise 从 JSON 字符串解析为数组
+    const coaches = (rows || []).map((r: any) => ({
+      ...r,
+      expertise: r.expertise ? (() => { try { return JSON.parse(r.expertise); } catch { return r.expertise; } })() : []
+    }));
+    return NextResponse.json({ success: true, coaches });
   } catch (error: any) {
     console.error('获取陪跑专家失败:', error?.message);
     return NextResponse.json({ success: false, error: '获取失败' }, { status: 500 });
@@ -46,6 +51,9 @@ export async function POST(request: NextRequest) {
     const { userId, name, phone, email, type, expertise, description } = await request.json();
     if (!userId) return NextResponse.json({ success: false, error: '缺少用户ID' }, { status: 400 });
 
+    // 将 expertise 数组转为 JSON 字符串存储
+    const expertiseStr = Array.isArray(expertise) ? JSON.stringify(expertise) : (expertise || '');
+
     // 检查是否已有申请
     const [existing]: any = await pool.query(
       'SELECT id FROM coach_applications WHERE user_id = ?',
@@ -56,7 +64,7 @@ export async function POST(request: NextRequest) {
       // 更新已有申请
       await pool.query(
         'UPDATE coach_applications SET name=?, phone=?, email=?, type=?, expertise=?, description=?, status="pending", updated_at=NOW() WHERE user_id=?',
-        [name, phone, email, type, expertise, description, userId]
+        [name, phone, email, type, expertiseStr, description, userId]
       );
       return NextResponse.json({ success: true, message: '申请已更新' });
     }
@@ -65,7 +73,7 @@ export async function POST(request: NextRequest) {
     const id = uuidv4();
     await pool.query(
       'INSERT INTO coach_applications (id, user_id, name, phone, email, type, expertise, description) VALUES (?,?,?,?,?,?,?,?)',
-      [id, userId, name, phone, email, type, expertise, description]
+      [id, userId, name, phone, email, type, expertiseStr, description]
     );
     return NextResponse.json({ success: true, message: '申请已提交' });
   } catch (error: any) {
