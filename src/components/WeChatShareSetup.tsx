@@ -23,7 +23,7 @@ export function WeChatShareSetup({
     const shareLink = link || window.location.href;
     const shareTitle = title || "正道驿站";
     const shareDesc = description || "全球商业信任共建社区";
-    const shareImg = imageUrl ? (imageUrl.startsWith('http') ? imageUrl : `${window.location.origin}${imageUrl}`) : `${window.location.origin}/api/og`;
+    const shareImg = imageUrl ? (imageUrl.startsWith('http') ? imageUrl : `${window.location.origin}${imageUrl}`) : `${window.location.origin}/uploads/logo.jpg`;
 
     const configShare = () => {
       const shareData = {

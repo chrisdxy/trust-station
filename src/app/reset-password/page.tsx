@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import { Lock, ArrowRight, CheckCircle, AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-const LOGO_URL = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiNiOTFjMWMiLz48dGV4dCB4PSIxNiIgeT0iMjIiIGZvbnQtZmFtaWx5PSJLYWlUaSxTVEthaXRpLHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iI2Q0YWYzNyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zdHlsZT0iaXRhbGljIj7mraM8L3RleHQ+PC9zdmc+";
+const LOGO_URL = "/uploads/logo.jpg";
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();

@@ -8,7 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { WeChatShareSetup } from '@/components/WeChatShareSetup';
 
-const LOGO_URL = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiNiOTFjMWMiLz48dGV4dCB4PSIxNiIgeT0iMjIiIGZvbnQtZmFtaWx5PSJLYWlUaSxTVEthaXRpLHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iI2Q0YWYzNyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zdHlsZT0iaXRhbGljIj7mraM8L3RleHQ+PC9zdmc+";
+const LOGO_URL = "/uploads/logo.jpg";
 
 export default function HomePage() {
   const router = useRouter();
@@ -41,7 +41,7 @@ export default function HomePage() {
 
   return (
     <>
-      <WeChatShareSetup title="正道驿站 | Trust Station" description="全球商业信任共建社区 — 让合作有迹可循，让成长和信任在真实交往中沉淀" imageUrl="/api/og" />
+      <WeChatShareSetup title="正道驿站 | Trust Station" description="全球商业信任共建社区 — 让合作有迹可循，让成长和信任在真实交往中沉淀" imageUrl="/uploads/logo.jpg" />
       <div className="min-h-screen bg-white dark:bg-slate-900 overflow-hidden">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-950 via-blue-900 to-slate-900">

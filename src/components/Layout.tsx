@@ -116,8 +116,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </button>
           )}
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-red-700 flex items-center justify-center overflow-hidden">
-              <span className="text-amber-400 font-bold text-sm" style={{ fontFamily: "KaiTi, STKaiti, serif", fontStyle: "italic" }}>正</span>
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-transparent">
+              <img src="/uploads/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
             </div>
             <span className="text-white font-semibold text-lg hidden sm:block">{t('app.name')}</span>
           </Link>

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     siteName: "正道驿站",
     images: [
       {
-        url: "https://myfriends.vip/api/og",
+        url: "https://myfriends.vip/uploads/logo.jpg",
         width: 1200,
         height: 630,
         alt: "正道驿站"
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "正道驿站 | Trust Station",
     description: "全球商业信任共建社区 — 让合作有迹可循，让成长和信任在真实交往中沉淀",
-    images: ["https://myfriends.vip/api/og"]
+    images: ["https://myfriends.vip/uploads/logo.jpg"]
   }
 };
 
