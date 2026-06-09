@@ -326,7 +326,7 @@ export default function DashboardPage() {
               transition={{ delay: 0.3 }}
               className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl p-6 text-white"
             >
-              <h2 className="text-lg font-semibold mb-3">成为更高级别</h2>
+              <h2 className="text-lg font-semibold mb-3">成为专家与合伙人</h2>
               <p className="text-sm text-purple-100 mb-4">申请成为协调专家或事业合伙人，开启更多权益</p>
               <Link href="/profile">
                 <button className="w-full py-2.5 bg-white text-purple-600 rounded-lg font-medium hover:bg-purple-50 transition-colors">
