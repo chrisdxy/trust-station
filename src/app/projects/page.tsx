@@ -679,7 +679,7 @@ export default function ProjectsPage() {
 
                     {/* 简介 */}
                     <div className="text-sm text-slate-600 dark:text-slate-400 line-clamp-3 mb-3">
-                      {project.summary || project.description || ''}
+                      {(project.summary || '').replace(/<[^>]*>/g, '')}
                     </div>
 
                     {/* 项目ID + 类型标签 */}
@@ -1236,9 +1236,17 @@ export default function ProjectsPage() {
                       </div>
                     )}
                     
-                    
+
+                    {/* 项目简介 */}
+
+                      <div className="mb-4 px-4 py-3 bg-amber-50 dark:bg-amber-900/10 rounded-xl">
+                        <h4 className="text-sm font-semibold text-amber-700 dark:text-amber-400 mb-2">项目简介</h4>
+                        <p className="text-slate-700 dark:text-slate-300 text-sm">{(selectedProject?.summary || '').replace(/<[^>]*>/g, '')}</p>
+                      </div>
+
+
                     <div>
-                      <p className="text-sm text-slate-500 mb-2">项目描述</p>
+                      <p className="text-sm text-slate-500 mb-2">项目详情</p>
                       <p className="text-slate-700 dark:text-slate-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: renderDescription(selectedProject?.description) }} />
                     </div>
                     
@@ -1253,14 +1261,6 @@ export default function ProjectsPage() {
                       </div>
                     )}
                   </div>
-                  
-                  {/* 简介 */}
-                  {selectedProject?.summary && (
-                    <div className="mb-4 px-4 py-3 bg-amber-50 dark:bg-amber-900/10 rounded-xl">
-                      <h4 className="text-sm font-semibold text-amber-700 dark:text-amber-400 mb-2">项目简介</h4>
-                      <p className="text-slate-700 dark:text-slate-300 text-sm">{selectedProject?.summary}</p>
-                    </div>
-                  )}
 
                   {/* Modal Footer */}
                   <div className="p-4 border-t border-slate-100 dark:border-slate-700 flex justify-end">

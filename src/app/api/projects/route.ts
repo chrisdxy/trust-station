@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
         industry: p.industry || '',
         types: Array.isArray(types) ? types : (types ? [types] : []),
         description: p.description || '',
-        summary: p.summary || '',
+        summary: p.summary || (p.description || '').replace(/<[^>]*>/g, '').trim().slice(0, 200),
         images: Array.isArray(images) ? images : [],
         date: p.date || '',
         createdAt: p.created_at || null,
