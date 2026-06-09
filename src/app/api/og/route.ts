@@ -1,0 +1,29 @@
+// 返回 OG 分享用的 SVG 图片（无需文件系统访问）
+export async function GET() {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a5f"/>
+      <stop offset="100%" style="stop-color:#2d4a6f"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="300" cy="315" r="100" fill="#b91c1c"/>
+  <circle cx="300" cy="315" r="88" fill="none" stroke="#d4af37" stroke-width="3"/>
+  <circle cx="300" cy="315" r="76" fill="#fef3c7"/>
+  <text x="300" y="350" font-family="KaiTi, STKaiti, serif" font-size="110" font-weight="bold" fill="#d4af37" text-anchor="middle" font-style="italic">正</text>
+  <text x="460" y="280" font-family="KaiTi, STKaiti, serif" font-size="56" font-weight="bold" fill="#f0b429">正道驿站</text>
+  <text x="460" y="330" font-family="Arial, sans-serif" font-size="24" fill="#94a3b8">Trust Station</text>
+  <line x1="460" y1="355" x2="800" y2="355" stroke="#d4af37" stroke-width="1.5" opacity="0.4"/>
+  <text x="460" y="390" font-family="KaiTi, STKaiti, serif" font-size="18" fill="#cbd5e1">全球商业信任共建社区</text>
+  <text x="460" y="420" font-family="KaiTi, STKaiti, serif" font-size="13" fill="#64748b">让合作有迹可循 · 让信任和成长在真实交往中沉淀</text>
+  <text x="600" y="580" font-family="Arial, sans-serif" font-size="11" fill="#475569" text-anchor="middle">正道驿站 · 正心正念 · 互相成就 · 共创共享</text>
+</svg>`;
+
+  return new Response(svg, {
+    headers: {
+      'Content-Type': 'image/svg+xml',
+      'Cache-Control': 'public, max-age=86400'
+    }
+  });
+}
