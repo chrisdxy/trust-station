@@ -1142,6 +1142,7 @@ export default function ProjectsPage() {
                       {selectedProject?.title}
                     </h2>
                     <div className="flex items-center gap-2">
+                      {currentUserId && selectedProject?.creatorId === currentUserId && (
                       <button
                         onClick={() => {
                           setEditingProject(selectedProject);
@@ -1166,6 +1167,7 @@ export default function ProjectsPage() {
                       >
                         <Edit className="w-5 h-5" />
                       </button>
+                      )}
                       {currentUserId && selectedProject?.creatorId === currentUserId && (
                         <button
                           onClick={() => {

@@ -126,11 +126,11 @@ function LoginPageContent() {
         // 更新 AuthContext 状态
         revalidateSession();
         
-        // 微信登录：老用户直接进入发现伙伴，新用户引导完善资料
+        // 微信登录：老用户直接进入功能中心，新用户引导完善资料
         if (data.needsProfile) {
           router.push(`/complete-profile?source=wechat&openid=${encodeURIComponent(data.wechatUser.openid)}`);
         } else {
-          router.push('/people?tab=requests');
+          router.push('/dashboard');
         }
       } else {
         setWechatError(data.error || '微信授权失败');
@@ -305,7 +305,8 @@ function LoginPageContent() {
         }
 
         // 登录成功后跳转：直接到发现伙伴（待处理的好友请求）
-        router.push('/people?tab=requests');
+          router.push('/dashboard');
+        }
       } else {
         setError(data.error || '登录失败');
       }
