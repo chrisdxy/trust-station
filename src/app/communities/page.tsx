@@ -63,6 +63,9 @@ export default function CommunitiesPage() {
   const [joinedCommunities, setJoinedCommunities] = useState<string[]>([]);
   const [pendingCommunities, setPendingCommunities] = useState<string[]>([]);
   const [joinReason, setJoinReason] = useState<string>('');
+  const [joinReason2, setJoinReason2] = useState<string>('');
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [joinTarget, setJoinTarget] = useState<Community | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -426,8 +429,19 @@ export default function CommunitiesPage() {
     e.target.value = '';
   };
 
-  // 查看详情
+  // 查看详情（仅正式成员和创建者可查看）
   const handleViewDetail = (community: Community) => {
+    if (!currentUser?.id) {
+      alert('请先登录');
+      return;
+    }
+    const isMyCommunity = isCreatedByMe(community) || joinedCommunities.includes(community.id);
+    if (!isMyCommunity) {
+      // 非成员点击卡片直接弹出申请加入弹窗
+      setJoinTarget(community);
+      setShowJoinModal(true);
+      return;
+    }
     setSelectedCommunity(community);
     setShowDetailModal(true);
   };
@@ -578,6 +592,7 @@ export default function CommunitiesPage() {
           // 提交申请成功，待审批
           setPendingCommunities([...pendingCommunities, id]);
           setJoinReason('');
+          setJoinReason2('');
           alert('加入申请已提交，请等待管理员审批');
         } else {
           // 直接加入成功（兼容旧流程）
@@ -1464,10 +1479,9 @@ export default function CommunitiesPage() {
                   )}
                 </div>
 
-                <div className="p-4 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-3">
-                  {/* 加入/状态区域 */}
+                <div className="p-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
                   {selectedCommunity && !isCreatedByMe(selectedCommunity) && (
-                    <div className="px-4 py-3 border-t border-slate-100 dark:border-slate-700">
+                    <div>
                       {pendingCommunities.includes(selectedCommunity.id) ? (
                         <div className="flex items-center gap-2 text-amber-600">
                           <Clock className="w-5 h-5" />
@@ -1478,32 +1492,10 @@ export default function CommunitiesPage() {
                           <CheckCircle className="w-5 h-5" />
                           <span className="font-medium">正式成员</span>
                         </div>
-                      ) : (
-                        <div>
-                          <textarea
-                            value={joinReason}
-                            onChange={e => setJoinReason(e.target.value)}
-                            placeholder="请填写加入理由，比如您的行业、专长以及为什么想加入该共同体..."
-                            rows={3}
-                            className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 resize-none mb-3"
-                          />
-                          <button
-                            onClick={() => {
-                              if (!joinReason.trim()) {
-                                alert('请填写加入理由');
-                                return;
-                              }
-                              handleJoin(selectedCommunity.id);
-                            }}
-                            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-                          >
-                            提交申请
-                          </button>
-                        </div>
-                      )}
+                      ) : null}
                     </div>
                   )}
-                  <div className="flex justify-end p-4 border-t border-slate-100 dark:border-slate-700">
+                  <div className="flex gap-3 ml-auto">
                     <button
                       onClick={() => setShowDetailModal(false)}
                       className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors"
@@ -1614,6 +1606,77 @@ export default function CommunitiesPage() {
                 ) : (
                   '确认删除'
                 )}
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+
+    {/* 申请加入弹窗 */}
+    <AnimatePresence>
+      {showJoinModal && joinTarget && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          onClick={() => { setShowJoinModal(false); setJoinReason(''); }}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="p-5">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">申请加入 - {joinTarget.name}</h3>
+              <p className="text-sm text-slate-500 mb-4">请填写申请理由，管理员审核通过后即可成为正式成员</p>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">您的行业与专长</label>
+                  <input
+                    value={joinReason}
+                    onChange={e => setJoinReason(e.target.value)}
+                    placeholder="例如：互联网行业，10年技术管理经验..."
+                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 resize-none outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">为什么想加入</label>
+                  <textarea
+                    value={joinReason2}
+                    onChange={e => setJoinReason2(e.target.value)}
+                    placeholder="为什么想加入该共同体？希望获得什么？..."
+                    rows={3}
+                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 resize-none outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 p-4 border-t border-slate-100 dark:border-slate-700">
+              <button
+                onClick={() => { setShowJoinModal(false); setJoinReason(''); setJoinReason2(''); }}
+                className="flex-1 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={() => {
+                  if (!joinReason.trim() || !joinReason2.trim()) {
+                    alert('请完整填写申请信息');
+                    return;
+                  }
+                  const fullReason = `【行业专长】${joinReason}\n【加入理由】${joinReason2}`;
+                  setJoinReason(fullReason);
+                  handleJoin(joinTarget.id);
+                  setShowJoinModal(false);
+                  setJoinReason2('');
+                }}
+                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition-colors"
+              >
+                提交申请
               </button>
             </div>
           </motion.div>
