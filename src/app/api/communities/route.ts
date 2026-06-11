@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
        FROM communities c
        LEFT JOIN users u ON c.owner_id = u.id
        WHERE ${whereClause}
-       ORDER BY c.member_count DESC, c.created_at DESC
+       ORDER BY c.is_pinned DESC, c.sort_order ASC, c.member_count DESC, c.created_at DESC
        LIMIT ? OFFSET ?`,
       [...params, limit, offset]
     );
