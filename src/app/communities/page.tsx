@@ -61,6 +61,7 @@ export default function CommunitiesPage() {
   const descImageRef = useRef<HTMLInputElement>(null);  // 介绍区图片上传
   const [communities, setCommunities] = useState<Community[]>([]);
   const [joinedCommunities, setJoinedCommunities] = useState<string[]>([]);
+  const [pendingCommunities, setPendingCommunities] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -82,6 +83,15 @@ export default function CommunitiesPage() {
             .filter((c: Community) => c.memberList?.some(m => m.email === 'uid-' + currentUser.id))
             .map((c: Community) => c.id);
           setJoinedCommunities(joined);
+
+          // 同步 pendingCommunities：查询待审批的申请
+          try {
+            const pendingRes = await fetch(`/api/communities/members?pending=true&userId=${currentUser.id}`);
+            const pendingData = await pendingRes.json();
+            if (pendingData.success && pendingData.requests) {
+              setPendingCommunities(pendingData.requests.map((r: any) => r.community_id));
+            }
+          } catch {}
         }
       }
     } catch (err) {
@@ -533,6 +543,14 @@ export default function CommunitiesPage() {
     if (!community || !currentUser?.id) return;
 
     const isJoined = joinedCommunities.includes(id);
+    const isPending = pendingCommunities.includes(id);
+    
+    // 如果已有待审批申请，不允许重复提交
+    if (isPending) {
+      alert('您的加入申请正在等待管理员审批');
+      return;
+    }
+    
     try {
       const res = await fetch('/api/communities/members', {
         method: 'POST',
@@ -553,9 +571,13 @@ export default function CommunitiesPage() {
             return c;
           });
           setCommunities(updatedList);
-          // 同步选中的详情
           setSelectedCommunity(prev => prev?.id === id ? { ...prev, members: Math.max(0, prev.members - 1), memberList: prev.memberList.filter(m => m.email !== ('uid-' + currentUser.id)) } : prev);
+        } else if (data.status === 'pending') {
+          // 提交申请成功，待审批
+          setPendingCommunities([...pendingCommunities, id]);
+          alert('加入申请已提交，请等待管理员审批');
         } else {
+          // 直接加入成功（兼容旧流程）
           setJoinedCommunities([...joinedCommunities, id]);
           const newMember = { name: currentUser.display_name || currentUser.phone || '用户', email: 'uid-' + currentUser.id, role: 'member' as const, joinedAt: new Date().toISOString().split('T')[0] };
           const updatedList = communities.map(c => {
@@ -563,7 +585,6 @@ export default function CommunitiesPage() {
             return c;
           });
           setCommunities(updatedList);
-          // 同步选中的详情
           setSelectedCommunity(prev => prev?.id === id ? { ...prev, members: prev.members + 1, memberList: [...prev.memberList, newMember] } : prev);
         }
       } else {
@@ -873,6 +894,36 @@ export default function CommunitiesPage() {
                     >
                       <Eye className="w-4 h-4" />
                     </button>
+                    {!isCreatedByMe(community) && (
+                      <button
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleJoin(community.id);
+                        }}
+                        className={`p-1.5 rounded-lg transition-colors ${
+                          pendingCommunities.includes(community.id)
+                            ? 'text-amber-500 cursor-not-allowed'
+                            : joinedCommunities.includes(community.id)
+                            ? 'text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/30'
+                            : 'text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30'
+                        }`}
+                        title={
+                          pendingCommunities.includes(community.id)
+                            ? '待审批'
+                            : joinedCommunities.includes(community.id)
+                            ? '退出'
+                            : '申请加入'
+                        }
+                      >
+                        {pendingCommunities.includes(community.id) ? (
+                          <Clock className="w-4 h-4" />
+                        ) : joinedCommunities.includes(community.id) ? (
+                          <LogOut className="w-4 h-4" />
+                        ) : (
+                          <UserPlus className="w-4 h-4" />
+                        )}
+                      </button>
+                    )}
                   </div>
 
                   {/* 成员信息行 */}
@@ -1332,6 +1383,14 @@ export default function CommunitiesPage() {
                     </div>
                   )}
 
+                  {/* 待审批申请（仅管理员/创建者可见） */}
+                  {selectedCommunity && isCreatedByMe(selectedCommunity) && (
+                    <PendingApprovals
+                      communityId={selectedCommunity.id}
+                      onApprove={() => fetchCommunities()}
+                    />
+                  )}
+
                   <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
                     <button
                       onClick={() => setShowMembersModal(true)}
@@ -1470,6 +1529,27 @@ export default function CommunitiesPage() {
                 </div>
 
                 <div className="p-4 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-3">
+                  {selectedCommunity && !isCreatedByMe(selectedCommunity) && (
+                    <button
+                      onClick={() => {
+                        if (selectedCommunity) handleJoin(selectedCommunity.id);
+                      }}
+                      className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                        pendingCommunities.includes(selectedCommunity.id)
+                          ? 'bg-amber-100 text-amber-600 cursor-not-allowed'
+                          : joinedCommunities.includes(selectedCommunity.id)
+                          ? 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      }`}
+                      disabled={pendingCommunities.includes(selectedCommunity.id)}
+                    >
+                      {pendingCommunities.includes(selectedCommunity.id)
+                        ? '待审批'
+                        : joinedCommunities.includes(selectedCommunity.id)
+                        ? '退出共同体'
+                        : '加入共同体'}
+                    </button>
+                  )}
                   <button
                     onClick={() => setShowDetailModal(false)}
                     className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors"
@@ -1586,5 +1666,86 @@ export default function CommunitiesPage() {
       )}
     </AnimatePresence>
     </Layout>
+  );
+}
+
+// 待审批成员列表组件
+function PendingApprovals({ communityId, onApprove }: { communityId: string; onApprove: () => void }) {
+  const [requests, setRequests] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchPending = async () => {
+      try {
+        const res = await fetch(`/api/communities/members?communityId=${communityId}&pending=true`);
+        const data = await res.json();
+        if (data.success) setRequests(data.requests || []);
+      } catch {} finally {
+        setLoading(false);
+      }
+    };
+    fetchPending();
+  }, [communityId]);
+
+  const handleAction = async (requestId: string, action: 'approve' | 'reject') => {
+    setProcessing(requestId);
+    try {
+      const res = await fetch('/api/communities/members', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requestId, action })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setRequests(prev => prev.filter(r => r.id !== requestId));
+        if (onApprove) onApprove();
+      } else {
+        alert(data.error || '操作失败');
+      }
+    } catch {
+      alert('网络错误');
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  if (loading) return null;
+  if (requests.length === 0) return null;
+
+  return (
+    <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/10 rounded-xl">
+      <h4 className="text-sm font-semibold text-blue-700 dark:text-blue-400 mb-3">
+        待审批申请 ({requests.length})
+      </h4>
+      <div className="space-y-2">
+        {requests.map((req: any) => (
+          <div key={req.id} className="flex items-center justify-between p-3 bg-white dark:bg-slate-700/50 rounded-lg">
+            <div>
+              <p className="font-medium text-sm text-slate-900 dark:text-white">
+                {req.display_name || req.real_name || req.user_name || req.user_id}
+              </p>
+              <p className="text-xs text-slate-400">{req.phone || ''}</p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleAction(req.id, 'approve')}
+                disabled={processing === req.id}
+                className="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs rounded-lg disabled:opacity-50"
+              >
+                {processing === req.id ? '处理中...' : '通过'}
+              </button>
+              <button
+                onClick={() => handleAction(req.id, 'reject')}
+                disabled={processing === req.id}
+                className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs rounded-lg disabled:opacity-50"
+              >
+                拒绝
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
