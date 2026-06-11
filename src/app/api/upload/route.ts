@@ -38,22 +38,22 @@ export async function POST(request: NextRequest) {
 
     const ext = file.name.split('.').pop() || 'jpg';
     const filename = `${uuidv4()}.${ext}`;
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
 
-    // 写入本地 public/uploads
-    const publicDir = path.join(process.cwd(), 'public', 'uploads');
-    await mkdir(publicDir, { recursive: true });
-    await writeFile(path.join(publicDir, filename), buffer);
-    try {
-      const rootPublicDir = path.join(process.cwd(), '..', '..', 'public', 'uploads');
-      await mkdir(rootPublicDir, { recursive: true });
-      await writeFile(path.join(rootPublicDir, filename), buffer);
-    } catch { /* 忽略 */ }
-    // 写入 nginx 公开目录
+    // 写入 nginx 公开目录（主存储）
     try {
       const nginxDir = '/var/www/uploads';
       await mkdir(nginxDir, { recursive: true });
       await writeFile(path.join(nginxDir, filename), buffer);
+    } catch (e: any) {
+      console.error('写入 /var/www/uploads 失败:', e?.message);
+    }
+    // 写入本地 public/uploads（备用）
+    try {
+      const publicDir = path.join(process.cwd(), 'public', 'uploads');
+      await mkdir(publicDir, { recursive: true });
+      await writeFile(path.join(publicDir, filename), buffer);
     } catch { /* 忽略 */ }
 
     const url = `/uploads/${filename}`;
