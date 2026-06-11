@@ -1635,11 +1635,11 @@ export default function CommunitiesPage() {
               <p className="text-sm text-slate-500 mb-4">请填写申请理由，管理员审核通过后即可成为正式成员</p>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">您的行业与专长</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">自查是否符合共同体加入条件</label>
                   <input
                     value={joinReason}
                     onChange={e => setJoinReason(e.target.value)}
-                    placeholder="例如：互联网行业，10年技术管理经验..."
+                    placeholder="请自查是否满足该共同体的加入条件，并简要说明..."
                     className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 resize-none outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -1665,7 +1665,7 @@ export default function CommunitiesPage() {
               <button
                 onClick={() => {
                   if (!joinReason.trim() || !joinReason2.trim()) {
-                    alert('请完整填写申请信息');
+                    alert('请填写自查条件与加入理由');
                     return;
                   }
                   const fullReason = `【行业专长】${joinReason}\n【加入理由】${joinReason2}`;
