@@ -268,36 +268,33 @@ export async function PUT(request: NextRequest) {
 
     const now = new Date();
 
+    // 只更新请求中显式提供的字段，避免覆盖未传的字段
+    const updates: string[] = [];
+    const values: any[] = [];
+    
+    if (name !== undefined) { updates.push('name = ?'); values.push(name); }
+    if (summary !== undefined) { updates.push('summary = ?'); values.push(summary); }
+    if (description !== undefined) { updates.push('description = ?'); values.push(description); }
+    if (category !== undefined) { updates.push('category = ?'); values.push(category); }
+    if (industry !== undefined) { updates.push('industry = ?'); values.push(industry); }
+    if (coverImage !== undefined) { updates.push('cover_image = ?'); values.push(coverImage); }
+    if (isPublic !== undefined) { updates.push('is_public = ?'); values.push(isPublic !== false ? 1 : 0); }
+    if (isPaid !== undefined) { updates.push('is_paid = ?'); values.push(isPaid ? 1 : 0); }
+    if (images !== undefined) { updates.push('images = ?'); values.push(JSON.stringify(images)); }
+    if (qrCode !== undefined) { updates.push('qr_code = ?'); values.push(qrCode); }
+    if (memberList !== undefined) { updates.push('member_list = ?'); values.push(JSON.stringify(memberList)); }
+
+    if (updates.length === 0) {
+      return NextResponse.json({ success: false, error: '没有要更新的字段' }, { status: 400 });
+    }
+
+    updates.push('updated_at = ?');
+    values.push(now);
+    values.push(id);
+
     await pool.query(
-      `UPDATE communities SET 
-        name = ?,
-        summary = ?,
-        description = ?, 
-        category = ?, 
-        industry = ?,
-        cover_image = ?, 
-        is_public = ?, 
-        is_paid = ?, 
-        images = ?,
-        qr_code = ?,
-        member_list = ?,
-        updated_at = ?
-       WHERE id = ?`,
-      [
-        name || '',
-        summary || '',
-        description || '', 
-        category || '', 
-        industry || '',
-        coverImage || '', 
-        isPublic !== false ? 1 : 0, 
-        isPaid ? 1 : 0, 
-        JSON.stringify(images || []),
-        qrCode || '',
-        JSON.stringify(memberList || []),
-        now,
-        id
-      ]
+      `UPDATE communities SET ${updates.join(', ')} WHERE id = ?`,
+      values
     );
 
     return NextResponse.json({
