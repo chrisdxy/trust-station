@@ -61,10 +61,16 @@ export default function PublishManagementPage() {
   const qrInputRef = useRef<HTMLInputElement>(null);
   const descImageRef = useRef<HTMLInputElement>(null);
 
-  // 分类
+  // 分类（根据标签页动态切换）
   const adminCategories = useCategories();
   const communityCategories = adminCategories.community || [];
-  const categoryOptions = communityCategories.length > 0
+  const projectTypeCategories = adminCategories.project_type || [];
+  const activityCategories = adminCategories.activity || [];
+  const categoryOptions = activeTab === 'project'
+    ? projectTypeCategories.map((c: any) => ({ value: c.name, label: c.name }))
+    : activeTab === 'activity'
+    ? activityCategories.map((c: any) => ({ value: c.id, label: c.name }))
+    : communityCategories.length > 0
     ? communityCategories.map((c: any) => ({ value: c.id, label: c.name }))
     : [
         { value: '1', label: '商业合作' }, { value: '2', label: '技术交流' },
@@ -176,7 +182,8 @@ export default function PublishManagementPage() {
           coverImage: editForm.coverImage, qrCode: editForm.qrCode,
           isPublic: editForm.isPublic,
           maxMembers: editForm.maxMembers, rules: editForm.rules,
-          location: editForm.location, max_participants: editForm.max_participants
+          location: editForm.location, max_participants: editForm.max_participants,
+          types: activeTab === 'project' ? (editForm.types ? JSON.stringify([editForm.types]) : '[]') : undefined
         })
       });
       if (!res.ok) {
@@ -340,13 +347,24 @@ export default function PublishManagementPage() {
 
               {/* 3. 分类选择（radio网格） */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">分类</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  {activeTab === 'project' ? '项目类型' : '分类'}
+                </label>
                 {categoryOptions.length > 0 && (
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {categoryOptions.map(opt => (
-                      <label key={opt.value} className={`flex items-center justify-center p-2 border rounded-lg cursor-pointer text-sm ${editForm.category === opt.value ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600' : 'border-slate-200 dark:border-slate-600 hover:border-slate-300'}`}>
-                        <input type="radio" name="admin-cat" value={opt.value} checked={editForm.category === opt.value}
-                          onChange={e => setEditForm({ ...editForm, category: e.target.value })} className="sr-only" />{opt.label}
+                      <label key={opt.value} className={`flex items-center justify-center p-2 border rounded-lg cursor-pointer text-sm ${
+                        (activeTab === 'project' ? editForm.types === opt.value : editForm.category === opt.value)
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600'
+                        : 'border-slate-200 dark:border-slate-600 hover:border-slate-300'
+                      }`}>
+                        <input type="radio" name="admin-cat" value={opt.value}
+                          checked={activeTab === 'project' ? editForm.types === opt.value : editForm.category === opt.value}
+                          onChange={e => {
+                            if (activeTab === 'project') setEditForm({ ...editForm, types: e.target.value });
+                            else setEditForm({ ...editForm, category: e.target.value });
+                          }}
+                          className="sr-only" />{opt.label}
                       </label>
                     ))}
                   </div>

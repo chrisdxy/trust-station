@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       query += ` ORDER BY a.is_pinned DESC, a.sort_order ASC, a.created_at DESC LIMIT ? OFFSET ?`;
       params.push(limit, offset);
     } else if (type === 'project') {
-      query = `SELECT p.id, p.title as name, p.description as summary, p.description as description, p.user_id as owner_id, p.status,
+      query = `SELECT p.id, p.title as name, p.summary, p.description, p.industry, p.location, p.types, p.images, p.qr_code as qrCode, p.user_id as owner_id, p.status,
                       p.created_at,
                       p.is_pinned as is_pinned, p.sort_order as sort_order,
                       u.display_name as owner_name
