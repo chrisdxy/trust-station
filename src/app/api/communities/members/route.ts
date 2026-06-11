@@ -8,6 +8,7 @@ async function ensureTable() {
       community_id VARCHAR(50) NOT NULL,
       user_id VARCHAR(100) NOT NULL,
       user_name VARCHAR(100) DEFAULT '',
+      reason TEXT DEFAULT NULL,
       role ENUM('creator', 'admin', 'member') DEFAULT 'member',
       status ENUM('approved', 'pending', 'rejected') DEFAULT 'approved',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -18,6 +19,9 @@ async function ensureTable() {
       UNIQUE KEY uk_community_user (community_id, user_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   `);
+  // 兼容旧表：添加 reason 列（如果不存在）
+  try { await pool.query('ALTER TABLE community_members ADD COLUMN reason TEXT DEFAULT NULL AFTER user_name'); } catch {}
+  try { await pool.query('ALTER TABLE community_members ADD COLUMN status ENUM("approved","pending","rejected") DEFAULT "approved" AFTER role'); } catch {}
 }
 
 // GET: 获取社区成员列表，或获取待审批申请
@@ -78,7 +82,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await ensureTable();
-    const { communityId, userId, userName, action } = await request.json();
+    const { communityId, userId, userName, reason, action } = await request.json();
 
     if (!communityId || !userId) {
       return NextResponse.json(
@@ -146,8 +150,8 @@ export async function POST(request: NextRequest) {
       // 创建待审批的成员记录
       const id = 'cm-' + Date.now();
       await pool.query(
-        `INSERT INTO community_members (id, community_id, user_id, user_name, role, status) VALUES (?, ?, ?, ?, 'member', 'pending')`,
-        [id, communityId, userId, userName || '']
+        `INSERT INTO community_members (id, community_id, user_id, user_name, reason, role, status) VALUES (?, ?, ?, ?, ?, 'member', 'pending')`,
+        [id, communityId, userId, userName || '', reason || '']
       );
 
       return NextResponse.json({

@@ -62,6 +62,7 @@ export default function CommunitiesPage() {
   const [communities, setCommunities] = useState<Community[]>([]);
   const [joinedCommunities, setJoinedCommunities] = useState<string[]>([]);
   const [pendingCommunities, setPendingCommunities] = useState<string[]>([]);
+  const [joinReason, setJoinReason] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -559,6 +560,7 @@ export default function CommunitiesPage() {
           communityId: id,
           userId: currentUser.id,
           userName: currentUser.display_name || currentUser.phone || '用户',
+          reason: joinReason || '',
           action: isJoined ? 'leave' : 'join'
         })
       });
@@ -575,6 +577,7 @@ export default function CommunitiesPage() {
         } else if (data.status === 'pending') {
           // 提交申请成功，待审批
           setPendingCommunities([...pendingCommunities, id]);
+          setJoinReason('');
           alert('加入申请已提交，请等待管理员审批');
         } else {
           // 直接加入成功（兼容旧流程）
@@ -848,82 +851,15 @@ export default function CommunitiesPage() {
                       创建人：{community.ownerName}
                     </p>
                   )}
-                  {/* 操作按钮 */}
-                  <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
-                    {isCreatedByMe(community) && (
-                      <>
-                        <button
-                          onClick={e => {
-                            e.stopPropagation();
-                            console.log('编辑按钮点击', community);
-                            setEditingCommunity(community);
-                            setFormData({
-                              name: community.name,
-                              summary: community.summary || '',
-                              category: community.category,
-                              industry: community.industry || '',
-                              industryName: community.industryName || '',
-                              description: community.description,
-                              coverImage: community.coverImage || '',
-                              images: community.images,
-                              isPublic: community.isPublic,
-                              qrCode: community.qrCode || '',
-                              hosts: community.memberList.filter(m => m.role === 'admin').map(m => ({
-                                id: m.id || m.name,
-                                phone: m.phone || '',
-                                display_name: m.name,
-                                real_name: m.name,
-                                avatar_url: null
-                              }))
-                            });
-                            setCoverImagePreview(community.coverImage || '');
-                            uploadedCoverRef.current = '';
-                            setShowModal(true);
-                          }}
-                          className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"
-                          title="修改"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                      </>
-                    )}
-                    <button
-                      onClick={() => handleViewDetail(community)}
-                      className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg"
-                      title="详情"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    {!isCreatedByMe(community) && (
-                      <button
-                        onClick={e => {
-                          e.stopPropagation();
-                          handleJoin(community.id);
-                        }}
-                        className={`p-1.5 rounded-lg transition-colors ${
-                          pendingCommunities.includes(community.id)
-                            ? 'text-amber-500 cursor-not-allowed'
-                            : joinedCommunities.includes(community.id)
-                            ? 'text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/30'
-                            : 'text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30'
-                        }`}
-                        title={
-                          pendingCommunities.includes(community.id)
-                            ? '待审批'
-                            : joinedCommunities.includes(community.id)
-                            ? '退出'
-                            : '申请加入'
-                        }
-                      >
-                        {pendingCommunities.includes(community.id) ? (
-                          <Clock className="w-4 h-4" />
-                        ) : joinedCommunities.includes(community.id) ? (
-                          <LogOut className="w-4 h-4" />
-                        ) : (
-                          <UserPlus className="w-4 h-4" />
-                        )}
-                      </button>
-                    )}
+                  {/* 成员状态 */}
+                  <div className="mt-2 flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                    {isCreatedByMe(community) ? (
+                      <span className="text-xs px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full">创建者</span>
+                    ) : joinedCommunities.includes(community.id) ? (
+                      <span className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full">正式成员</span>
+                    ) : pendingCommunities.includes(community.id) ? (
+                      <span className="text-xs px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full">待审批</span>
+                    ) : null}
                   </div>
 
                   {/* 成员信息行 */}
@@ -1529,33 +1465,52 @@ export default function CommunitiesPage() {
                 </div>
 
                 <div className="p-4 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-3">
+                  {/* 加入/状态区域 */}
                   {selectedCommunity && !isCreatedByMe(selectedCommunity) && (
-                    <button
-                      onClick={() => {
-                        if (selectedCommunity) handleJoin(selectedCommunity.id);
-                      }}
-                      className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                        pendingCommunities.includes(selectedCommunity.id)
-                          ? 'bg-amber-100 text-amber-600 cursor-not-allowed'
-                          : joinedCommunities.includes(selectedCommunity.id)
-                          ? 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30'
-                          : 'bg-blue-600 hover:bg-blue-700 text-white'
-                      }`}
-                      disabled={pendingCommunities.includes(selectedCommunity.id)}
-                    >
-                      {pendingCommunities.includes(selectedCommunity.id)
-                        ? '待审批'
-                        : joinedCommunities.includes(selectedCommunity.id)
-                        ? '退出共同体'
-                        : '加入共同体'}
-                    </button>
+                    <div className="px-4 py-3 border-t border-slate-100 dark:border-slate-700">
+                      {pendingCommunities.includes(selectedCommunity.id) ? (
+                        <div className="flex items-center gap-2 text-amber-600">
+                          <Clock className="w-5 h-5" />
+                          <span className="font-medium">待审批</span>
+                        </div>
+                      ) : joinedCommunities.includes(selectedCommunity.id) ? (
+                        <div className="flex items-center gap-2 text-green-600">
+                          <CheckCircle className="w-5 h-5" />
+                          <span className="font-medium">正式成员</span>
+                        </div>
+                      ) : (
+                        <div>
+                          <textarea
+                            value={joinReason}
+                            onChange={e => setJoinReason(e.target.value)}
+                            placeholder="请填写加入理由，比如您的行业、专长以及为什么想加入该共同体..."
+                            rows={3}
+                            className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 resize-none mb-3"
+                          />
+                          <button
+                            onClick={() => {
+                              if (!joinReason.trim()) {
+                                alert('请填写加入理由');
+                                return;
+                              }
+                              handleJoin(selectedCommunity.id);
+                            }}
+                            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                          >
+                            提交申请
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   )}
-                  <button
-                    onClick={() => setShowDetailModal(false)}
-                    className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors"
-                  >
-                    关闭
-                  </button>
+                  <div className="flex justify-end p-4 border-t border-slate-100 dark:border-slate-700">
+                    <button
+                      onClick={() => setShowDetailModal(false)}
+                      className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors"
+                    >
+                      关闭
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1720,29 +1675,36 @@ function PendingApprovals({ communityId, onApprove }: { communityId: string; onA
       </h4>
       <div className="space-y-2">
         {requests.map((req: any) => (
-          <div key={req.id} className="flex items-center justify-between p-3 bg-white dark:bg-slate-700/50 rounded-lg">
-            <div>
-              <p className="font-medium text-sm text-slate-900 dark:text-white">
-                {req.display_name || req.real_name || req.user_name || req.user_id}
+          <div key={req.id} className="p-3 bg-white dark:bg-slate-700/50 rounded-lg">
+            <div className="flex items-start justify-between mb-2">
+              <div>
+                <p className="font-medium text-sm text-slate-900 dark:text-white">
+                  {req.display_name || req.real_name || req.user_name || req.user_id}
+                </p>
+                <p className="text-xs text-slate-400">{req.phone || ''}</p>
+              </div>
+              <div className="flex gap-2 flex-shrink-0 ml-2">
+                <button
+                  onClick={() => handleAction(req.id, 'approve')}
+                  disabled={processing === req.id}
+                  className="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs rounded-lg disabled:opacity-50"
+                >
+                  {processing === req.id ? '处理中...' : '通过'}
+                </button>
+                <button
+                  onClick={() => handleAction(req.id, 'reject')}
+                  disabled={processing === req.id}
+                  className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs rounded-lg disabled:opacity-50"
+                >
+                  拒绝
+                </button>
+              </div>
+            </div>
+            {req.reason && (
+              <p className="text-xs text-slate-500 bg-slate-50 dark:bg-slate-800/50 p-2 rounded mt-1">
+                申请理由：{req.reason}
               </p>
-              <p className="text-xs text-slate-400">{req.phone || ''}</p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleAction(req.id, 'approve')}
-                disabled={processing === req.id}
-                className="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs rounded-lg disabled:opacity-50"
-              >
-                {processing === req.id ? '处理中...' : '通过'}
-              </button>
-              <button
-                onClick={() => handleAction(req.id, 'reject')}
-                disabled={processing === req.id}
-                className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs rounded-lg disabled:opacity-50"
-              >
-                拒绝
-              </button>
-            </div>
+            )}
           </div>
         ))}
       </div>
