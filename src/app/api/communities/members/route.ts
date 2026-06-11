@@ -154,6 +154,18 @@ export async function POST(request: NextRequest) {
         [id, communityId, userId, userName || '', reason || '']
       );
 
+      // 推送给创建者通知
+      try {
+        const ownerId = community.owner_id;
+        if (ownerId) {
+          const notifId = 'notif-' + Date.now();
+          await pool.query(
+            `INSERT INTO notifications (id, user_id, type, title, content, reference_id, reference_name, actor_id, actor_name) VALUES (?, ?, 'community_join', ?, ?, ?, ?, ?, ?)`,
+            [notifId, ownerId, '新的共同体加入申请', `${userName || '用户'}申请加入「${community.name}」`, communityId, community.name, userId, userName || '用户']
+          );
+        }
+      } catch {}
+
       return NextResponse.json({
         success: true,
         message: '加入申请已提交，请等待管理员审批',

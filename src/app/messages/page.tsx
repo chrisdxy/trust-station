@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { UserCheck, UserX, MessageSquare, Clock, ChevronRight, Bell } from 'lucide-react';
+import { UserCheck, UserX, MessageSquare, Clock, ChevronRight, Bell, Users2, Eye } from 'lucide-react';
+import Link from 'next/link';
 import Layout from '@/components/Layout';
 
 interface FriendRequest {
@@ -25,6 +26,8 @@ export default function MessagesPage() {
   const router = useRouter();
   const { user: authUser } = useAuth();
   const [requests, setRequests] = useState<FriendRequest[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifLoading, setNotifLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'friends' | 'notifications'>('friends');
 
@@ -46,6 +49,28 @@ export default function MessagesPage() {
     const timer = setInterval(fetchRequests, 15000);
     return () => clearInterval(timer);
   }, [authUser?.id]);
+
+  const fetchNotifications = async () => {
+    if (!authUser?.id) return;
+    setNotifLoading(true);
+    try {
+      const res = await fetch(`/api/notifications?userId=${authUser.id}`);
+      const data = await res.json();
+      if (data.success) setNotifications(data.notifications || []);
+    } catch {} finally { setNotifLoading(false); }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'notifications') fetchNotifications();
+  }, [activeTab, authUser?.id]);
+
+  const markAllRead = async () => {
+    if (!authUser?.id) return;
+    try {
+      await fetch('/api/notifications', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: authUser.id }) });
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: 1 })));
+    } catch {}
+  };
 
   const handleAction = async (id: string, action: 'accept' | 'reject') => {
     try {
@@ -212,13 +237,59 @@ export default function MessagesPage() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center py-12"
             >
-              <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center">
-                <Bell className="w-8 h-8 text-slate-400" />
-              </div>
-              <p className="text-slate-500 dark:text-slate-400">暂无系统通知</p>
-              <p className="text-xs text-slate-400 mt-1">系统通知功能即将上线</p>
+              {notifications.length > 0 && (
+                <div className="flex justify-end mb-3">
+                  <button onClick={markAllRead} className="text-xs text-blue-600 hover:text-blue-700">全部标为已读</button>
+                </div>
+              )}
+              {notifLoading ? (
+                <div className="text-center py-12 text-slate-500">加载中...</div>
+              ) : notifications.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center">
+                    <Bell className="w-8 h-8 text-slate-400" />
+                  </div>
+                  <p className="text-slate-500 dark:text-slate-400">暂无系统通知</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {notifications.map((notif: any) => (
+                    <motion.div
+                      key={notif.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`p-4 rounded-xl border ${
+                        !notif.is_read ? 'bg-blue-50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-800' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          notif.type === 'community_join' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'
+                        }`}>
+                          {notif.type === 'community_join' ? <Users2 className="w-5 h-5" /> : <Bell className="w-5 h-5" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm text-slate-900 dark:text-white">{notif.title}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">{notif.content}</p>
+                          <p className="text-xs text-slate-400 mt-1">{formatTime(notif.created_at)}</p>
+                          {notif.type === 'community_join' && notif.reference_id && (
+                            <Link
+                              href={`/communities?highlight=${notif.reference_id}`}
+                              className="inline-flex items-center gap-1 mt-2 text-xs text-blue-600 hover:text-blue-700"
+                            >
+                              <Eye className="w-3 h-3" />查看共同体
+                            </Link>
+                          )}
+                        </div>
+                        {!notif.is_read && (
+                          <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></span>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </motion.div>
           )}
         </motion.div>

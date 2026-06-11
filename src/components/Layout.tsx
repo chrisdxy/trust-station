@@ -74,7 +74,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       try {
         const res = await fetch(`/api/friends?userId=${currentUser.id}&type=received`);
         const data = await res.json();
-        if (data.success) setMessageUnread(data.requests?.length || 0);
+        const friendCount = data.requests?.length || 0;
+        // 同时获取未读通知数
+        let notifCount = 0;
+        try {
+          const notifRes = await fetch(`/api/notifications?userId=${currentUser.id}&unread=true`);
+          const notifData = await notifRes.json();
+          notifCount = notifData.notifications?.length || 0;
+        } catch {}
+        setMessageUnread(friendCount + notifCount);
       } catch {}
     };
     fetchUnreadMessages();
