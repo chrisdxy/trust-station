@@ -185,6 +185,13 @@ export default function ProjectsPage() {
         method: 'POST',
         body: formData
       });
+      // 检查 HTTP 状态码（非 JSON 响应时提前拦截）
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        toast('上传失败: ' + (res.status === 413 ? '图片过大' : '服务器错误 ' + res.status));
+        console.error('Upload HTTP error:', res.status, text.substring(0, 200));
+        return;
+      }
       const data = await res.json();
       if (data.success) {
         setFormData(prev => ({ ...prev, coverImage: data.url }));
@@ -260,6 +267,12 @@ export default function ProjectsPage() {
           method: 'POST',
           body: formData
         });
+        if (!res.ok) {
+          const text = await res.text().catch(() => '');
+          toast('上传失败: ' + (res.status === 413 ? '图片过大' : '服务器错误 ' + res.status));
+          console.error('Upload HTTP error:', res.status, text.substring(0, 200));
+          continue;
+        }
         const data = await res.json();
         if (data.success) {
           const textarea = document.getElementById('project-description') as HTMLTextAreaElement;

@@ -285,6 +285,11 @@ export default function ActivitiesPage() {
         method: 'POST',
         body: formData
       });
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        alert('上传失败: ' + (res.status === 413 ? '图片过大' : '服务器错误 ' + res.status));
+        return;
+      }
       const data = await res.json();
       if (data.success && data.url) {
         setCoverImage(data.url);
