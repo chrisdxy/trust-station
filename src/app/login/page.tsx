@@ -304,9 +304,8 @@ function LoginPageContent() {
           return;
         }
 
-        // 登录成功后跳转：直接到发现伙伴（待处理的好友请求）
-          router.push('/dashboard');
-        }
+        // 登录成功后跳转：直接发现伙伴（待处理的好友请求）
+        router.push('/dashboard');
       } else {
         setError(data.error || '登录失败');
       }
