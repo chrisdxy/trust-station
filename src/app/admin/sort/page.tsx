@@ -428,7 +428,8 @@ export default function PublishManagementPage() {
                 />
               </div>
 
-              {/* 9. 社群二维码 */}
+              {/* 9. 社群二维码（仅共同体和活动需要） */}
+              {activeTab !== 'project' && (
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">社群二维码</label>
                 <input ref={qrInputRef} type="file" accept="image/*" onChange={handleQrUpload} className="hidden" />
@@ -445,6 +446,7 @@ export default function PublishManagementPage() {
                   </button>
                 </div>
               </div>
+              )}
 
               {/* 10. 公开/私密 */}
               <div>
