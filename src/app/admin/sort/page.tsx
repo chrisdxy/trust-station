@@ -183,7 +183,7 @@ export default function PublishManagementPage() {
           isPublic: editForm.isPublic,
           maxMembers: editForm.maxMembers, rules: editForm.rules,
           location: editForm.location, max_participants: editForm.max_participants,
-          types: activeTab === 'project' ? (editForm.types ? JSON.stringify([editForm.types]) : '[]') : undefined
+          types: activeTab === 'project' ? (editForm.types || '[]') : undefined
         })
       });
       if (!res.ok) {
@@ -345,28 +345,43 @@ export default function PublishManagementPage() {
                   className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white resize-none" />
               </div>
 
-              {/* 3. 分类选择（radio网格） */}
+              {/* 3. 分类选择（radio/checkbox） */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  {activeTab === 'project' ? '项目类型' : '分类'}
+                  {activeTab === 'project' ? '项目类型（可多选）' : '分类'}
                 </label>
                 {categoryOptions.length > 0 && (
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {categoryOptions.map(opt => (
+                    {categoryOptions.map(opt => {
+                      // 处理项目类型多选
+                      const isProjectSelected = activeTab === 'project' && (() => {
+                        try { const t = typeof editForm.types === 'string' ? JSON.parse(editForm.types) : (editForm.types || []); return Array.isArray(t) && t.includes(opt.value); } catch { return editForm.types === opt.value; }
+                      })();
+                      const isSelected = activeTab === 'project' ? isProjectSelected : editForm.category === opt.value;
+                      return (
                       <label key={opt.value} className={`flex items-center justify-center p-2 border rounded-lg cursor-pointer text-sm ${
-                        (activeTab === 'project' ? editForm.types === opt.value : editForm.category === opt.value)
+                        isSelected
                         ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600'
                         : 'border-slate-200 dark:border-slate-600 hover:border-slate-300'
                       }`}>
-                        <input type="radio" name="admin-cat" value={opt.value}
-                          checked={activeTab === 'project' ? editForm.types === opt.value : editForm.category === opt.value}
-                          onChange={e => {
-                            if (activeTab === 'project') setEditForm({ ...editForm, types: e.target.value });
-                            else setEditForm({ ...editForm, category: e.target.value });
+                        <input type={activeTab === 'project' ? 'checkbox' : 'radio'} name="admin-cat" value={opt.value}
+                          checked={isSelected}
+                          onChange={() => {
+                            if (activeTab === 'project') {
+                              try {
+                                const current = typeof editForm.types === 'string' ? JSON.parse(editForm.types) : (editForm.types || []);
+                                const arr = Array.isArray(current) ? current : [];
+                                const idx = arr.indexOf(opt.value);
+                                if (idx >= 0) arr.splice(idx, 1);
+                                else arr.push(opt.value);
+                                setEditForm({ ...editForm, types: JSON.stringify(arr) });
+                              } catch { setEditForm({ ...editForm, types: JSON.stringify([opt.value]) }); }
+                            } else setEditForm({ ...editForm, category: opt.value });
                           }}
                           className="sr-only" />{opt.label}
                       </label>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

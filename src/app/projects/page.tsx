@@ -61,6 +61,8 @@ export default function ProjectsPage() {
   const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
   const [selectedMembers, setSelectedMembers] = useState<UserSearchResult[]>([]);
   
   // Filter states
@@ -161,12 +163,20 @@ export default function ProjectsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     
+    // 前端校验文件大小（超过 10MB 提前提示）
+    if (file.size > 10 * 1024 * 1024) {
+      toast('图片大小不能超过 10MB');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = e => {
       setCoverImagePreview((e.target as FileReader).result as string);
     };
     reader.readAsDataURL(file);
 
+    setUploadingCover(true);
     // Upload to server
     const formData = new FormData();
     formData.append('file', file);
@@ -187,6 +197,8 @@ export default function ProjectsPage() {
     } catch (err) {
       console.error('Upload failed:', err);
       toast('图片上传失败，请重试');
+    } finally {
+      setUploadingCover(false);
     }
   };
 
@@ -235,6 +247,12 @@ export default function ProjectsPage() {
     
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
+      // 前端校验文件大小
+      if (file.size > 10 * 1024 * 1024) {
+        toast('图片大小不能超过 10MB');
+        continue;
+      }
+      setUploadingImages(true);
       const formData = new FormData();
       formData.append('file', file);
       try {
@@ -258,6 +276,8 @@ export default function ProjectsPage() {
       } catch (err) {
         console.error('Upload failed:', err);
         toast('图片上传失败，请重试');
+      } finally {
+        setUploadingImages(false);
       }
     }
     // 重置文件输入框，防止手机端显示长文件名
