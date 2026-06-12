@@ -320,6 +320,20 @@ export default function ActivitiesPage() {
     fetch('/api/communities').then(r => r.json()).then(d => {
       if (d.success) setCommunities((d.communities || []).map((c: any) => ({ id: c.id, name: c.name })));
     }).catch(() => {});
+    // 处理微信分享链接中的 ?view=xxx，自动打开活动详情
+    const viewId = new URLSearchParams(window.location.search).get('view');
+    if (viewId) {
+      // 先直接获取活动详情
+      fetch(`/api/activities/${viewId}${user?.id ? '?userId=' + user.id : ''}`)
+        .then(r => r.json())
+        .then(d => {
+          if (d.success) {
+            const act = d.activity;
+            setDetailActivity({ ...act, my_registration_status: d.registration?.status, is_organizer_member: act.is_organizer_member });
+          }
+        })
+        .catch(() => {});
+    }
   }, []);
 
   // 筛选条件变化时自动刷新
@@ -828,7 +842,7 @@ export default function ActivitiesPage() {
               className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
               onClick={closeDetail}
             >
-              <WeChatShareSetup title={detailActivity.title} description={detailActivity.description?.replace(/<[^>]*>/g, '').slice(0, 200)} imageUrl={detailActivity.cover_image || ''} />
+              <WeChatShareSetup title={detailActivity.title} description={detailActivity.description?.replace(/<[^>]*>/g, '').slice(0, 200)} imageUrl={detailActivity.cover_image || ''} link={window.location.origin + '/activities?view=' + detailActivity.id} />
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
                 className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 relative"
