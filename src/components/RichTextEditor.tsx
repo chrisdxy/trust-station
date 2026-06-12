@@ -179,14 +179,36 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           onFocus={() => { try { if (editorRef.current && !editorRef.current.innerHTML) editorRef.current.innerHTML = value || ''; } catch (e) {} }}
           onBlur={() => { try { handleInput(); } catch (e) {} }}
           onInput={handleInput}
-          className="min-h-[200px] p-4 outline-none text-sm"
+          className="min-h-[200px] p-4 outline-none"
           data-placeholder={placeholder}
           style={{ minHeight: '200px' }}
         />
       ) : (
-        <div className="min-h-[200px] p-4 text-sm text-slate-400">{placeholder}</div>
+        <div className="min-h-[200px] p-4 text-slate-400" style={{ fontSize: '12pt', lineHeight: '1.4' }}>{placeholder}</div>
       )}
       <style>{`
+        [contenteditable] {
+          font-size: 12pt !important;
+          line-height: 1.4 !important;
+        }
+        [contenteditable] p {
+          text-indent: 2em;
+          margin: 0.4em 0;
+        }
+        [contenteditable] h2 {
+          text-indent: 0;
+        }
+        [contenteditable] ul, [contenteditable] ol {
+          text-indent: 0;
+          padding-left: 3em;
+          margin: 0.4em 0;
+        }
+        [contenteditable] li {
+          text-indent: 0;
+        }
+        [contenteditable] img {
+          text-indent: 0;
+        }
         [contenteditable][data-placeholder]:empty:before {
           content: attr(data-placeholder);
           color: #94a3b8;
@@ -196,8 +218,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         [contenteditable] img { max-width: 100%; height: auto; margin: 0.5em 0; border-radius: 0.5rem; }
         [contenteditable] a { color: #3b82f6; text-decoration: underline; }
         [contenteditable] ul, [contenteditable] ol { padding-left: 1.5em; margin: 0.5em 0; }
-        [contenteditable] h2 { font-size: 1.25em; font-weight: bold; margin: 0.5em 0; }
-        [contenteditable] p { margin: 0.3em 0; }
+        [contenteditable] h2 { font-size: 1.5em; font-weight: bold; margin: 0.6em 0; }
       `}</style>
     </div>
   );
