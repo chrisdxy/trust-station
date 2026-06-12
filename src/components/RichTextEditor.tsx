@@ -44,36 +44,48 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = 'image/*';
+      input.multiple = true;
       input.onchange = async e => {
-        const file = (e.target as HTMLInputElement).files?.[0];
-        if (!file) return;
-        // 上传到服务器
-        const fd = new FormData();
-        fd.append('file', file);
-        try {
-          const res = await fetch('/api/upload', { method: 'POST', body: fd });
-          const data = await res.json();
-          if (data.success) {
-            const img = document.createElement('img');
-            img.src = data.url;
-            img.style.maxWidth = '100%';
-            img.style.height = 'auto';
-            if (!editorRef.current) return;
-            editorRef.current.focus();
-            const selection = window.getSelection();
-            if (selection?.rangeCount) {
-              const range = selection.getRangeAt(0);
-              range.insertNode(img);
-              range.collapse(false);
-            } else {
-              editorRef.current.appendChild(img);
-            }
-            handleInput();
-          } else {
-            alert(data.error || '上传图片失败');
+        const files = (e.target as HTMLInputElement).files;
+        if (!files || files.length === 0) return;
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          if (file.size > 10 * 1024 * 1024) {
+            alert(file.name + ' 大小超过 10MB，已跳过');
+            continue;
           }
-        } catch (err) {
-          alert('上传图片失败');
+          const fd = new FormData();
+          fd.append('file', file);
+          try {
+            const res = await fetch('/api/upload', { method: 'POST', body: fd });
+            if (!res.ok) {
+              const txt = await res.text().catch(() => '');
+              alert(file.name + ' 上传失败: ' + (res.status === 413 ? '图片过大' : '错误 ' + res.status));
+              continue;
+            }
+            const data = await res.json();
+            if (data.success) {
+              const img = document.createElement('img');
+              img.src = data.url;
+              img.style.maxWidth = '100%';
+              img.style.height = 'auto';
+              if (!editorRef.current) continue;
+              editorRef.current.focus();
+              const selection = window.getSelection();
+              if (selection?.rangeCount) {
+                const range = selection.getRangeAt(0);
+                range.insertNode(img);
+                range.collapse(false);
+              } else {
+                editorRef.current.appendChild(img);
+              }
+              handleInput();
+            } else {
+              alert(file.name + ': ' + (data.error || '上传图片失败'));
+            }
+          } catch (err) {
+            alert(file.name + ' 上传图片失败');
+          }
         }
       };
       input.click();
