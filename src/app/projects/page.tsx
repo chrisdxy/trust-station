@@ -157,6 +157,28 @@ export default function ProjectsPage() {
       loadProjects();
     }
   }, [isAuthChecked, currentUserId]);
+
+  // 处理 ?view=xxx 自动打开项目详情
+  useEffect(() => {
+    if (!isAuthChecked) return;
+    const viewId = new URLSearchParams(window.location.search).get('view');
+    if (viewId) {
+      fetch(`/api/projects?id=${viewId}`)
+        .then(r => r.json())
+        .then(d => {
+          if (d.success) {
+            const p = d.project || d;
+            setSelectedProject(p);
+          } else {
+            fetch(`/api/projects/${viewId}`)
+              .then(r => r.json())
+              .then(d2 => { if (d2.success) setSelectedProject(d2.project || d2); })
+              .catch(() => {});
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isAuthChecked]);
   
   // Handle cover image upload
   const handleCoverImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1153,7 +1175,7 @@ export default function ProjectsPage() {
         <AnimatePresence>
           {selectedProject && (
             <>
-              <WeChatShareSetup title={selectedProject?.title} description={(selectedProject?.summary || selectedProject?.description || '').replace(/<[^>]*>/g, '').slice(0, 200)} imageUrl={selectedProject?.coverImage || ''} />
+              <WeChatShareSetup title={selectedProject?.title} description={(selectedProject?.summary || selectedProject?.description || '').replace(/<[^>]*>/g, '').slice(0, 200)} imageUrl={selectedProject?.coverImage || ''} link={window.location.origin + '/projects?view=' + selectedProject?.id} />
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

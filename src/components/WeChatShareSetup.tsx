@@ -91,12 +91,13 @@ export function WeChatShareSetup({
 
     return () => {
       // 组件卸载时更新分享数据回默认值
-      if (mountedRef.current) return;
-      try {
-        const defaultData = { title: "正道驿站", desc: "全球商业信任共建社区", link: window.location.href, imgUrl: window.location.origin + "/uploads/logo.jpg" };
-        window.wx?.updateAppMessageShareData?.(defaultData);
-        window.wx?.updateTimelineShareData?.(defaultData);
-      } catch {}
+      if (!mountedRef.current) {
+        try {
+          const defaultData = { title: "正道驿站", desc: "全球商业信任共建社区", link: window.location.href, imgUrl: window.location.origin + "/uploads/logo.jpg" };
+          window.wx?.updateAppMessageShareData?.(defaultData);
+          window.wx?.updateTimelineShareData?.(defaultData);
+        } catch {}
+      }
     };
   }, [title, description, link, imageUrl]);
 

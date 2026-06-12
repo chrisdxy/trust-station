@@ -1222,7 +1222,7 @@ export default function CommunitiesPage() {
 
       {showDetailModal && selectedCommunity && (
         <>
-          <WeChatShareSetup title={selectedCommunity.name} description={selectedCommunity.summary || selectedCommunity.description?.replace(/<[^>]*>/g, '').slice(0, 200)} imageUrl={selectedCommunity.coverImage || selectedCommunity.images?.[0] || ''} />
+          <WeChatShareSetup title={selectedCommunity.name} description={selectedCommunity.summary || selectedCommunity.description?.replace(/<[^>]*>/g, '').slice(0, 200)} imageUrl={selectedCommunity.coverImage || selectedCommunity.images?.[0] || ''} link={window.location.origin + '/communities?view=' + selectedCommunity.id} />
           <div
             className="fixed inset-0 bg-black/50 z-50"
             onClick={() => setShowDetailModal(false)}
