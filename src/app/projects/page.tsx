@@ -73,6 +73,24 @@ export default function ProjectsPage() {
   const [aiSearchQuery, setAiSearchQuery] = useState('');
   const [aiSearching, setAiSearching] = useState(false);
   const [aiSearchResult, setAiSearchResult] = useState('');
+  const [followedProjects, setFollowedProjects] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('followedProjects');
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
+
+  // 关注/取消关注项目
+  const toggleFollow = (projectId: string) => {
+    setFollowedProjects(prev => {
+      const updated = prev.includes(projectId)
+        ? prev.filter(id => id !== projectId)
+        : [...prev, projectId];
+      localStorage.setItem('followedProjects', JSON.stringify(updated));
+      return updated;
+    });
+  };
   const [dueDiligenceFilter, setDueDiligenceFilter] = useState<'none' | 'due' | 'not_due'>('not_due');
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   
@@ -464,7 +482,7 @@ export default function ProjectsPage() {
   const filteredProjects = projects.filter(project => {
     // Tab filter
     if (activeTab === 'created' && project.creatorId !== currentUserId) return false;
-    // Note: 'following' tab needs backend support for follow status
+    if (activeTab === 'following' && !followedProjects.includes(project.id)) return false;
     
     // Search filter
     if (searchQuery) {
@@ -571,7 +589,7 @@ export default function ProjectsPage() {
                       setAiSearchResult('');
                       try {
                         const projectsList = projects.map(p => ({
-                          title: p.title, industry: p.industry, types: p.types,
+                          title: p.title, id: p.id, industry: p.industry, types: p.types,
                           location: p.location, summary: p.summary, status: p.status
                         }));
                         const res = await fetch('/api/ai', {
@@ -579,9 +597,9 @@ export default function ProjectsPage() {
                           body: JSON.stringify({
                             action: 'match',
                             prompt: `根据用户需求"${aiSearchQuery}"，从以下项目中推荐最匹配的3-5个项目，按匹配度排序。每个推荐需说明匹配理由。
-返回格式：每行"项目名称 | 匹配度% | 匹配理由"`,
-                            context: JSON.stringify(projectsList),
-                            content: '项目列表如上，请匹配推荐'
+返回格式：每行"项目名称（ID:项目ID）| 匹配度% | 匹配理由"`,
+                            context: `项目列表：${projectsList.map(p => `ID:${p.id} ${p.title} [${(p.types||[]).join(',')}] ${p.location||''} ${p.industry||''}`).join('\n')}`,
+                            content: '请匹配推荐'
                           })
                         });
                         const data = await res.json();
@@ -606,7 +624,7 @@ export default function ProjectsPage() {
                 setAiSearchResult('');
                 try {
                   const projectsList = projects.map(p => ({
-                    title: p.title, industry: p.industry, types: p.types,
+                    title: p.title, id: p.id, industry: p.industry, types: p.types,
                     location: p.location, summary: p.summary, status: p.status
                   }));
                   const res = await fetch('/api/ai', {
@@ -614,9 +632,9 @@ export default function ProjectsPage() {
                     body: JSON.stringify({
                       action: 'match',
                       prompt: `根据用户需求"${aiSearchQuery}"，从以下项目中推荐最匹配的3-5个项目，按匹配度排序。每个推荐需说明匹配理由。
-返回格式：每行"项目名称 | 匹配度% | 匹配理由"`,
-                      context: JSON.stringify(projectsList),
-                      content: '项目列表如上，请匹配推荐'
+返回格式：每行"项目名称（ID:项目ID）| 匹配度% | 匹配理由"`,
+                      context: `项目列表：${projectsList.map(p => `ID:${p.id} ${p.title} [${(p.types||[]).join(',')}] ${p.location||''} ${p.industry||''}`).join('\n')}`,
+                      content: '请匹配推荐'
                     })
                   });
                   const data = await res.json();
@@ -636,7 +654,38 @@ export default function ProjectsPage() {
             {aiSearchResult && (
               <div className="mt-3 p-4 bg-white dark:bg-slate-800 rounded-xl border border-indigo-100 dark:border-indigo-800">
                 <div className="text-xs font-medium text-indigo-600 dark:text-indigo-400 mb-2">匹配结果</div>
-                <div className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{aiSearchResult}</div>
+                <div className="space-y-2">
+                  {aiSearchResult.split('\n').filter(Boolean).map((line, i) => {
+                    const idMatch = line.match(/ID:([a-f0-9-]+)/i);
+                    const parts = line.split('|').map(s => s.trim());
+                    const title = (parts[0] || '').replace(/\s*（?ID:[a-f0-9-]+）?\s*/i, '').trim();
+                    const score = parts[1] || '';
+                    const reason = parts[2] || '';
+                    const projectId = idMatch ? idMatch[1] : '';
+                    return (
+                      <div key={i} className="flex items-start gap-3 p-3 bg-indigo-50/50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800 hover:bg-indigo-100/50 dark:hover:bg-indigo-900/30 transition-colors">
+                        <span className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-800 text-indigo-600 dark:text-indigo-300 text-xs font-medium flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {projectId ? (
+                              <button onClick={() => {
+                                const p = projects.find(pr => pr.id === projectId);
+                                if (p) setSelectedProject(p);
+                              }}
+                                className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:underline truncate text-left">
+                                {title || line}
+                              </button>
+                            ) : (
+                              <span className="text-sm font-medium text-slate-800 dark:text-slate-200">{title || line}</span>
+                            )}
+                            {score && <span className="text-xs text-green-600 bg-green-100 dark:bg-green-900/30 px-1.5 py-0.5 rounded font-medium">{score}</span>}
+                          </div>
+                          {reason && <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{reason}</p>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
@@ -792,9 +841,21 @@ export default function ProjectsPage() {
                   )}
                   <div className="p-5">
                     {/* 标题 */}
-                    <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors text-base mb-2 line-clamp-1">
-                      {project.title}
-                    </h3>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors text-base line-clamp-1 flex-1">
+                        {project.title}
+                      </h3>
+                      <button onClick={e => { e.stopPropagation(); toggleFollow(project.id); }}
+                        className={`ml-2 p-1.5 rounded-lg transition-all flex-shrink-0 ${
+                          followedProjects.includes(project.id)
+                            ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-500'
+                            : 'text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20'
+                        }`}
+                        title={followedProjects.includes(project.id) ? '取消关注' : '关注项目'}
+                      >
+                        <Star className={`w-4 h-4 ${followedProjects.includes(project.id) ? 'fill-amber-500' : ''}`} />
+                      </button>
+                    </div>
 
                     {/* 创建人 + 创建时间 */}
                     <div className="flex items-center gap-3 text-xs text-slate-400 mb-2">
