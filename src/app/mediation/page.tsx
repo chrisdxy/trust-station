@@ -1,11 +1,12 @@
 "use client";
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Scale, FileText, Users, Clock, CheckCircle, XCircle, Plus, X, Loader2, AlertTriangle, User, Image, Upload, Search } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserSelect, UserSearchResult } from '@/components/UserSelect';
+import AISummary from '@/components/AISummary';
 
 interface Mediation {
   id: string;
@@ -71,6 +72,10 @@ export default function MediationPage() {
   // 证据文件
   const [evidenceFiles, setEvidenceFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 沟通记录
+  const [replies, setReplies] = useState<{ id: string; sender_name: string; content: string; created_at?: string }[]>([]);
+  const allRepliesText = useMemo(() => replies.map(r => `${r.sender_name}: ${r.content}`).join('\n'), [replies]);
 
   // 记录搜索
   const [recordSearchTerm, setRecordSearchTerm] = useState('');
@@ -634,7 +639,10 @@ export default function MediationPage() {
                   )}
 
                   <div>
-                    <p className="text-sm text-slate-500 mb-1">协调原因</p>
+                    <p className="text-sm text-slate-500 mb-1 flex items-center gap-2">
+                      <span>协调原因</span>
+                      <AISummary content={selectedMediation.reason || ''} context="这是纠纷协调中心的协调申请内容" label="AI 分析摘要" />
+                    </p>
                     <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
                       {selectedMediation.reason}
                     </p>
@@ -666,6 +674,35 @@ export default function MediationPage() {
                       </p>
                     </div>
                   )}
+
+                  {/* 沟通记录区域：展示调解员与申请方/被协调方之间的交流记录 */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm text-slate-500 font-medium">沟通记录</p>
+                      <AISummary
+                        content={allRepliesText}
+                        prompt="请总结以上协调沟通记录，提取关键争议点和已达成共识的事项"
+                        label="AI 沟通总结"
+                      />
+                    </div>
+                    <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-4">
+                      {replies.length === 0 ? (
+                        <p className="text-sm text-slate-400 text-center py-4">暂无沟通记录</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {replies.map((reply) => (
+                            <div key={reply.id} className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{reply.sender_name}</span>
+                                <span className="text-xs text-slate-400">{reply.created_at ? new Date(reply.created_at).toLocaleString('zh-CN') : ''}</span>
+                              </div>
+                              <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{reply.content}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
                   {selectedMediation.created_at && (
                     <div className="pt-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-500">

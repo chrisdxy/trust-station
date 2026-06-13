@@ -6,6 +6,7 @@ import { Globe, User, Building, Award, Search, X, MapPin, Mail, Phone, Star, Shi
 import Layout from '@/components/Layout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { Sparkles, Loader2 } from 'lucide-react';
 
 type CardType = 'personal' | 'enterprise' | 'expert' | 'coach' | 'partner';
 type PageTab = 'browse' | 'requests' | 'friends';
@@ -111,6 +112,8 @@ function PeopleContent() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [friends, setFriends] = useState<FriendRequest[]>([]);
   const [friendsLoading, setFriendsLoading] = useState(false);
+  const [aiRecommendations, setAiRecommendations] = useState<any[]>([]);
+  const [aiLoading, setAiLoading] = useState(false);
 
   // 获取好友清单
   const fetchFriends = useCallback(async () => {
@@ -376,6 +379,57 @@ function PeopleContent() {
         {/* 浏览伙伴列表 - 基于名片 */}
         {pageTab === 'browse' && (
           <div className="max-w-7xl mx-auto px-4 pb-12">
+            {/* AI 推荐区域 */}
+            {pageTab === 'browse' && (
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-purple-500" />AI 为你推荐
+                  </h3>
+                  <button onClick={async () => {
+                    setAiLoading(true);
+                    try {
+                      const profiles = cards.map(u => ({ name: u.display_name || u.real_name, industry: u.industry, bio: u.bio })).slice(0, 20);
+                      const res = await fetch('/api/ai', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          action: 'match',
+                          prompt: '根据我的信息，从以下候选人中推荐最值得认识合作的3-5位，按匹配度排序。返回格式：每行"人选 | 匹配度% | 推荐理由"',
+                          context: `候选名单：${JSON.stringify(profiles)}`,
+                          content: '请推荐最匹配的合作人选。',
+                        }),
+                      });
+                      const data = await res.json();
+                      if (data.success) {
+                        const lines = data.result.split('\n').filter(Boolean);
+                        setAiRecommendations(lines);
+                      }
+                    } catch {} finally { setAiLoading(false); }
+                  }} disabled={aiLoading}
+                    className="text-xs text-purple-600 hover:text-purple-700 font-medium flex items-center gap-1">
+                    {aiLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                    {aiLoading ? '分析中...' : '生成推荐'}
+                  </button>
+                </div>
+                {aiRecommendations.length > 0 && (
+                  <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl p-4 border border-purple-100 dark:border-purple-800">
+                    {aiRecommendations.map((line, i) => {
+                      const parts = line.split('|').map(s => s.trim());
+                      return (
+                        <div key={i} className="flex items-center gap-3 py-2 border-b border-purple-100 dark:border-purple-800 last:border-0">
+                          <span className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-800 text-purple-600 dark:text-purple-300 text-xs font-medium flex items-center justify-center">{i + 1}</span>
+                          <div className="flex-1">
+                            <span className="text-sm font-medium text-slate-800 dark:text-slate-200">{parts[0] || line}</span>
+                            {parts[1] && <span className="ml-2 text-xs text-green-600 bg-green-100 dark:bg-green-900/30 px-1.5 py-0.5 rounded">{parts[1]}</span>}
+                            {parts[2] && <p className="text-xs text-slate-500 mt-0.5">{parts[2]}</p>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
             {loading ? (
               <div className="flex items-center justify-center py-20">
                 <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" />

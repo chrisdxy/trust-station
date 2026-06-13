@@ -7,6 +7,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useCategories, Category } from '@/hooks/useCategories';
 import { UserSelect, UserSearchResult } from '@/components/UserSelect';
 import { WeChatShareSetup } from '@/components/WeChatShareSetup';
+import AIWriter from '@/components/AIWriter';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 
 // Simple Toast Component
 function Toast({ message, visible }: { message: string; visible: boolean }) {
@@ -88,6 +90,8 @@ export default function ProjectsPage() {
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [isAuthChecked, setIsAuthChecked] = useState(false);
+  const [riskResult, setRiskResult] = useState('');
+  const [riskLoading, setRiskLoading] = useState(false);
   
   // 安全日期格式化
   const safeDate = (dateStr: string | null | undefined) => {
@@ -955,9 +959,33 @@ export default function ProjectsPage() {
 
                     {/* Description */}
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                        项目详情
-                      </label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                          项目详情
+                        </label>
+                        <button type="button" onClick={async () => {
+                          if (!formData.description.trim()) { alert('请先填写项目描述'); return; }
+                          setRiskLoading(true);
+                          setRiskResult('');
+                          try {
+                            const res = await fetch('/api/ai', {
+                              method: 'POST', headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                action: 'analyze',
+                                content: formData.description,
+                                prompt: '请分析以上项目描述，检测是否存在以下风险：1）虚假或夸大承诺 2）模糊不清的描述 3）潜在的合规问题。逐项列出风险并给出改进建议。返回格式：风险项 | 风险等级(高/中/低) | 改进建议',
+                                context: '这是用户发布的合作项目描述，需要做风险审核',
+                              }),
+                            });
+                            const data = await res.json();
+                            if (data.success) setRiskResult(data.result);
+                          } catch {} finally { setRiskLoading(false); }
+                        }} disabled={riskLoading}
+                          className="text-xs text-red-600 hover:text-red-700 font-medium flex items-center gap-1 px-2 py-1 bg-red-50 dark:bg-red-900/30 rounded-lg border border-red-200 dark:border-red-800">
+                          {riskLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <AlertTriangle className="w-3 h-3" />}
+                          风险检测
+                        </button>
+                      </div>
                       <div className="border border-slate-200 dark:border-slate-600 rounded-lg overflow-hidden">
                         <div className="flex items-center gap-1 p-2 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-600">
                           <button
@@ -1021,6 +1049,12 @@ export default function ProjectsPage() {
                       <p className="mt-1 text-xs text-slate-400">
                         支持格式：**加粗**、*斜体*、- 列表、[文字](链接)
                       </p>
+                    {riskResult && (
+                      <div className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
+                        <div className="font-medium text-red-600 mb-1 flex items-center gap-1"><AlertTriangle className="w-4 h-4" />风险检测结果</div>
+                        {riskResult}
+                      </div>
+                    )}
                     </div>
 
                     {/* Due Diligence Toggle */}

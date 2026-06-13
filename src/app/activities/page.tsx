@@ -5,6 +5,7 @@ import { Calendar, Plus, MapPin, Users, Clock, Search, Loader2, X, User, Edit, T
 import Layout from '@/components/Layout';
 import { WeChatShareSetup } from '@/components/WeChatShareSetup';
 import RichTextEditor from '@/components/RichTextEditor';
+import AIWriter from '@/components/AIWriter';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserSelect, UserSearchResult } from '@/components/UserSelect';
@@ -819,7 +820,15 @@ export default function ActivitiesPage() {
                     )}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">活动描述</label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">活动描述</label>
+                      <AIWriter
+                        onResult={(text) => setEditorContent(text)}
+                        prompt="请为活动撰写一段吸引人的介绍，包括活动亮点、参与价值、适合人群。要求语言有感染力、真实可信。"
+                        label="AI 活动介绍"
+                        buttonText="AI 写活动介绍"
+                      />
+                    </div>
                     <RichTextEditor placeholder="请输入活动描述，支持富文本格式，可插入图片..." value={editorContent} onChange={setEditorContent} />
                   </div>
                 </div>
@@ -988,7 +997,16 @@ export default function ActivitiesPage() {
                     <input value={editForm.location} onChange={e => setEditForm({ ...editForm, location: e.target.value })} placeholder="请输入活动地点" className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">活动描述</label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">活动描述</label>
+                      <AIWriter
+                        onResult={(text) => setEditForm({ ...editForm, description: text })}
+                        prompt="请为活动撰写一段吸引人的介绍，包括活动亮点、参与价值、适合人群。要求语言有感染力、真实可信。"
+                        context={`活动标题：${editForm.title}，时间：${editForm.start_time}，地点：${editForm.location}`}
+                        label="AI 活动介绍"
+                        buttonText="AI 写活动介绍"
+                      />
+                    </div>
                     <RichTextEditor placeholder="请输入活动描述..." value={editForm.description} onChange={v => setEditForm({ ...editForm, description: v })} />
                   </div>
                   {/* 封面图片 */}

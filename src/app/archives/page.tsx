@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  FileText, Key, Search, X, Loader2, Plus,
+  FileText, Key, Search, X, Loader2, Plus, Sparkles,
   Calendar, Shield, Clock, CheckCircle, Eye, EyeOff, Trash2, Pencil,
   Users, MessageSquare, AlertCircle, Scale, ChevronDown, Check, Copy
 } from 'lucide-react';
@@ -11,6 +11,7 @@ import RichTextEditor from '@/components/RichTextEditor';
 import { UserSelect, UserSearchResult } from '@/components/UserSelect';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import AISummary from '@/components/AISummary';
 
 // 会话过期时间（ms）
 const SESSION_SHORT = 30 * 60 * 1000; // 30分钟
@@ -65,6 +66,8 @@ export default function ArchivesPage() {
   const [authorizations, setAuthorizations] = useState<Authorization[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [aiTimeline, setAiTimeline] = useState('');
+  const [timelineLoading, setTimelineLoading] = useState(false);
 
   // 弹窗状态
   const [showAddRecordModal, setShowAddRecordModal] = useState(false);
@@ -1136,7 +1139,45 @@ export default function ArchivesPage() {
             <div className="space-y-6">
               {/* 认知留痕 */}
               {activeTab === 'records' && (
-                filteredRecords.length === 0 ? (
+                <>
+              {/* AI 信任履历分析 */}
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-2xl p-5 mb-6 border border-amber-200 dark:border-amber-700">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4" />AI 信任履历分析
+                  </h3>
+                  <button onClick={async () => {
+                    setTimelineLoading(true);
+                    try {
+                      const recordsText = records.map((r: any) => `[${r.created_at || ''}] ${r.title || ''}: ${(r.content || '').slice(0, 100)}`).join('\n');
+                      const res = await fetch('/api/ai', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          action: 'analyze',
+                          content: recordsText || '暂无记录',
+                          prompt: '请根据以上认知留痕记录，生成一份简洁的「信任履历」时间线分析。提取关键事件、合作方、时间节点，评估信任建立趋势。返回格式：时间线段落 + 总体评价。',
+                          context: '这是用户在正道驿站平台的认知留痕记录中心数据',
+                        }),
+                      });
+                      const data = await res.json();
+                      if (data.success) setAiTimeline(data.result);
+                    } catch {} finally { setTimelineLoading(false); }
+                  }} disabled={timelineLoading}
+                    className="text-xs text-amber-600 hover:text-amber-700 font-medium flex items-center gap-1 px-3 py-1.5 bg-white dark:bg-amber-900/30 rounded-lg border border-amber-200 dark:border-amber-700">
+                    {timelineLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Clock className="w-3.5 h-3.5" />}
+                    {timelineLoading ? '分析中...' : '生成信任履历'}
+                  </button>
+                </div>
+                {aiTimeline && (
+                  <div className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed bg-white dark:bg-slate-800 rounded-xl p-4 border border-amber-100 dark:border-amber-800">
+                    {aiTimeline}
+                  </div>
+                )}
+                {!aiTimeline && !timelineLoading && (
+                  <p className="text-xs text-amber-500">点击上方按钮，AI 将分析你的所有认知留痕记录，自动生成信任履历时间线</p>
+                )}
+              </div>
+                {filteredRecords.length === 0 ? (
                   <div className="text-center py-20 text-slate-500">
                     <FileText className="w-16 h-16 mx-auto mb-4 text-slate-300" />
                     <p>暂无记录</p>
@@ -1187,7 +1228,8 @@ export default function ArchivesPage() {
                       </motion.div>
                     ))}
                   </div>
-                )
+                )}
+              </>
               )}
 
               {/* 授权记录 */}

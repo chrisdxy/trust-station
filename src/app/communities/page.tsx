@@ -8,6 +8,7 @@ import { useCategories, Category } from '@/hooks/useCategories';
 import { UserSelect, UserSearchResult } from '@/components/UserSelect';
 import { IndustrySelect } from '@/components/IndustrySelect';
 import { WeChatShareSetup } from '@/components/WeChatShareSetup';
+import AIWriter from '@/components/AIWriter';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
@@ -1108,6 +1109,14 @@ export default function CommunitiesPage() {
                           <ImageIcon className="w-4 h-4" />
                         </button>
                         <input ref={descImageRef} type="file" accept="image/*" onChange={handleDescImageUpload} className="hidden" />
+                        <div className="flex-1" />
+                        <AIWriter
+                          onResult={(text) => setFormData({ ...formData, description: text })}
+                          prompt="请为共同体撰写一份吸引人的介绍，包括共同体宗旨、目标人群、活动形式和加入价值。要求语言真诚、有感染力。"
+                          context={`共同体名称：${formData.name}，概要：${formData.summary}，当前已有内容：${(formData.description || '').slice(0, 200)}`}
+                          label="AI 写介绍"
+                          buttonText="AI 写介绍"
+                        />
                       </div>
                       <textarea
                         id="community-description"

@@ -7,6 +7,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import { useCategories } from '@/hooks/useCategories';
+import AIWriter from '@/components/AIWriter';
+import AISummary from '@/components/AISummary';
 
 export default function ProfilePage() {
   const { t } = useLanguage();
@@ -1694,6 +1696,13 @@ export default function ProfilePage() {
                                 className="hidden"
                                 onChange={e => handleImageUpload(e, field.key)}
                               />
+                              <div className="flex-1" />
+                              <AIWriter
+                                onResult={(text) => setCreateForm(prev => ({ ...prev, fields: { ...prev.fields, [field.key]: text } }))}
+                                prompt={`请为${createForm.type}类型的名片撰写专业的简介，要求语言精炼、真实可信，内容包含${field.key === 'description' ? '企业主营业务、核心优势和行业影响力' : '个人专业背景、核心专长和价值主张'}。`}
+                                context={`用户已填写内容：${createForm.fields[field.key] || '无'}`}
+                                label="AI 写简介"
+                              />
                             </div>
                             <textarea
                               id={`bio-editor-${createForm.type}`}
@@ -2833,6 +2842,15 @@ export default function ProfilePage() {
                               <button onClick={async () => { if(!confirm('确定删除？')) return; try { const r=await fetch('/api/profiles/'+profile.id,{ method:'DELETE' });if((await r.json()).success) setPublicProfiles(prev=>prev.filter(p=>p.id!==profile.id)); } catch {} }} className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg"><Trash2 className="w-4 h-4" /></button>
                             </div>
                           </div>
+                          {(() => {
+                            const bioField = profile.fields?.find((f: any) => f.key === 'bio' || f.key === 'description');
+                            const bioText = bioField?.value || '';
+                            return bioText ? (
+                              <div className="mb-3">
+                                <AISummary content={bioText} />
+                              </div>
+                            ) : null;
+                          })()}
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-slate-400">分享码: {profile.shareCode}</span>
                             <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/share/${profile.shareCode}`); }} className="text-xs text-amber-500 flex items-center gap-1"><Share2 className="w-3 h-3" />分享</button>
