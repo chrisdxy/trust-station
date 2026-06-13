@@ -433,8 +433,8 @@ function PeopleContent() {
                           body: JSON.stringify({
                             action: 'analyze',
                             content: `用户列表：${names.join('、')}`,
-                            prompt: '请分析以上用户之间的关系网络，找出关键连接人、潜在合作圈子和关系链建议。返回格式：\n1）关键连接人：xxx（理由）\n2）潜在圈子：xxx圈子（成员）\n3）关系链建议：xxx',
-                            context: '这是一个商业信任平台的用户关系分析',
+                            prompt: '请对以上用户进行关系网络分析和可靠性评估，从三个维度判断：1）决策能力（依据沟通记录中的逻辑性、判断力、决断速度）2）执行能力（依据项目参与、活动参与、合作完成情况）3）人品可靠性（依据留痕记录中的诚信表现、协作态度、反馈评价）。返回格式：\n【关键连接人】xxx — 连接价值说明\n【决策能力】xxx — 评估依据\n【执行能力】xxx — 评估依据\n【人品可靠性】xxx — 评估依据\n【潜在合作圈子】xxx圈子 — 成员\n【综合建议】关系链建议',
+                            context: '这是一个商业信任共建平台的用户数据，包含用户的沟通记录、项目参与、活动记录和认知留痕',
                           }),
                         });
                         const data = await res.json();
@@ -453,7 +453,7 @@ function PeopleContent() {
                       </div>
                       {graphLoading && <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />}
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">AI 分析关系网络，发现关键连接人</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">AI 评估决策力、执行力、人品可靠性，发现关键连接人</p>
                   </div>
                 </div>
                 {aiRecommendations.length > 0 && (
@@ -474,8 +474,8 @@ function PeopleContent() {
                   </div>
                 )}
                 {graphResult && (
-                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl p-4 border border-emerald-200 dark:border-emerald-700">
-                    <h4 className="text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-2 flex items-center gap-1">AI 关系图谱分析</h4>
+                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl p-5 border border-emerald-200 dark:border-emerald-700">
+                    <h4 className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 mb-3 flex items-center gap-1.5">AI 关系与可靠性分析</h4>
                     <div className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{graphResult}</div>
                   </div>
                 )}
