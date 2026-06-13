@@ -1,8 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import RichTextEditor from '@/components/RichTextEditor';
-import { Briefcase, Plus, MapPin, Calendar, X, Image, Upload, Users, UserPlus, Trash2, Edit, Pause, Play, CheckCircle, Search, Star, ChevronDown, Copy } from 'lucide-react';
+import { Briefcase, Plus, MapPin, Calendar, X, Bold, Italic, List, Link, Image, Upload, Users, UserPlus, Trash2, Edit, Pause, Play, CheckCircle, Search, Star, ChevronDown, Copy } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCategories, Category } from '@/hooks/useCategories';
@@ -54,6 +53,7 @@ interface Project {
 export default function ProjectsPage() {
   const { t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const editorImageRef = useRef<HTMLInputElement>(null);
   
   // State variables
   const [projects, setProjects] = useState<Project[]>([]);
@@ -267,10 +267,22 @@ export default function ProjectsPage() {
   // 简易 Markdown → HTML（支持图片、链接、粗体）
   const renderDescription = (text: any) => {
     if (!text || typeof text !== 'string') return '';
-    if (!/<[a-z][\s\S]*>/i.test(text)) {
-      return text.replace(/\n/g, '<br/>');
-    }
-    return text;
+    let html = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match: string, alt: string, url: string) => {
+      const fullUrl = url.startsWith('/') ? 'https://myfriends.vip' + url : url;
+      return `<img src="${fullUrl}" alt="${alt}" style="max-width:100%;height:auto;margin:8px 0;border-radius:8px" />`;
+    });
+    html = html.replace(/\[([^\]]*)\]\(([^)]+)\)/g, (match: string, text: string, url: string) => {
+      const fullUrl = url.startsWith('/') ? 'https://myfriends.vip' + url : url;
+      return `<a href="${fullUrl}" target="_blank" style="color:#3b82f6;text-decoration:underline">${text}</a>`;
+    });
+    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    html = html.replace(/\n/g, '<br/>');
+    return html;
   };
 
   // Remove cover image
@@ -283,7 +295,89 @@ export default function ProjectsPage() {
   };
   
   // Handle editor image upload
-
+  const handleEditorImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      // 前端校验文件大小
+      if (file.size > 10 * 1024 * 1024) {
+        toast('图片大小不能超过 10MB');
+        continue;
+      }
+      setUploadingImages(true);
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        if (!res.ok) {
+          const text = await res.text().catch(() => '');
+          toast('上传失败: ' + (res.status === 413 ? '图片过大' : '服务器错误 ' + res.status));
+          console.error('Upload HTTP error:', res.status, text.substring(0, 200));
+          continue;
+        }
+        const data = await res.json();
+        if (data.success) {
+          const textarea = document.getElementById('project-description') as HTMLTextAreaElement;
+          if (textarea) {
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const newText = text.substring(0, start) + `![image](${data.url})` + text.substring(end);
+            setFormData(prev => ({ ...prev, description: newText }));
+          }
+        } else {
+          toast(data.error || '图片上传失败');
+        }
+      } catch (err) {
+        console.error('Upload failed:', err);
+        toast('图片上传失败，请重试');
+      } finally {
+        setUploadingImages(false);
+      }
+    }
+    // 重置文件输入框，防止手机端显示长文件名
+    if (editorImageRef.current) editorImageRef.current.value = '';
+  };
+  
+  // Format text helper
+  const formatText = (format: string) => {
+    const textarea = document.getElementById('project-description') as HTMLTextAreaElement;
+    if (!textarea) return;
+    
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    let formatted = '';
+    
+    switch (format) {
+      case 'bold':
+        formatted = `**${text.substring(start, end) || '粗体文字'}**`;
+        break;
+      case 'italic':
+        formatted = `*${text.substring(start, end) || '斜体文字'}*`;
+        break;
+      case 'list':
+        formatted = `\n- ${text.substring(start, end) || '列表项'}`;
+        break;
+      case 'link':
+        const url = prompt('请输入链接地址:', 'https://');
+        if (url) {
+          formatted = `[${text.substring(start, end) || '链接文字'}](${url})`;
+        } else {
+          return;
+        }
+        break;
+    }
+    
+    const newText = text.substring(0, start) + formatted + text.substring(end);
+    setFormData(prev => ({ ...prev, description: newText }));
+  };
+  
   // Add/remove members via UserSelect multi-select
   const addMember = (user: UserSearchResult) => {
     const name = user.real_name || user.display_name || '用户';
@@ -1012,41 +1106,96 @@ export default function ProjectsPage() {
 
                     {/* Description */}
                     <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                          项目详情
+                        </label>
+                        <button type="button" onClick={async () => {
+                          if (!formData.description.trim()) { alert('请先填写项目描述'); return; }
+                          setRiskLoading(true);
+                          setRiskResult('');
+                          try {
+                            const res = await fetch('/api/ai', {
+                              method: 'POST', headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                action: 'analyze',
+                                content: formData.description,
+                                prompt: '请分析以上项目描述，检测是否存在以下风险：1）虚假或夸大承诺 2）模糊不清的描述 3）潜在的合规问题。逐项列出风险并给出改进建议。返回格式：风险项 | 风险等级(高/中/低) | 改进建议',
+                                context: '这是用户发布的合作项目描述，需要做风险审核',
+                              }),
+                            });
+                            const data = await res.json();
+                            if (data.success) setRiskResult(data.result);
+                          } catch {} finally { setRiskLoading(false); }
+                        }} disabled={riskLoading}
+                          className="text-xs text-red-600 hover:text-red-700 font-medium flex items-center gap-1 px-2 py-1 bg-red-50 dark:bg-red-900/30 rounded-lg border border-red-200 dark:border-red-800">
+                          {riskLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <AlertTriangle className="w-3 h-3" />}
+                          风险检测
+                        </button>
                       </div>
-                      {/* 项目详情 */}
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                            项目详情
-                          </label>
-                          <button type="button" onClick={async () => {
-                            if (!formData.description.trim()) { alert('请先填写项目描述'); return; }
-                            setRiskLoading(true);
-                            setRiskResult('');
-                            try {
-                              const res = await fetch('/api/ai', {
-                                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                  action: 'analyze',
-                                  content: formData.description,
-                                  prompt: '请分析以上项目描述，检测是否存在以下风险：1）虚假或夸大承诺 2）模糊不清的描述 3）潜在的合规问题。逐项列出风险并给出改进建议。返回格式：风险项 | 风险等级(高/中/低) | 改进建议',
-                                  context: '这是用户发布的合作项目描述，需要做风险审核',
-                                }),
-                              });
-                              const data = await res.json();
-                              if (data.success) setRiskResult(data.result);
-                            } catch {} finally { setRiskLoading(false); }
-                          }} disabled={riskLoading}
-                            className="text-xs text-red-600 hover:text-red-700 font-medium flex items-center gap-1 px-2 py-1 bg-red-50 dark:bg-red-900/30 rounded-lg border border-red-200 dark:border-red-800">
-                            {riskLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <AlertTriangle className="w-3 h-3" />}
-                            风险检测
+                      <div className="border border-slate-200 dark:border-slate-600 rounded-lg overflow-hidden">
+                        <div className="flex items-center gap-1 p-2 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-600">
+                          <button
+                            type="button"
+                            onClick={() => formatText('bold')}
+                            className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded transition-colors"
+                            title="加粗"
+                          >
+                            <Bold className="w-4 h-4" />
                           </button>
+                          <button
+                            type="button"
+                            onClick={() => formatText('italic')}
+                            className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded transition-colors"
+                            title="斜体"
+                          >
+                            <Italic className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => formatText('list')}
+                            className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded transition-colors"
+                            title="列表"
+                          >
+                            <List className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => formatText('link')}
+                            className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded transition-colors"
+                            title="链接"
+                          >
+                            <Link className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => editorImageRef.current?.click()}
+                            className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded transition-colors"
+                            title="上传图片"
+                          >
+                            <Image className="w-4 h-4" />
+                          </button>
+                          <input
+                            ref={editorImageRef}
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handleEditorImageUpload}
+                            className="hidden"
+                          />
                         </div>
-                        <RichTextEditor
-                          placeholder="请输入项目详情，支持富文本格式，可插入图片..."
+                        <textarea
+                          id="project-description"
+                          rows={4}
                           value={formData.description}
-                          onChange={v => setFormData(prev => ({ ...prev, description: v }))}
+                          onChange={e => setFormData({ ...formData, description: e.target.value })}
+                          placeholder="请输入项目详情..."
+                          className="w-full px-4 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-white resize-none focus:outline-none"
                         />
+                      </div>
+                      <p className="mt-1 text-xs text-slate-400">
+                        支持格式：**加粗**、*斜体*、- 列表、[文字](链接)
+                      </p>
                     {riskResult && (
                       <div className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
                         <div className="font-medium text-red-600 mb-1 flex items-center gap-1"><AlertTriangle className="w-4 h-4" />风险检测结果</div>
@@ -1090,11 +1239,43 @@ export default function ProjectsPage() {
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                           尽调详情
                         </label>
-                        <RichTextEditor
-                          placeholder="尽调详情..."
-                          value={formData.dueDiligenceDetails}
-                          onChange={v => setFormData(prev => ({ ...prev, dueDiligenceDetails: v }))}
-                        />
+                        <div className="border border-slate-200 dark:border-slate-600 rounded-lg overflow-hidden">
+                          <div className="flex items-center gap-1 p-2 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-600">
+                            <button
+                              type="button"
+                              onClick={() => formatText('bold')}
+                              className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded transition-colors"
+                              title="加粗"
+                            >
+                              <Bold className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => formatText('italic')}
+                              className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded transition-colors"
+                              title="斜体"
+                            >
+                              <Italic className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => formatText('list')}
+                              className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded transition-colors"
+                              title="列表"
+                            >
+                              <List className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => formatText('link')}
+                              className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded transition-colors"
+                              title="链接"
+                            >
+                              <Link className="w-4 h-4" />
+                            </button>
+                          </div>
+                          <textarea
+                            id="due-diligence-details"
                             rows={4}
                             value={formData.dueDiligenceDetails}
                             onChange={e => setFormData({ ...formData, dueDiligenceDetails: e.target.value })}
