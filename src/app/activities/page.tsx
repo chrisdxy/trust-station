@@ -73,9 +73,24 @@ export default function ActivitiesPage() {
     return 'ACT' + id.replace(/-/g, '').slice(0, 8).toUpperCase();
   };
 
-  // 跳转到独立活动详情页（用于微信分享 OG 卡片）
-  const openDetail = (activity: Activity) => {
-    router.push(`/activities/${activity.id}`);
+  // 详情弹窗 - 加载活动详情
+  const openDetail = async (activity: Activity) => {
+    setDetailActivity(activity);
+    if (user?.id) {
+      setDetailLoading(true);
+      try {
+        const detailRes = await fetch(`/api/activities/${activity.id}?userId=${user.id}`);
+        const detailData = await detailRes.json();
+        if (detailData.success) {
+          setDetailActivity({ ...detailData.activity, my_registration_status: detailData.registration?.status, is_organizer_member: detailData.activity.is_organizer_member });
+        }
+      } catch (e) { /* ignore */ }
+      setDetailLoading(false);
+    }
+  };
+
+  const closeDetail = () => {
+    setDetailActivity(null);
   };
 
   // 报名（从卡片触发）

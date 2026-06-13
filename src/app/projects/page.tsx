@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import RichTextEditor from '@/components/RichTextEditor';
 import { Briefcase, Plus, MapPin, Calendar, X, Image, Upload, Users, UserPlus, Trash2, Edit, Pause, Play, CheckCircle, Search, Star, ChevronDown, Copy } from 'lucide-react';
@@ -53,7 +52,6 @@ interface Project {
 }
 
 export default function ProjectsPage() {
-  const router = useRouter();
   const { t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -744,7 +742,7 @@ export default function ProjectsPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
                   className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => router.push(`/projects/${project.id}`)}
+                  onClick={() => setSelectedProject(project)}
                 >
                   <div className="flex items-start gap-4">
                     {project.coverImage ? (
