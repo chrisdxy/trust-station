@@ -421,7 +421,7 @@ function PeopleContent() {
                     <p className="text-xs text-slate-500 dark:text-slate-400">AI 分析你的资料，推荐最值得认识的伙伴</p>
                   </div>
 
-                  {/* AI 关系图卡片 */}
+                  {/* AI 关系分析卡片 */}
                   <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-2xl p-5 border border-emerald-200/50 dark:border-emerald-700/50 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
                     onClick={async () => {
                       setGraphLoading(true);
@@ -447,13 +447,13 @@ function PeopleContent() {
                           <Sparkles className="w-4 h-4 text-white" />
                         </div>
                         <div>
-                          <div className="text-sm font-semibold text-slate-800 dark:text-white">AI 关系图</div>
+                          <div className="text-sm font-semibold text-slate-800 dark:text-white">AI 关系分析</div>
                           <div className="text-[11px] text-emerald-400">点击可查</div>
                         </div>
                       </div>
                       {graphLoading && <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />}
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">AI 分析用户关系网络，发现关键连接人</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">AI 分析关系网络，发现关键连接人</p>
                   </div>
                 </div>
                 {aiRecommendations.length > 0 && (
