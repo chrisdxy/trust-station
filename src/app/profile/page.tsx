@@ -860,17 +860,57 @@ export default function ProfilePage() {
               className="px-4 py-2 bg-white/15 backdrop-blur-sm border border-white/20 text-white rounded-xl font-medium flex items-center gap-2 hover:bg-white/25 transition-all"
             >
               <Eye className="w-4 h-4" />
-              资料概览
+              对外展示
             </button>
             <button
               onClick={() => setShowProfileModal(true)}
               className="px-4 py-2 bg-white/15 backdrop-blur-sm border border-white/20 text-white rounded-xl font-medium flex items-center gap-2 hover:bg-white/25 transition-all"
             >
               <FileText className="w-4 h-4" />
-              对外展示
+              编辑资料
             </button>
           </div>
         </motion.div>
+
+        {/* AI 信任画像 */}
+        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-5 mb-6 border border-indigo-100 dark:border-indigo-800">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="text-sm font-semibold text-indigo-800 dark:text-indigo-300 flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4" />信用画像
+              </h3>
+              <p className="text-xs text-indigo-500">综合分析活跃度与合作信用</p>
+            </div>
+            <button onClick={async () => {
+              setScoreLoading(true);
+              try {
+                const res = await fetch('/api/ai', {
+                  method: 'POST', headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    action: 'analyze',
+                    content: '请生成一份信任画像分析，基于以下维度评估：1）社区参与度 2）活动活跃度 3）合作诚信度 4）社交网络广度。给出一份综合信任评分和成长建议。',
+                    prompt: '请以专业、鼓励的语气，为用户生成一份简洁的信任画像分析报告。包含综合评分（百分制）、各维度得分简述、以及2-3条可执行的提升建议。',
+                    context: '这是一份社交信任平台的用户资料数据',
+                  }),
+                });
+                const data = await res.json();
+                if (data.success) setTrustScore(data.result);
+              } catch {} finally { setScoreLoading(false); }
+            }} disabled={scoreLoading}
+              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg flex items-center gap-1.5 disabled:opacity-50 transition-colors">
+              {scoreLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+              {scoreLoading ? '分析中...' : '刷新信任画像'}
+            </button>
+          </div>
+          {trustScore && (
+            <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-indigo-100 dark:border-indigo-800">
+              <div className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{trustScore}</div>
+            </div>
+          )}
+          {!trustScore && !scoreLoading && (
+            <p className="text-xs text-indigo-400 text-center py-3">点击上方按钮，AI 将综合你的平台数据生成信用画像</p>
+          )}
+        </div>
 
         {/* 申请通道 */}
         <motion.div
@@ -891,46 +931,6 @@ export default function ProfilePage() {
                 <p className="text-sm text-slate-500">开启你的平台之旅</p>
               </div>
             </div>
-          </div>
-
-          {/* AI 信任画像 */}
-          <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-5 mb-6 border border-indigo-100 dark:border-indigo-800">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h3 className="text-sm font-semibold text-indigo-800 dark:text-indigo-300 flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4" />AI 信任画像
-                </h3>
-                <p className="text-xs text-indigo-500">综合分析活跃度与合作信用</p>
-              </div>
-              <button onClick={async () => {
-                setScoreLoading(true);
-                try {
-                  const res = await fetch('/api/ai', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      action: 'analyze',
-                      content: '请生成一份信任画像分析，基于以下维度评估：1）社区参与度 2）活动活跃度 3）合作诚信度 4）社交网络广度。给出一份综合信任评分和成长建议。',
-                      prompt: '请以专业、鼓励的语气，为用户生成一份简洁的信任画像分析报告。包含综合评分（百分制）、各维度得分简述、以及2-3条可执行的提升建议。',
-                      context: '这是一份社交信任平台的用户资料数据',
-                    }),
-                  });
-                  const data = await res.json();
-                  if (data.success) setTrustScore(data.result);
-                } catch {} finally { setScoreLoading(false); }
-              }} disabled={scoreLoading}
-                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg flex items-center gap-1.5 disabled:opacity-50 transition-colors">
-                {scoreLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                {scoreLoading ? '分析中...' : '刷新信任画像'}
-              </button>
-            </div>
-            {trustScore && (
-              <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-indigo-100 dark:border-indigo-800">
-                <div className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{trustScore}</div>
-              </div>
-            )}
-            {!trustScore && !scoreLoading && (
-              <p className="text-xs text-indigo-400 text-center py-3">点击上方按钮，AI 将综合你的平台数据生成信任画像</p>
-            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2793,7 +2793,7 @@ export default function ProfilePage() {
               onClick={e => e.stopPropagation()}
               className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] overflow-y-auto">
               <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-800 z-10">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white">资料概览</h2>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">对外展示</h2>
                 <div className="flex items-center gap-2">
                   <button onClick={() => { setShowOverview(false); handleOpenEdit(); }} className="px-3 py-1.5 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-1"><Edit className="w-4 h-4" />编辑</button>
                   {(publicProfiles.length > 0) ? (
