@@ -80,6 +80,8 @@ export default function ProfilePage() {
 
   // 富文本编辑器图片上传
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [trustScore, setTrustScore] = useState<string>('');
+  const [scoreLoading, setScoreLoading] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   // 处理富文本编辑器图片插入
@@ -890,7 +892,47 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-          
+
+          {/* AI 信任画像 */}
+          <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-5 mb-6 border border-indigo-100 dark:border-indigo-800">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h3 className="text-sm font-semibold text-indigo-800 dark:text-indigo-300 flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4" />AI 信任画像
+                </h3>
+                <p className="text-xs text-indigo-500">综合分析活跃度与合作信用</p>
+              </div>
+              <button onClick={async () => {
+                setScoreLoading(true);
+                try {
+                  const res = await fetch('/api/ai', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      action: 'analyze',
+                      content: '请生成一份信任画像分析，基于以下维度评估：1）社区参与度 2）活动活跃度 3）合作诚信度 4）社交网络广度。给出一份综合信任评分和成长建议。',
+                      prompt: '请以专业、鼓励的语气，为用户生成一份简洁的信任画像分析报告。包含综合评分（百分制）、各维度得分简述、以及2-3条可执行的提升建议。',
+                      context: '这是一份社交信任平台的用户资料数据',
+                    }),
+                  });
+                  const data = await res.json();
+                  if (data.success) setTrustScore(data.result);
+                } catch {} finally { setScoreLoading(false); }
+              }} disabled={scoreLoading}
+                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg flex items-center gap-1.5 disabled:opacity-50 transition-colors">
+                {scoreLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                {scoreLoading ? '分析中...' : '刷新信任画像'}
+              </button>
+            </div>
+            {trustScore && (
+              <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-indigo-100 dark:border-indigo-800">
+                <div className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{trustScore}</div>
+              </div>
+            )}
+            {!trustScore && !scoreLoading && (
+              <p className="text-xs text-indigo-400 text-center py-3">点击上方按钮，AI 将综合你的平台数据生成信任画像</p>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* 协调专家申请卡片 */}
             <div className={`p-5 rounded-xl border-2 transition-all ${
