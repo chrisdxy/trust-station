@@ -579,12 +579,12 @@ export default function ProjectsPage() {
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
               <div className="flex-1 relative">
-                <input
-                  type="text"
+                <textarea
                   value={aiSearchQuery}
                   onChange={e => setAiSearchQuery(e.target.value)}
                   onKeyDown={async e => {
-                    if (e.key === 'Enter' && aiSearchQuery.trim()) {
+                    if (e.key === 'Enter' && !e.shiftKey && aiSearchQuery.trim()) {
+                      e.preventDefault();
                       setAiSearching(true);
                       setAiSearchResult('');
                       try {
@@ -596,10 +596,11 @@ export default function ProjectsPage() {
                           method: 'POST', headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
                             action: 'match',
-                            prompt: `根据用户需求"${aiSearchQuery}"，从以下项目中推荐最匹配的3-5个项目，按匹配度排序。每个推荐需说明匹配理由。
+                            prompt: `【严格限定】用户需求：${aiSearchQuery}
+【规则】只能从下方提供的项目列表中推荐，绝对禁止推荐列表中不存在的项目。如果没有匹配的项目，请如实回答"未找到匹配项目"。
 返回格式：每行"项目名称（ID:项目ID）| 匹配度% | 匹配理由"`,
-                            context: `项目列表：${projectsList.map(p => `ID:${p.id} ${p.title} [${(p.types||[]).join(',')}] ${p.location||''} ${p.industry||''}`).join('\n')}`,
-                            content: '请匹配推荐'
+                            context: `项目列表（仅限以下项目，共${projectsList.length}个）：\n${projectsList.map(p => `ID:${p.id} | ${p.title} | 类型:${(p.types||[]).join(',')} | 地点:${p.location||''} | 行业:${p.industry||''}`).join('\n')}`,
+                            content: '请严格依据以上列表进行匹配推荐，不得新增任何列表外的项目'
                           })
                         });
                         const data = await res.json();
@@ -613,10 +614,16 @@ export default function ProjectsPage() {
                       finally { setAiSearching(false); }
                     }
                   }}
-                  placeholder="输入需求，AI 智能匹配项目..."
-                  className="w-full pl-4 pr-10 py-2.5 bg-white dark:bg-slate-700 border border-indigo-200 dark:border-indigo-600 rounded-xl text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  placeholder="输入需求，AI 智能匹配项目（Shift+Enter换行）..."
+                  className="w-full pl-4 pr-10 py-2.5 bg-white dark:bg-slate-700 border border-indigo-200 dark:border-indigo-600 rounded-xl text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none overflow-hidden min-h-[42px]"
+                  rows={1}
+                  onInput={e => {
+                    const el = e.currentTarget;
+                    el.style.height = 'auto';
+                    el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+                  }}
                 />
-                {aiSearching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-indigo-500" />}
+                {aiSearching && <Loader2 className="absolute right-3 top-3 w-4 h-4 animate-spin text-indigo-500" />}
               </div>
               <button onClick={async () => {
                 if (!aiSearchQuery.trim()) return;
@@ -631,10 +638,11 @@ export default function ProjectsPage() {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                       action: 'match',
-                      prompt: `根据用户需求"${aiSearchQuery}"，从以下项目中推荐最匹配的3-5个项目，按匹配度排序。每个推荐需说明匹配理由。
+                      prompt: `【严格限定】用户需求：${aiSearchQuery}
+【规则】只能从下方提供的项目列表中推荐，绝对禁止推荐列表中不存在的项目。如果没有匹配的项目，请如实回答"未找到匹配项目"。
 返回格式：每行"项目名称（ID:项目ID）| 匹配度% | 匹配理由"`,
-                      context: `项目列表：${projectsList.map(p => `ID:${p.id} ${p.title} [${(p.types||[]).join(',')}] ${p.location||''} ${p.industry||''}`).join('\n')}`,
-                      content: '请匹配推荐'
+                      context: `项目列表（仅限以下项目，共${projectsList.length}个）：\n${projectsList.map(p => `ID:${p.id} | ${p.title} | 类型:${(p.types||[]).join(',')} | 地点:${p.location||''} | 行业:${p.industry||''}`).join('\n')}`,
+                      content: '请严格依据以上列表进行匹配推荐，不得新增任何列表外的项目'
                     })
                   });
                   const data = await res.json();
