@@ -430,21 +430,9 @@ export default function CommunitiesPage() {
     e.target.value = '';
   };
 
-  // 查看详情（仅正式成员和创建者可查看）
+  // 查看详情 — 跳转到独立详情页（用于微信分享 OG 卡片）
   const handleViewDetail = (community: Community) => {
-    if (!currentUser?.id) {
-      alert('请先登录');
-      return;
-    }
-    const isMyCommunity = isCreatedByMe(community) || joinedCommunities.includes(community.id);
-    if (!isMyCommunity) {
-      // 非成员点击卡片直接弹出申请加入弹窗
-      setJoinTarget(community);
-      setShowJoinModal(true);
-      return;
-    }
-    setSelectedCommunity(community);
-    setShowDetailModal(true);
+    router.push(`/communities/${community.id}`);
   };
 
   // 创建/更新共同体（通过云 MySQL API，不依赖 localStorage）
