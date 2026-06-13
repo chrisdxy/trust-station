@@ -8,7 +8,7 @@ import { useCategories, Category } from '@/hooks/useCategories';
 import { UserSelect, UserSearchResult } from '@/components/UserSelect';
 import { WeChatShareSetup } from '@/components/WeChatShareSetup';
 import AIWriter from '@/components/AIWriter';
-import { AlertTriangle, Loader2 } from 'lucide-react';
+import { AlertTriangle, Loader2, Sparkles } from 'lucide-react';
 
 // Simple Toast Component
 function Toast({ message, visible }: { message: string; visible: boolean }) {
@@ -70,6 +70,9 @@ export default function ProjectsPage() {
   // Filter states
   const [activeTab, setActiveTab] = useState<'all' | 'created' | 'following'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [aiSearchQuery, setAiSearchQuery] = useState('');
+  const [aiSearching, setAiSearching] = useState(false);
+  const [aiSearchResult, setAiSearchResult] = useState('');
   const [dueDiligenceFilter, setDueDiligenceFilter] = useState<'none' | 'due' | 'not_due'>('not_due');
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   
@@ -551,16 +554,91 @@ export default function ProjectsPage() {
             ))}
           </div>
 
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="搜索项目..."
-              className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
-            />
+          {/* AI 智能匹配 */}
+          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-4 border border-indigo-200 dark:border-indigo-700">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  value={aiSearchQuery}
+                  onChange={e => setAiSearchQuery(e.target.value)}
+                  onKeyDown={async e => {
+                    if (e.key === 'Enter' && aiSearchQuery.trim()) {
+                      setAiSearching(true);
+                      setAiSearchResult('');
+                      try {
+                        const projectsList = projects.map(p => ({
+                          title: p.title, industry: p.industry, types: p.types,
+                          location: p.location, summary: p.summary, status: p.status
+                        }));
+                        const res = await fetch('/api/ai', {
+                          method: 'POST', headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            action: 'match',
+                            prompt: `根据用户需求"${aiSearchQuery}"，从以下项目中推荐最匹配的3-5个项目，按匹配度排序。每个推荐需说明匹配理由。
+返回格式：每行"项目名称 | 匹配度% | 匹配理由"`,
+                            context: JSON.stringify(projectsList),
+                            content: '项目列表如上，请匹配推荐'
+                          })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                          const lines = data.result.split('\n').filter(Boolean);
+                          setAiSearchResult(lines.join('\n'));
+                        } else {
+                          setAiSearchResult('AI 匹配失败，请稍后重试');
+                        }
+                      } catch { setAiSearchResult('网络错误，请稍后重试'); }
+                      finally { setAiSearching(false); }
+                    }
+                  }}
+                  placeholder="输入需求，AI 智能匹配项目..."
+                  className="w-full pl-4 pr-10 py-2.5 bg-white dark:bg-slate-700 border border-indigo-200 dark:border-indigo-600 rounded-xl text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                />
+                {aiSearching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-indigo-500" />}
+              </div>
+              <button onClick={async () => {
+                if (!aiSearchQuery.trim()) return;
+                setAiSearching(true);
+                setAiSearchResult('');
+                try {
+                  const projectsList = projects.map(p => ({
+                    title: p.title, industry: p.industry, types: p.types,
+                    location: p.location, summary: p.summary, status: p.status
+                  }));
+                  const res = await fetch('/api/ai', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      action: 'match',
+                      prompt: `根据用户需求"${aiSearchQuery}"，从以下项目中推荐最匹配的3-5个项目，按匹配度排序。每个推荐需说明匹配理由。
+返回格式：每行"项目名称 | 匹配度% | 匹配理由"`,
+                      context: JSON.stringify(projectsList),
+                      content: '项目列表如上，请匹配推荐'
+                    })
+                  });
+                  const data = await res.json();
+                  if (data.success) {
+                    const lines = data.result.split('\n').filter(Boolean);
+                    setAiSearchResult(lines.join('\n'));
+                  } else setAiSearchResult('AI 匹配失败');
+                } catch { setAiSearchResult('网络错误'); }
+                finally { setAiSearching(false); }
+              }} disabled={aiSearching}
+                className="px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium rounded-xl hover:from-indigo-600 hover:to-purple-600 disabled:opacity-50 transition-all flex items-center gap-1.5 flex-shrink-0"
+              >
+                {aiSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                AI 匹配
+              </button>
+            </div>
+            {aiSearchResult && (
+              <div className="mt-3 p-4 bg-white dark:bg-slate-800 rounded-xl border border-indigo-100 dark:border-indigo-800">
+                <div className="text-xs font-medium text-indigo-600 dark:text-indigo-400 mb-2">匹配结果</div>
+                <div className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{aiSearchResult}</div>
+              </div>
+            )}
           </div>
 
           {/* Due Diligence Filter & Project Type Filter */}
