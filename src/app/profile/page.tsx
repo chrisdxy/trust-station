@@ -860,14 +860,14 @@ export default function ProfilePage() {
               className="px-4 py-2 bg-white/15 backdrop-blur-sm border border-white/20 text-white rounded-xl font-medium flex items-center gap-2 hover:bg-white/25 transition-all"
             >
               <Eye className="w-4 h-4" />
-              对外展示
+              个人资料
             </button>
             <button
               onClick={() => setShowProfileModal(true)}
               className="px-4 py-2 bg-white/15 backdrop-blur-sm border border-white/20 text-white rounded-xl font-medium flex items-center gap-2 hover:bg-white/25 transition-all"
             >
               <FileText className="w-4 h-4" />
-              编辑资料
+              对外展示
             </button>
           </div>
         </motion.div>
@@ -2793,14 +2793,8 @@ export default function ProfilePage() {
               onClick={e => e.stopPropagation()}
               className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] overflow-y-auto">
               <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-800 z-10">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white">对外展示</h2>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">个人资料</h2>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => { setShowOverview(false); handleOpenEdit(); }} className="px-3 py-1.5 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-1"><Edit className="w-4 h-4" />编辑</button>
-                  {(publicProfiles.length > 0) ? (
-                    <button onClick={() => { setShowOverview(false); setShowProfileModal(true); }} className="px-3 py-1.5 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-700">名片管理</button>
-                  ) : (
-                    <button onClick={() => { setShowOverview(false); setShowCardEditModal(true); }} className="px-3 py-1.5 bg-amber-500 text-white rounded-lg text-sm">创建名片</button>
-                  )}
                   <button onClick={() => setShowOverview(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"><X className="w-5 h-5" /></button>
                 </div>
               </div>
