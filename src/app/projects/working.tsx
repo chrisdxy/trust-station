@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Briefcase, Plus, MapPin, Calendar, X, Bold, Italic, List, Link, Image, Upload, Users, UserPlus, Trash2, Edit, Pause, Play, CheckCircle, Search, Star, ChevronDown, Copy } from 'lucide-react';
 import Layout from '@/components/Layout';
@@ -52,7 +51,6 @@ interface Project {
 }
 
 export default function ProjectsPage() {
-  const router = useRouter();
   const { t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editorImageRef = useRef<HTMLInputElement>(null);
@@ -581,12 +579,12 @@ export default function ProjectsPage() {
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
               <div className="flex-1 relative">
-                <textarea
+                <input
+                  type="text"
                   value={aiSearchQuery}
                   onChange={e => setAiSearchQuery(e.target.value)}
                   onKeyDown={async e => {
-                    if (e.key === 'Enter' && !e.shiftKey && aiSearchQuery.trim()) {
-                      e.preventDefault();
+                    if (e.key === 'Enter' && aiSearchQuery.trim()) {
                       setAiSearching(true);
                       setAiSearchResult('');
                       try {
@@ -598,11 +596,10 @@ export default function ProjectsPage() {
                           method: 'POST', headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
                             action: 'match',
-                            prompt: `【严格限定】用户需求：${aiSearchQuery}
-【规则】只能从下方提供的项目列表中推荐，绝对禁止推荐列表中不存在的项目。如果没有匹配的项目，请如实回答"未找到匹配项目"。
+                            prompt: `根据用户需求"${aiSearchQuery}"，从以下项目中推荐最匹配的3-5个项目，按匹配度排序。每个推荐需说明匹配理由。
 返回格式：每行"项目名称（ID:项目ID）| 匹配度% | 匹配理由"`,
-                            context: `项目列表（仅限以下项目，共${projectsList.length}个）：\n${projectsList.map(p => `ID:${p.id} | ${p.title} | 类型:${(p.types||[]).join(',')} | 地点:${p.location||''} | 行业:${p.industry||''}`).join('\n')}`,
-                            content: '请严格依据以上列表进行匹配推荐，不得新增任何列表外的项目'
+                            context: `项目列表：${projectsList.map(p => `ID:${p.id} ${p.title} [${(p.types||[]).join(',')}] ${p.location||''} ${p.industry||''}`).join('\n')}`,
+                            content: '请匹配推荐'
                           })
                         });
                         const data = await res.json();
@@ -616,16 +613,10 @@ export default function ProjectsPage() {
                       finally { setAiSearching(false); }
                     }
                   }}
-                  placeholder="输入需求，AI 智能匹配项目（Shift+Enter换行）..."
-                  className="w-full pl-4 pr-10 py-2.5 bg-white dark:bg-slate-700 border border-indigo-200 dark:border-indigo-600 rounded-xl text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none overflow-hidden min-h-[42px]"
-                  rows={1}
-                  onInput={e => {
-                    const el = e.currentTarget;
-                    el.style.height = 'auto';
-                    el.style.height = Math.min(el.scrollHeight, 200) + 'px';
-                  }}
+                  placeholder="输入需求，AI 智能匹配项目..."
+                  className="w-full pl-4 pr-10 py-2.5 bg-white dark:bg-slate-700 border border-indigo-200 dark:border-indigo-600 rounded-xl text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 />
-                {aiSearching && <Loader2 className="absolute right-3 top-3 w-4 h-4 animate-spin text-indigo-500" />}
+                {aiSearching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-indigo-500" />}
               </div>
               <button onClick={async () => {
                 if (!aiSearchQuery.trim()) return;
@@ -640,11 +631,10 @@ export default function ProjectsPage() {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                       action: 'match',
-                      prompt: `【严格限定】用户需求：${aiSearchQuery}
-【规则】只能从下方提供的项目列表中推荐，绝对禁止推荐列表中不存在的项目。如果没有匹配的项目，请如实回答"未找到匹配项目"。
+                      prompt: `根据用户需求"${aiSearchQuery}"，从以下项目中推荐最匹配的3-5个项目，按匹配度排序。每个推荐需说明匹配理由。
 返回格式：每行"项目名称（ID:项目ID）| 匹配度% | 匹配理由"`,
-                      context: `项目列表（仅限以下项目，共${projectsList.length}个）：\n${projectsList.map(p => `ID:${p.id} | ${p.title} | 类型:${(p.types||[]).join(',')} | 地点:${p.location||''} | 行业:${p.industry||''}`).join('\n')}`,
-                      content: '请严格依据以上列表进行匹配推荐，不得新增任何列表外的项目'
+                      context: `项目列表：${projectsList.map(p => `ID:${p.id} ${p.title} [${(p.types||[]).join(',')}] ${p.location||''} ${p.industry||''}`).join('\n')}`,
+                      content: '请匹配推荐'
                     })
                   });
                   const data = await res.json();
@@ -830,28 +820,29 @@ export default function ProjectsPage() {
               <p>暂无项目，点击上方按钮创建</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {filteredProjects.map((project, idx) => (
                 <motion.div
                   key={project.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
-                  className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => router.push(`/projects/${project.id}`)}
+                  className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm hover:shadow-md transition-shadow overflow-hidden cursor-pointer group"
+                  onClick={() => setSelectedProject(project)}
                 >
-                  <div className="flex items-start gap-4">
-                    {project.coverImage ? (
-                      <img src={project.coverImage} alt={project.title} className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />
-                    ) : (
-                      <div className="w-14 h-14 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <Briefcase className="w-7 h-7 text-amber-600" />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
+                  {project.coverImage && (
+                    <div className="h-48 overflow-hidden">
+                      <img 
+                        src={project.coverImage} 
+                        alt={project.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                  )}
+                  <div className="p-5">
                     {/* 标题 */}
-                    <div className="flex items-center justify-between gap-2">
-                      <h3 className="font-semibold text-slate-900 dark:text-white truncate">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors text-base line-clamp-1 flex-1">
                         {project.title}
                       </h3>
                       <button onClick={e => { e.stopPropagation(); toggleFollow(project.id); }}
@@ -908,8 +899,6 @@ export default function ProjectsPage() {
                       )}
                     </div>
 
-                    </div>
-                  </div>
                     {/* 删除按钮 — 仅创建者可见 */}
                     {currentUserId && project.creatorId === currentUserId && (
                       <div className="flex justify-end mt-3 pt-2 border-t border-slate-100 dark:border-slate-700">
@@ -935,6 +924,7 @@ export default function ProjectsPage() {
                         </button>
                       </div>
                     )}
+                  </div>
                 </motion.div>
               ))}
             </div>
