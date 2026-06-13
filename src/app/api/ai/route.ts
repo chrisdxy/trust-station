@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || '';
 const API_URL = 'https://api.deepseek.com/v1/chat/completions';
 
-const PLATFORM_DESC = '「正道驿站」是一个促进心性成长与商业互信的共建平台。核心理念：正心正念、非暴力沟通、行为留痕、择优合作。用户可在平台创建共同体、发布活动、管理项目、建立合作关系、记录认知留痕、申请纠纷协调。';
+const PLATFORM_DESC = '「正道驿站」(myfriends.vip) 是一个促进心性成长与商业互信的全球信任共建社区平台。核心使命：让合作有迹可循，让成长和信任在真实交往中沉淀。平台提供：共同体（社群交流）、活动中心（线下线上活动）、项目中心（合作项目）、记录中心（认知留痕）、协调中心（纠纷调解）等功能，围绕「正心正念、非暴力沟通、行为留痕、择优合作」六大共识运作。';
 
 const SYSTEM_PROMPTS: Record<string, string> = {
   generate: `你是一个专业的写作助手，服务于${PLATFORM_DESC}请根据用户的要求生成简洁、专业、真诚的中文内容。直接返回生成结果，不要添加额外说明。`,
