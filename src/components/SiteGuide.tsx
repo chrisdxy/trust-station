@@ -115,6 +115,24 @@ const steps: Step[] = [
         { text: '协调申请 → 有分歧时申请协调', highlight: '化解' }
       ]
     }
+  },
+  {
+    id: 'ai',
+    icon: Sparkles,
+    title: 'AI 赋能',
+    subtitle: '智能助手提升效率',
+    color: 'from-purple-500 to-indigo-500',
+    content: {
+      type: 'tips',
+      items: [
+        { text: 'AI 信任画像 → 概览页一键分析，综合评估活跃度与合作信用', highlight: '✨' },
+        { text: 'AI 智能推荐 → 发现伙伴页，AI 推荐最匹配的合作人选', highlight: '🎯' },
+        { text: 'AI 写简介 → 个人名片/共同体/活动/项目描述一键生成', highlight: '✍️' },
+        { text: 'AI 风险检测 → 发布项目时检测描述中的潜在风险', highlight: '🛡️' },
+        { text: 'AI 摘要分析 → 协调中心沟通记录自动提取争议焦点', highlight: '📋' },
+        { text: 'AI 信任履历 → 记录中心分析留痕数据生成时间线报告', highlight: '📈' }
+      ]
+    }
   }
 ];
 
