@@ -113,6 +113,8 @@ function PeopleContent() {
   const [friendsLoading, setFriendsLoading] = useState(false);
   const [aiRecommendations, setAiRecommendations] = useState<any[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
+  const [graphResult, setGraphResult] = useState('');
+  const [graphLoading, setGraphLoading] = useState(false);
 
   // 获取好友清单
   const fetchFriends = useCallback(async () => {
@@ -382,33 +384,57 @@ function PeopleContent() {
             {pageTab === 'browse' && (
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-purple-500" />AI 为你推荐
-                  </h3>
-                  <button onClick={async () => {
-                    setAiLoading(true);
-                    try {
-                      const profiles = cards.map(u => ({ name: u.display_name || u.real_name, industry: u.industry, bio: u.bio })).slice(0, 20);
-                      const res = await fetch('/api/ai', {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          action: 'match',
-                          prompt: '根据我的信息，从以下候选人中推荐最值得认识合作的3-5位，按匹配度排序。返回格式：每行"人选 | 匹配度% | 推荐理由"',
-                          context: `候选名单：${JSON.stringify(profiles)}`,
-                          content: '请推荐最匹配的合作人选。',
-                        }),
-                      });
-                      const data = await res.json();
-                      if (data.success) {
-                        const lines = data.result.split('\n').filter(Boolean);
-                        setAiRecommendations(lines);
-                      }
-                    } catch {} finally { setAiLoading(false); }
-                  }} disabled={aiLoading}
-                    className="text-xs text-purple-600 hover:text-purple-700 font-medium flex items-center gap-1">
-                    {aiLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                    {aiLoading ? '分析中...' : '生成推荐'}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-purple-500" />AI 推荐
+                    </h3>
+                    <button onClick={async () => {
+                      setAiLoading(true);
+                      try {
+                        const profiles = cards.map(u => ({ name: u.display_name || u.real_name, industry: u.industry, bio: u.bio })).slice(0, 20);
+                        const res = await fetch('/api/ai', {
+                          method: 'POST', headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            action: 'match',
+                            prompt: '根据我的信息，从以下候选人中推荐最值得认识合作的3-5位，按匹配度排序。返回格式：每行"人选 | 匹配度% | 推荐理由"',
+                            context: `候选名单：${JSON.stringify(profiles)}`,
+                            content: '请推荐最匹配的合作人选。',
+                          }),
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                          const lines = data.result.split('\n').filter(Boolean);
+                          setAiRecommendations(lines);
+                        }
+                      } catch {} finally { setAiLoading(false); }
+                    }} disabled={aiLoading}
+                      className="text-xs text-purple-600 hover:text-purple-700 font-medium flex items-center gap-1 px-2 py-1 bg-purple-50 dark:bg-purple-900/30 rounded-lg border border-purple-200 dark:border-purple-700">
+                      {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                      {aiLoading ? '分析中' : '刷新'}
+                    </button>
+                    <button onClick={async () => {
+                      setGraphLoading(true);
+                      setGraphResult('');
+                      try {
+                        const names = cards.map(u => u.display_name || u.real_name || '未知').filter(Boolean).slice(0, 30);
+                        const res = await fetch('/api/ai', {
+                          method: 'POST', headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            action: 'analyze',
+                            content: `用户列表：${names.join('、')}`,
+                            prompt: '请分析以上用户之间的关系网络，找出关键连接人、潜在合作圈子和关系链建议。返回格式：\n1）关键连接人：xxx（理由）\n2）潜在圈子：xxx圈子（成员）\n3）关系链建议：xxx',
+                            context: '这是一个商业信任平台的用户关系分析',
+                          }),
+                        });
+                        const data = await res.json();
+                        if (data.success) setGraphResult(data.result);
+                      } catch {} finally { setGraphLoading(false); }
+                    }} disabled={graphLoading}
+                      className="text-xs text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1 px-2 py-1 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg border border-emerald-200 dark:border-emerald-700">
+                      {graphLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                      AI 关系图
+                    </button>
+                  </div>
                 </div>
                 {aiRecommendations.length > 0 && (
                   <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl p-4 border border-purple-100 dark:border-purple-800">
@@ -425,6 +451,12 @@ function PeopleContent() {
                         </div>
                       );
                     })}
+                  </div>
+                )}
+                {graphResult && (
+                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl p-4 border border-emerald-200 dark:border-emerald-700">
+                    <h4 className="text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-2 flex items-center gap-1">AI 关系图谱分析</h4>
+                    <div className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{graphResult}</div>
                   </div>
                 )}
               </div>
