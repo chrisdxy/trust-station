@@ -383,12 +383,10 @@ function PeopleContent() {
             {/* AI 推荐区域 */}
             {pageTab === 'browse' && (
               <div className="mb-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                      <Sparkles className="w-4 h-4 text-purple-500" />AI 推荐
-                    </h3>
-                    <button onClick={async () => {
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                  {/* AI 推荐卡片 */}
+                  <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-2xl p-5 border border-purple-200/50 dark:border-purple-700/50 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={async () => {
                       setAiLoading(true);
                       try {
                         const profiles = cards.map(u => ({ name: u.display_name || u.real_name, industry: u.industry, bio: u.bio })).slice(0, 20);
@@ -407,12 +405,25 @@ function PeopleContent() {
                           setAiRecommendations(lines);
                         }
                       } catch {} finally { setAiLoading(false); }
-                    }} disabled={aiLoading}
-                      className="text-xs text-purple-600 hover:text-purple-700 font-medium flex items-center gap-1 px-2 py-1 bg-purple-50 dark:bg-purple-900/30 rounded-lg border border-purple-200 dark:border-purple-700">
-                      {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
-                      {aiLoading ? '分析中' : '刷新'}
-                    </button>
-                    <button onClick={async () => {
+                    }}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center">
+                          <Sparkles className="w-4 h-4 text-white" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold text-slate-800 dark:text-white">AI 推荐</div>
+                          <div className="text-[11px] text-purple-400">点击可查</div>
+                        </div>
+                      </div>
+                      {aiLoading && <Loader2 className="w-4 h-4 animate-spin text-purple-500" />}
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">AI 分析你的资料，推荐最值得认识的伙伴</p>
+                  </div>
+
+                  {/* AI 关系图卡片 */}
+                  <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-2xl p-5 border border-emerald-200/50 dark:border-emerald-700/50 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={async () => {
                       setGraphLoading(true);
                       setGraphResult('');
                       try {
@@ -429,11 +440,20 @@ function PeopleContent() {
                         const data = await res.json();
                         if (data.success) setGraphResult(data.result);
                       } catch {} finally { setGraphLoading(false); }
-                    }} disabled={graphLoading}
-                      className="text-xs text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1 px-2 py-1 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg border border-emerald-200 dark:border-emerald-700">
-                      {graphLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
-                      AI 关系图
-                    </button>
+                    }}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+                          <Sparkles className="w-4 h-4 text-white" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold text-slate-800 dark:text-white">AI 关系图</div>
+                          <div className="text-[11px] text-emerald-400">点击可查</div>
+                        </div>
+                      </div>
+                      {graphLoading && <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />}
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">AI 分析用户关系网络，发现关键连接人</p>
                   </div>
                 </div>
                 {aiRecommendations.length > 0 && (
