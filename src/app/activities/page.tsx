@@ -592,99 +592,74 @@ export default function ActivitiesPage() {
               {user && <p className="text-sm mt-2">点击上方按钮发布第一个活动</p>}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {activities.map((activity, index) => (
                 <motion.div
                   key={activity.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                  className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow cursor-pointer"
                   onClick={() => openDetail(activity)}
                 >
-                  <div className="h-40 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 flex items-center justify-center relative">
-                    {activity.cover_image ? (
+                  <div className="flex items-start gap-4">
+                    <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 flex items-center justify-center relative">
+                      {activity.cover_image ? (
                       <img src={activity.cover_image} alt={activity.title} className="w-full h-full object-cover" />
                     ) : (
-                      <Calendar className="w-12 h-12 text-purple-400" />
-                    )}
-                    {/* 报名状态标签 */}
-                    {isRegistered(activity) && (
-                      <span className="absolute top-2 right-2 px-2 py-1 bg-green-500 text-white text-xs rounded-full flex items-center gap-1">
-                        <CheckCircle className="w-3 h-3" /> 已报名
-                      </span>
-                    )}
-                  </div>
-                  <div className="p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(activity.status || 'upcoming')}`}>
-                        {getStatusLabel(activity.status || 'upcoming')}
-                      </span>
-                      {activity.activity_type && <span className="text-xs text-slate-500">{activity.activity_type}</span>}
-                    </div>
-                    <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-1 line-clamp-2">{activity.title}</h3>
-                    <span className="inline-block px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded text-xs font-mono cursor-pointer hover:bg-amber-200 transition-colors mb-2"
-                      onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(getShortActivityId(activity.id)); }}
-                      title="点击复制活动ID，用于记录中心查询">
-                      活动ID: {getShortActivityId(activity.id)}
-                    </span>
-                    {activity.description && (
-                      <p className="text-sm text-slate-500 mb-4 line-clamp-2">{activity.description.replace(/<[^>]*>/g, '').trim()}</p>
-                    )}
-                    <div className="space-y-2 text-sm text-slate-500">
-                      {(activity.organizer_name_selected || activity.organizer_name) && (
-                        <div className="flex items-center gap-2"><User className="w-4 h-4" />{activity.organizer_name_selected || activity.organizer_name}</div>
-                      )}
-                      {activity.location && (
-                        <div className="flex items-center gap-2"><MapPin className="w-4 h-4" />{activity.location}</div>
-                      )}
-                      {activity.start_time && (
-                        <div className="flex items-center gap-2"><Clock className="w-4 h-4" />{fmtDate(activity.start_time)}</div>
-                      )}
-                      {activity.max_participants && (
-                        <div className="flex items-center gap-2"><Users className="w-4 h-4" />{activity.current_participants || 0} / {activity.max_participants} 人</div>
-                      )}
-                      {activity.is_paid && activity.price != null && (
-                        <div className="flex items-center gap-2 text-orange-600 font-medium">¥{Number(activity.price).toFixed(2)}</div>
+                        <Calendar className="w-7 h-7 text-purple-400" />
                       )}
                     </div>
-                    {/* 操作按钮 */}
-                    {user && (
-                      <div className="flex gap-2 mt-4 pt-3 border-t border-slate-100 dark:border-slate-700" onClick={e => e.stopPropagation()}>
-                        {/* 我发布的：显示编辑和删除 */}
-                        {isMyPublished(activity) && (
-                          <>
-                            <button onClick={() => openEdit(activity)}
-                              className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm hover:bg-blue-100 transition-colors">
-                              <Edit className="w-4 h-4" />编辑
-                            </button>
-                            <button onClick={() => confirmDelete(activity)}
-                              disabled={deleting}
-                              className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg text-sm hover:bg-red-100 transition-colors disabled:opacity-50">
-                              <Trash2 className="w-4 h-4" />删除
-                            </button>
-                          </>
-                        )}
-                        {/* 我作为组织成员（但不是我发布的）：显示标识 */}
-                        {isOrganizerMember(activity) && !isMyPublished(activity) && (
-                          <span className="flex-1 text-center text-xs text-slate-400 py-2">组织成员</span>
-                        )}
-                        {/* 报名/取消报名：所有用户均可（含发布者），upcoming 状态 */}
-                        {activity.status === 'upcoming' && (
-                          isRegistered(activity) ? (
-                            <button onClick={() => handleCancelFromCard(activity)}
-                              className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-orange-50 text-orange-600 rounded-lg text-sm hover:bg-orange-100 transition-colors">
-                              <LogOut className="w-4 h-4" />取消报名
-                            </button>
-                          ) : (
-                            <button onClick={() => handleRegisterFromCard(activity)}
-                              className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-green-50 text-green-600 rounded-lg text-sm hover:bg-green-100 transition-colors">
-                              <CheckCircle className="w-4 h-4" />立即报名
-                            </button>
-                          )
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                        <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${getStatusColor(activity.status || 'upcoming')}`}>
+                          {getStatusLabel(activity.status || 'upcoming')}
+                        </span>
+                        {activity.activity_type && <span className="text-xs text-slate-500">{activity.activity_type}</span>}
+                        {isRegistered(activity) && (
+                          <span className="px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs rounded flex items-center gap-0.5">
+                            <CheckCircle className="w-3 h-3" />已报名
+                          </span>
                         )}
                       </div>
-                    )}
+                      <h3 className="font-semibold text-slate-900 dark:text-white truncate">{activity.title}</h3>
+                      <span className="inline-block px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded text-xs font-mono cursor-pointer hover:bg-amber-200 transition-colors mt-0.5"
+                        onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(getShortActivityId(activity.id)); }}
+                        title="点击复制活动ID，用于记录中心查询">
+                        活动ID: {getShortActivityId(activity.id)}
+                      </span>
+                      <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500 mt-1.5">
+                        {(activity.organizer_name_selected || activity.organizer_name) && (
+                          <span className="flex items-center gap-1"><User className="w-3 h-3" />{activity.organizer_name_selected || activity.organizer_name}</span>
+                        )}
+                        {activity.location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{activity.location}</span>}
+                        {activity.start_time && <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{fmtDate(activity.start_time)}</span>}
+                        {activity.max_participants && (
+                          <span className="flex items-center gap-1"><Users className="w-3 h-3" />{activity.current_participants || 0}/{activity.max_participants}</span>
+                        )}
+                        {activity.is_paid && activity.price != null && <span className="text-orange-600">¥{Number(activity.price).toFixed(2)}</span>}
+                      </div>
+                      {user && (
+                        <div className="flex gap-2 mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-700" onClick={e => e.stopPropagation()}>
+                          {isMyPublished(activity) && (
+                            <>
+                              <button onClick={() => openEdit(activity)} className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs hover:bg-blue-100 transition-colors"><Edit className="w-3 h-3" />编辑</button>
+                              <button onClick={() => confirmDelete(activity)} disabled={deleting} className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs hover:bg-red-100 transition-colors disabled:opacity-50"><Trash2 className="w-3 h-3" />删除</button>
+                            </>
+                          )}
+                          {isOrganizerMember(activity) && !isMyPublished(activity) && (
+                            <span className="text-xs text-slate-400 flex items-center gap-1">组织成员</span>
+                          )}
+                          {activity.status === 'upcoming' && (
+                            isRegistered(activity) ? (
+                              <button onClick={() => handleCancelFromCard(activity)} className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-orange-50 text-orange-600 rounded-lg text-xs hover:bg-orange-100 transition-colors"><LogOut className="w-3 h-3" />取消报名</button>
+                            ) : (
+                              <button onClick={() => handleRegisterFromCard(activity)} className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-green-50 text-green-600 rounded-lg text-xs hover:bg-green-100 transition-colors"><CheckCircle className="w-3 h-3" />立即报名</button>
+                            )
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </motion.div>
               ))}
