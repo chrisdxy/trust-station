@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Plus, MapPin, Users, Clock, Search, Loader2, X, User, Edit, Trash2, CheckCircle, LogOut, ChevronRight, ChevronDown, Image, Copy } from 'lucide-react';
 import Layout from '@/components/Layout';
@@ -35,6 +36,7 @@ interface Activity {
 }
 
 export default function ActivitiesPage() {
+  const router = useRouter();
   const { t } = useLanguage();
   const { user } = useAuth();
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -73,20 +75,9 @@ export default function ActivitiesPage() {
     return 'ACT' + id.replace(/-/g, '').slice(0, 8).toUpperCase();
   };
 
-  // 详情弹窗 - 加载活动详情
-  const openDetail = async (activity: Activity) => {
-    setDetailActivity(activity);
-    if (user?.id) {
-      setDetailLoading(true);
-      try {
-        const detailRes = await fetch(`/api/activities/${activity.id}?userId=${user.id}`);
-        const detailData = await detailRes.json();
-        if (detailData.success) {
-          setDetailActivity({ ...detailData.activity, my_registration_status: detailData.registration?.status, is_organizer_member: detailData.activity.is_organizer_member });
-        }
-      } catch (e) { /* ignore */ }
-      setDetailLoading(false);
-    }
+  // 跳转到独立活动详情页（用于微信分享 OG 卡片）
+  const openDetail = (activity: Activity) => {
+    router.push(`/activities/${activity.id}`);
   };
 
   const closeDetail = () => {
@@ -592,14 +583,14 @@ export default function ActivitiesPage() {
               {user && <p className="text-sm mt-2">点击上方按钮发布第一个活动</p>}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {activities.map((activity, index) => (
                 <motion.div
                   key={activity.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                  className="bg-white dark:bg-slate-800 rounded-xl p-3 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow cursor-pointer"
                   onClick={() => openDetail(activity)}
                 >
                   <div className="h-40 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 flex items-center justify-center relative">

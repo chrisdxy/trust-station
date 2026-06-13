@@ -433,18 +433,10 @@ export default function CommunitiesPage() {
   // 查看详情（仅正式成员和创建者可查看）
   const handleViewDetail = (community: Community) => {
     if (!currentUser?.id) {
-      alert('请先登录');
+      router.push('/login');
       return;
     }
-    const isMyCommunity = isCreatedByMe(community) || joinedCommunities.includes(community.id);
-    if (!isMyCommunity) {
-      // 非成员点击卡片直接弹出申请加入弹窗
-      setJoinTarget(community);
-      setShowJoinModal(true);
-      return;
-    }
-    setSelectedCommunity(community);
-    setShowDetailModal(true);
+    router.push(`/communities/${community.id}`);
   };
 
   // 创建/更新共同体（通过云 MySQL API，不依赖 localStorage）

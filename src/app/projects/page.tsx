@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import RichTextEditor from "@/components/RichTextEditor";
 import { Briefcase, Plus, MapPin, Calendar, X, Bold, Italic, List, Link, Image, Upload, Users, UserPlus, Trash2, Edit, Pause, Play, CheckCircle, Search, Star, ChevronDown, Copy } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -1136,68 +1137,12 @@ export default function ProjectsPage() {
                         </button>
                       </div>
                       <div className="border border-slate-200 dark:border-slate-600 rounded-lg overflow-hidden">
-                        <div className="flex items-center gap-1 p-2 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-600">
-                          <button
-                            type="button"
-                            onClick={() => formatText('bold')}
-                            className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded transition-colors"
-                            title="加粗"
-                          >
-                            <Bold className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => formatText('italic')}
-                            className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded transition-colors"
-                            title="斜体"
-                          >
-                            <Italic className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => formatText('list')}
-                            className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded transition-colors"
-                            title="列表"
-                          >
-                            <List className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => formatText('link')}
-                            className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded transition-colors"
-                            title="链接"
-                          >
-                            <Link className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => editorImageRef.current?.click()}
-                            className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded transition-colors"
-                            title="上传图片"
-                          >
-                            <Image className="w-4 h-4" />
-                          </button>
-                          <input
-                            ref={editorImageRef}
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            onChange={handleEditorImageUpload}
-                            className="hidden"
-                          />
-                        </div>
-                        <textarea
-                          id="project-description"
-                          rows={4}
+                        <RichTextEditor
+                          placeholder="请输入项目详情，支持富文本格式，可插入图片..."
                           value={formData.description}
-                          onChange={e => setFormData({ ...formData, description: e.target.value })}
-                          placeholder="请输入项目详情..."
-                          className="w-full px-4 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-white resize-none focus:outline-none"
+                          onChange={v => setFormData(prev => ({ ...prev, description: v }))}
                         />
                       </div>
-                      <p className="mt-1 text-xs text-slate-400">
-                        支持格式：**加粗**、*斜体*、- 列表、[文字](链接)
-                      </p>
                     {riskResult && (
                       <div className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
                         <div className="font-medium text-red-600 mb-1 flex items-center gap-1"><AlertTriangle className="w-4 h-4" />风险检测结果</div>
@@ -1241,50 +1186,11 @@ export default function ProjectsPage() {
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                           尽调详情
                         </label>
-                        <div className="border border-slate-200 dark:border-slate-600 rounded-lg overflow-hidden">
-                          <div className="flex items-center gap-1 p-2 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-600">
-                            <button
-                              type="button"
-                              onClick={() => formatText('bold')}
-                              className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded transition-colors"
-                              title="加粗"
-                            >
-                              <Bold className="w-4 h-4" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => formatText('italic')}
-                              className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded transition-colors"
-                              title="斜体"
-                            >
-                              <Italic className="w-4 h-4" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => formatText('list')}
-                              className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded transition-colors"
-                              title="列表"
-                            >
-                              <List className="w-4 h-4" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => formatText('link')}
-                              className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded transition-colors"
-                              title="链接"
-                            >
-                              <Link className="w-4 h-4" />
-                            </button>
-                          </div>
-                          <textarea
-                            id="due-diligence-details"
-                            rows={4}
-                            value={formData.dueDiligenceDetails}
-                            onChange={e => setFormData({ ...formData, dueDiligenceDetails: e.target.value })}
-                            placeholder="请输入尽调详情..."
-                            className="w-full px-4 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-white resize-none focus:outline-none"
-                          />
-                        </div>
+                        <RichTextEditor
+                          placeholder="请输入尽调详情..."
+                          value={formData.dueDiligenceDetails}
+                          onChange={v => setFormData(prev => ({ ...prev, dueDiligenceDetails: v }))}
+                        />
                       </div>
                     )}
 
