@@ -6,7 +6,6 @@ import { Globe, User, Building, Award, Search, X, MapPin, Mail, Phone, Star, Shi
 import Layout from '@/components/Layout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Sparkles, Loader2 } from 'lucide-react';
 
 type CardType = 'personal' | 'enterprise' | 'expert' | 'coach' | 'partner';
 type PageTab = 'browse' | 'requests' | 'friends';
