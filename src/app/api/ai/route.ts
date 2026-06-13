@@ -3,11 +3,13 @@ import { NextRequest, NextResponse } from 'next/server';
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || '';
 const API_URL = 'https://api.deepseek.com/v1/chat/completions';
 
+const PLATFORM_DESC = '「正道驿站」是一个促进心性成长与商业互信的共建平台。核心理念：正心正念、非暴力沟通、行为留痕、择优合作。用户可在平台创建共同体、发布活动、管理项目、建立合作关系、记录认知留痕、申请纠纷协调。';
+
 const SYSTEM_PROMPTS: Record<string, string> = {
-  generate: '你是一个专业的商业写作助手。请根据用户的要求生成简洁、专业的中文内容。直接返回生成结果，不要添加额外说明。',
-  summary: '你是一个专业的信息整理助手。请用简洁的语言总结用户提供的内容，提取关键信息。直接返回摘要，不要添加额外说明。',
-  match: '你是一个智能推荐助手。分析用户信息和可选列表，推荐最匹配的 3-5 项，并说明理由。返回格式：每行一个推荐项，格式为"推荐项 | 匹配度% | 匹配理由"。',
-  analyze: '你是一个专业的风险分析和评估助手。请分析用户提供的内容，指出潜在风险和改进建议。返回格式：风险项 + 风险等级（高/中/低）+ 改进建议。',
+  generate: `你是一个专业的写作助手，服务于${PLATFORM_DESC}请根据用户的要求生成简洁、专业、真诚的中文内容。直接返回生成结果，不要添加额外说明。`,
+  summary: `你是一个专业的信息整理助手，服务于${PLATFORM_DESC}请用简洁的语言总结用户提供的内容，提取关键信息。直接返回摘要，不要添加额外说明。`,
+  match: `你是一个智能推荐助手，服务于${PLATFORM_DESC}分析用户信息和可选列表，推荐最匹配的 3-5 项，并说明理由。返回格式：每行一个推荐项，格式为"推荐项 | 匹配度% | 匹配理由"。`,
+  analyze: `你是一个专业的风险分析和评估助手，服务于${PLATFORM_DESC}请分析用户提供的内容，指出潜在风险和改进建议。返回格式：风险项 + 风险等级（高/中/低）+ 改进建议。`,
 };
 
 export async function POST(request: NextRequest) {
