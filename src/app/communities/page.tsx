@@ -852,8 +852,36 @@ export default function CommunitiesPage() {
             </button>
           </div>
           {aiSearchResult && (
-            <div className="mt-3 p-3 bg-white dark:bg-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap border border-blue-100 dark:border-blue-800">
-              {aiSearchResult}
+            <div className="mt-3 p-3 bg-white dark:bg-slate-700 rounded-lg border border-blue-100 dark:border-blue-800">
+              <div className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-2">搜索结果</div>
+              <div className="space-y-2">
+                {aiSearchResult.split('\n').filter(Boolean).map((line, i) => {
+                  const parts = line.split('|').map(s => s.trim());
+                  const title = parts[0] || '';
+                  const score = parts[1] || '';
+                  const reason = parts[2] || '';
+                  const matched = communities.find(c => c.name?.toLowerCase().includes(title.toLowerCase()) || title.toLowerCase().includes((c.name || '').toLowerCase()));
+                  return (
+                    <div key={i} className="flex items-start gap-3 p-2.5 bg-blue-50/50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
+                      <span className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-xs font-medium flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {matched ? (
+                            <button onClick={() => router.push(`/communities/${matched.id}`)}
+                              className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline truncate text-left">
+                              {title}
+                            </button>
+                          ) : (
+                            <span className="text-sm font-medium text-slate-800 dark:text-slate-200">{title}</span>
+                          )}
+                          {score && <span className="text-xs text-green-600 bg-green-100 dark:bg-green-900/30 px-1.5 py-0.5 rounded font-medium">{score}</span>}
+                        </div>
+                        {reason && <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{reason}</p>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>

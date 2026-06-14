@@ -676,10 +676,7 @@ export default function ProjectsPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             {projectId ? (
-                              <button onClick={() => {
-                                const p = projects.find(pr => pr.id === projectId);
-                                if (p) setSelectedProject(p);
-                              }}
+                              <button onClick={() => { router.push(`/projects/${projectId}`); }}
                                 className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:underline truncate text-left">
                                 {title || line}
                               </button>
