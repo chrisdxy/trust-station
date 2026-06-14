@@ -12,6 +12,7 @@ START_TIME=$(date +%s)
 cd "$APP_DIR"
 header "正道驿站 全自动部署 v3（零停机）"
 echo "时间: $(date)"; echo "版本: $VERSION"; echo ""
+
 header "[1/10] 预检查"
 DISK_AVAIL=$(df / | tail -1 | awk '{print $4}')
 echo "  磁盘: $((DISK_AVAIL/1024))MB 可用"
@@ -21,64 +22,86 @@ echo "  node_modules OK"
 OLD_RUNNING=false; OLD_INSTANCES=0
 if pm2 list 2>/dev/null | grep -q "zhengdao.*online"; then
   OLD_RUNNING=true; OLD_INSTANCES=$(pm2 list 2>/dev/null | grep "zhengdao" | wc -l)
-  log "旧版运行中 ($OLD_INSTANCES 实例)，零停机切换"
+  log "旧版运行中 ($OLD_INSTANCES 实例)"
 else
   warn "旧版未运行，直接启动新版"
 fi
-if [ -f "ecosystem.config.js" ]; then PM2_CONF="ecosystem.config.js"
-elif [ -f "ecosystem.config.cjs" ]; then PM2_CONF="ecosystem.config.cjs"
-else error "未找到 PM2 配置"; exit 1; fi
-echo "  PM2 配置: $PM2_CONF"
+
+# 生成集群模式 PM2 配置（实现零停机滚动重启）
+cat > /tmp/ecosystem.zhengdao.js << 'PM2EOF'
+module.exports = {
+  apps: [{
+    name: 'zhengdao',
+    script: './server.js',
+    instances: 2,
+    exec_mode: 'cluster',
+    autorestart: true,
+    watch: false,
+    max_memory_restart: '1G',
+    listen_timeout: 30000,
+    kill_timeout: 10000,
+    env: {
+      NODE_ENV: 'production',
+      PORT: 5000,
+      HOST: '0.0.0.0'
+    }
+  }]
+};
+PM2EOF
+log "PM2 集群配置已生成（2 实例，滚动重启）"
+
 header "[2/10] 备份"
 MY_BACKUP_DIR="/root/backups/zhengdao_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$MY_BACKUP_DIR"
 cp .env "$MY_BACKUP_DIR/" 2>/dev/null || true
-cp "$PM2_CONF" "$MY_BACKUP_DIR/" 2>/dev/null || true
+cp ecosystem.config.js /tmp/ecosystem.zhengdao.js "$MY_BACKUP_DIR/" 2>/dev/null || true
 cp next.config.js "$MY_BACKUP_DIR/" 2>/dev/null || true
 log "备份目录: $MY_BACKUP_DIR"
 if [ -d ".next" ]; then rm -rf /tmp/next-rollback 2>/dev/null; cp -r .next /tmp/next-rollback; fi
+
 header "[3/10] 拉取代码"
 if [ -d ".git" ]; then git stash 2>/dev/null || true; git pull 2>&1; else warn "非 Git 仓库"; fi
+
 header "[4/10] 安装依赖"
-npm install 2>&1 || { warn "npm install 失败，尝试清理缓存后重试..."; npm cache clean --force 2>/dev/null; rm -rf node_modules package-lock.json; npm install 2>&1; } || { error "npm install 重试仍然失败"; exit 1; }
+npm install 2>&1 || { warn "npm install 失败，清理重试..."; npm cache clean --force 2>/dev/null; rm -rf node_modules package-lock.json; npm install 2>&1; } || { error "npm install 重试失败"; exit 1; }
 warn "跳过 npm audit fix"
+
 header "[5/10] 构建"
 rm -rf .next
-npm run build 2>&1 || { error "构建失败"; [ -d /tmp/next-rollback ] && warn "旧版未受影响，继续运行"; exit 1; }
+npm run build 2>&1 || { error "构建失败"; [ -d /tmp/next-rollback ] && warn "旧版继续运行"; exit 1; }
 log "构建成功"
+
 header "[6/10] 部署静态文件"
 mkdir -p .next/standalone/public
 cp -r public/* .next/standalone/public/ 2>/dev/null || true
 mkdir -p .next/standalone/.next
 cp -r .next/static .next/standalone/.next/static
-cp "$PM2_CONF" .env .next/standalone/ 2>/dev/null || true
-header "[7/10] 零停机切换"
+cp /tmp/ecosystem.zhengdao.js .next/standalone/ecosystem.config.js
+
+header "[7/10] 零停机切换（滚动重启）"
 cd "$APP_DIR/.next/standalone"
 if [ "$OLD_RUNNING" = true ]; then
-  log "启动新实例（旧版继续服务）..."
-  pm2 start "$PM2_CONF" --name "zhengdao-new" 2>&1
+  log "集群模式滚动重启（逐个切换，零停机）..."
+  pm2 reload ecosystem.config.js --update-env 2>&1
   sleep 4
-  # 验证新实例
-  NEW_OK=false
+  # 验证
   for i in 1 2 3; do
-    if curl -s -o /dev/null -w "%{http_code}" https://myfriends.vip --max-time 5 2>/dev/null | grep -q "200"; then
-      NEW_OK=true; break
+    if curl -s -o /dev/null -w "%{http_code}" http://localhost:5000 --max-time 5 2>/dev/null | grep -q "200"; then
+      log "滚动重启成功"; break
     fi
-    sleep 2
+    [ "$i" -lt 3 ] && sleep 2
   done
-  if [ "$NEW_OK" = true ]; then
-    log "新实例验证通过，停止旧版..."
-    pm2 delete zhengdao 2>/dev/null || true
-    pm2 rename zhengdao-new zhengdao 2>/dev/null || true
-    log "切换完成"
-  else
-    warn "新实例验证失败，回滚中..."
-    pm2 delete zhengdao-new 2>/dev/null || true
+  # 如果验证失败，尝试直接启动
+  if ! curl -s -o /dev/null -w "%{http_code}" http://localhost:5000 --max-time 5 2>/dev/null | grep -q "200"; then
+    warn "滚动重启验证未通过，尝试直启..."
+    pm2 start ecosystem.config.js --update-env 2>&1 || true
+    sleep 3
   fi
 else
-  pm2 start "$PM2_CONF" 2>&1; sleep 3
+  pm2 start ecosystem.config.js --update-env 2>&1; sleep 3
 fi
 cd "$APP_DIR"
+
 header "[8/10] 验证"; sleep 2
 SITE_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://myfriends.vip --max-time 10 2>/dev/null || echo "000")
 CSS_FILE=$(ls .next/static/css/ 2>/dev/null | head -1); CSS_CODE="000"
@@ -89,16 +112,16 @@ if [ "$SITE_CODE" = "200" ] && [ "$PM2_COUNT" -ge 1 ]; then
   log "验证通过"
 else
   error "验证失败，正在回滚..."
-  pm2 delete zhengdao 2>/dev/null || true
   [ -d "/tmp/next-rollback" ] && { rm -rf "$APP_DIR/.next"; cp -r /tmp/next-rollback "$APP_DIR/.next"; }
-  cd "$APP_DIR" && pm2 start "$PM2_CONF" 2>/dev/null || true
-  log "已回滚到旧版"; exit 1
+  pm2 restart zhengdao 2>/dev/null || pm2 start ecosystem.config.js 2>/dev/null || true
+  log "已回滚"; exit 1
 fi
+
 header "[9/10] 保存状态"; pm2 save --force 2>&1 | tail -1
 header "[10/10] 部署报告"
 END_TIME=$(date +%s); DURATION=$((END_TIME - START_TIME))
 echo "  版本: $VERSION"; echo "  状态: 成功"
 echo "  用时: $((DURATION/60))m$((DURATION%60))s"
 echo "  站点: https://myfriends.vip ($SITE_CODE)"
-echo "  PM2:  $PM2_COUNT 实例在线"
+echo "  PM2:  $PM2_COUNT 实例在线(集群模式)"
 log "部署完成！pm2 logs zhengdao"
