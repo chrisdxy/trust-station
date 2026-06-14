@@ -45,6 +45,7 @@ interface Project {
   createdAt?: string;
   members: string[];
   creatorId?: string;
+  creatorName?: string;
   paused?: boolean;
   isDueDiligence?: boolean;
   dueDiligenceDetails?: string;
