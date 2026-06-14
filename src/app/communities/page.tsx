@@ -110,11 +110,18 @@ export default function CommunitiesPage() {
     fetchCommunities();
   }, [fetchCommunities]);
 
-  // 支持从 URL 参数打开编辑（管理员从发布管理跳转）
+  // 支持从 URL 参数打开编辑（管理员从发布管理跳转）或查看详情（微信分享跳转）
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const editId = params.get('edit');
-    if (editId && communities.length > 0) {
+    const viewId = params.get('view');
+    if (viewId && communities.length > 0) {
+      const community = communities.find(c => c.id === viewId);
+      if (community) {
+        setSelectedCommunity(community);
+        setShowDetailModal(true);
+      }
+    } else if (editId && communities.length > 0) {
       const community = communities.find(c => c.id === editId);
       if (community) {
         setEditingCommunity(community);
