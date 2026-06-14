@@ -1,0 +1,17 @@
+module.exports = {
+  apps: [{
+    name: 'zhengdao',
+    script: '.next/standalone/server.js',
+    instances: 2,
+    exec_mode: 'cluster',
+    env: {
+      PORT: '5000',
+      DEEPSEEK_API_KEY: 'sk-c2459f4d6fc2487cadfaba8e2c3fb850',
+      DB_HOST: 'sh-cynosdbmysql-grp-b72pddqo.sql.tencentcdb.com',
+      DB_PORT: '20683',
+      DB_USER: 'Administrator',
+      DB_PASSWORD: '12qwaszx!@QWASZX34erdf#$ERDF',
+      DB_NAME: 'zhengdao'
+    }
+  }]
+};
