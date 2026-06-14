@@ -1,6 +1,13 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import dynamic from 'next/dynamic';
+
+// 动态导入客户端组件（避免SSR）
+const ProjectCommunication = dynamic(
+  () => import('@/components/ProjectCommunication'),
+  { ssr: false }
+);
 
 async function getProject(id: string) {
   try {
@@ -67,6 +74,13 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
             <div className="text-slate-700 dark:text-slate-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: project.description }} />
           </div>
         )}
+
+        {/* 项目沟通区 */}
+        <ProjectCommunication
+          projectId={id}
+          creatorId={project.creatorId || ''}
+          creatorName={project.creatorName || '创建者'}
+        />
       </div>
     </div>
   );
