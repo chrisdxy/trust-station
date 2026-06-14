@@ -28,6 +28,7 @@ const superAdminNavItems = [
   { path: '/admin/mediation', label: '协调管理', icon: Scale },
   { path: '/admin/feedbacks', label: '投诉与建议', icon: MessageSquare },
   { path: '/admin/ai-tools', label: 'AI工具管理', icon: Sparkles },
+  { path: '/admin/ai-assistant', label: 'AI小助手', icon: MessageSquare },
   { path: '/admin/stats', label: '数据统计', icon: BarChart3 },
   { path: '/admin/settings', label: '系统设置', icon: Settings }
 ];
@@ -42,6 +43,7 @@ const adminNavItems = [
   { path: '/admin/mediation', label: '协调管理', icon: Scale },
   { path: '/admin/feedbacks', label: '投诉与建议', icon: MessageSquare },
   { path: '/admin/ai-tools', label: 'AI工具管理', icon: Sparkles },
+  { path: '/admin/ai-assistant', label: 'AI小助手', icon: MessageSquare },
   { path: '/admin/stats', label: '数据统计', icon: BarChart3 },
   { path: '/admin/settings', label: '系统设置', icon: Settings }
 ];

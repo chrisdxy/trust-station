@@ -1,0 +1,14 @@
+-- AI 小助手知识库表
+CREATE TABLE IF NOT EXISTS ai_knowledge (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL COMMENT '知识标题',
+  content TEXT NOT NULL COMMENT '知识内容',
+  tags VARCHAR(500) DEFAULT NULL COMMENT '标签（逗号分隔）',
+  category VARCHAR(100) DEFAULT NULL COMMENT '分类',
+  enabled TINYINT(1) DEFAULT 1 COMMENT '是否启用',
+  sort_order INT DEFAULT 0 COMMENT '排序',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_enabled (enabled),
+  INDEX idx_category (category)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AI 小助手知识库';

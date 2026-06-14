@@ -10,6 +10,7 @@ import {
   Calendar, Globe, Users2, Menu, X, LogOut, ChevronLeft, User, Key, Layout as LayoutIcon, Sparkles, BarChart3, MessageSquare
 } from 'lucide-react';
 import Footer from './Footer';
+import AIAssistant from './AIAssistant';
 
 const navItems = [
   { path: '/overview', labelKey: 'nav.community', icon: BarChart3 },
@@ -322,6 +323,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Global Footer */}
       <Footer />
+
+      {/* AI 小助手 - 用户登录后显示 */}
+      {currentUser && <AIAssistant />}
 
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && !hideSidebarWithoutLogin && (
