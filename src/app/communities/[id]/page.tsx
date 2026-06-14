@@ -56,13 +56,6 @@ export default async function CommunityDetailPage({ params }: { params: Promise<
           ← 返回共同体
         </Link>
 
-        {/* 封面图 */}
-        {c.cover_image && (
-          <div className="rounded-2xl overflow-hidden mb-6 shadow-md">
-            <img src={c.cover_image} alt={c.name} className="w-full h-64 object-cover" />
-          </div>
-        )}
-
         {/* 基本信息 */}
         <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 mb-6">
           <div className="flex items-start gap-4">
