@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       params.push(limit, offset);
     } else if (type === 'activity') {
       query = `SELECT a.id, a.title as name, a.description as summary, a.user_id as owner_id, a.status,
-                      a.max_participants, a.start_time, a.created_at,
+                      a.max_participants, a.start_time, a.created_at, a.cover_image as coverImage, a.location,
                       a.is_pinned as is_pinned, a.sort_order as sort_order,
                       u.display_name as owner_name
                FROM activities a LEFT JOIN users u ON a.user_id = u.id
