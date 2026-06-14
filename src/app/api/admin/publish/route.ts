@@ -72,6 +72,18 @@ export async function GET(request: NextRequest) {
     const [countResult]: any = await pool.query(countQuery, countParams);
     const total = countResult[0]?.total || 0;
 
+    // 项目类型：从 images JSON 中提取 coverImage
+    if (type === 'project') {
+      rows.forEach((r: any) => {
+        try {
+          const images = typeof r.images === 'string' ? JSON.parse(r.images) : (r.images || []);
+          r.coverImage = Array.isArray(images) && images.length > 0 ? images[0] : '';
+        } catch {
+          r.coverImage = '';
+        }
+      });
+    }
+
     return NextResponse.json({
       success: true,
       items: rows,
