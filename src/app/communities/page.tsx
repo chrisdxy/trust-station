@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Users2, Plus, Search, Globe, X, Bold, Italic, List, Link, Image, ImageIcon, Eye, Upload, Calendar, MapPin, Clock, User, Star, Edit, Trash2, ChevronDown, UserPlus, LogOut, CheckCircle, Copy, Loader2 } from 'lucide-react';
+import { Users2, Plus, Search, Globe, X, Bold, Italic, List, Link, Image, ImageIcon, Eye, Upload, Calendar, MapPin, Clock, User, Star, Edit, Trash2, ChevronDown, UserPlus, LogOut, CheckCircle, Copy, Loader2, Sparkles } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -152,6 +152,9 @@ export default function CommunitiesPage() {
   const [activeTab, setActiveTab] = useState<'all' | 'created' | 'joined'>('all');
   const [subFilter, setSubFilter] = useState<'all' | 'pinned' | 'active' | 'newest'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [aiSearchQuery, setAiSearchQuery] = useState('');
+  const [aiSearching, setAiSearching] = useState(false);
+  const [aiSearchResult, setAiSearchResult] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingCommunity, setEditingCommunity] = useState<Community | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -783,6 +786,90 @@ export default function CommunitiesPage() {
               className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
             />
           </div>
+        </div>
+
+        {/* AI 搜索 */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-4 border border-blue-200 dark:border-blue-700 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-4 h-4 text-white" />
+            </div>
+            <div className="flex-1 relative">
+              <textarea
+                value={aiSearchQuery}
+                onChange={e => setAiSearchQuery(e.target.value)}
+                onKeyDown={async e => {
+                  if (e.key === 'Enter' && !e.shiftKey && aiSearchQuery.trim()) {
+                    e.preventDefault();
+                    setAiSearching(true);
+                    setAiSearchResult('');
+                    try {
+                      const list = communities.map(c => ({
+                        id: c.id, name: c.name, summary: c.summary, category: c.category,
+                        industry: c.industry, industryName: c.industryName
+                      }));
+                      const res = await fetch('/api/ai', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          action: 'match',
+                          prompt: `【严格限定】用户需求：${aiSearchQuery}
+【规则】只能从下方提供的共同体列表中推荐。如果没有匹配的共同体，请如实回答"未找到匹配共同体"。
+返回格式：每行"共同体名称 | 匹配度% | 匹配理由"`,
+                          context: `共同体列表（共${list.length}个）：\n${list.map(c => `ID:${c.id} | ${c.name} | ${c.summary||''} | 类别:${c.category||''} | 行业:${c.industryName||c.industry||''}`).join('\n')}`,
+                          content: '请严格依据以上列表进行匹配推荐，不得新增任何列表外的项目'
+                        })
+                      });
+                      const data = await res.json();
+                      setAiSearchResult(data.success ? data.result : 'AI 搜索失败，请稍后重试');
+                    } catch { setAiSearchResult('网络错误，请稍后重试'); }
+                    finally { setAiSearching(false); }
+                  }
+                }}
+                placeholder="输入需求，AI 搜索共同体（Enter发送，Shift+Enter换行）..."
+                className="w-full pl-4 pr-10 py-2.5 bg-white dark:bg-slate-700 border border-blue-200 dark:border-blue-600 rounded-lg text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none overflow-hidden min-h-[42px]"
+                rows={1}
+                onInput={e => {
+                  const el = e.currentTarget;
+                  el.style.height = 'auto';
+                  el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+                }}
+              />
+              {aiSearching && <Loader2 className="absolute right-3 top-3 w-4 h-4 animate-spin text-blue-500" />}
+            </div>
+            <button onClick={async () => {
+              if (!aiSearchQuery.trim()) return;
+              setAiSearching(true);
+              setAiSearchResult('');
+              try {
+                const list = communities.map(c => ({
+                  id: c.id, name: c.name, summary: c.summary, category: c.category,
+                  industry: c.industry, industryName: c.industryName
+                }));
+                const res = await fetch('/api/ai', {
+                  method: 'POST', headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    action: 'match',
+                    prompt: `【严格限定】用户需求：${aiSearchQuery}
+【规则】只能从下方提供的共同体列表中推荐。如果没有匹配的共同体，请如实回答"未找到匹配共同体"。
+返回格式：每行"共同体名称 | 匹配度% | 匹配理由"`,
+                    context: `共同体列表（共${list.length}个）：\n${list.map(c => `ID:${c.id} | ${c.name} | ${c.summary||''} | 类别:${c.category||''} | 行业:${c.industryName||c.industry||''}`).join('\n')}`,
+                    content: '请严格依据以上列表进行匹配推荐，不得新增任何列表外的项目'
+                  })
+                });
+                const data = await res.json();
+                setAiSearchResult(data.success ? data.result : 'AI 搜索失败，请稍后重试');
+              } catch { setAiSearchResult('网络错误，请稍后重试'); }
+              finally { setAiSearching(false); }
+            }}
+              className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg text-sm font-medium hover:from-blue-600 hover:to-indigo-600 transition-all flex-shrink-0 whitespace-nowrap">
+              <Sparkles className="w-4 h-4 inline-block mr-1" />AI 搜索
+            </button>
+          </div>
+          {aiSearchResult && (
+            <div className="mt-3 p-3 bg-white dark:bg-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap border border-blue-100 dark:border-blue-800">
+              {aiSearchResult}
+            </div>
+          )}
         </div>
 
         {/* 筛选子标签（仅"全部"标签页显示） */}

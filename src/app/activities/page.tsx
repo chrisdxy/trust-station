@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Plus, MapPin, Users, Clock, Search, Loader2, X, User, Edit, Trash2, CheckCircle, LogOut, ChevronRight, ChevronDown, Image, Copy } from 'lucide-react';
+import { Calendar, Plus, MapPin, Users, Clock, Search, Loader2, X, User, Edit, Trash2, CheckCircle, LogOut, ChevronRight, ChevronDown, Image, Copy, Sparkles } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { WeChatShareSetup } from '@/components/WeChatShareSetup';
 import RichTextEditor from '@/components/RichTextEditor';
@@ -46,6 +46,9 @@ export default function ActivitiesPage() {
   const [deleteTarget, setDeleteTarget] = useState<Activity | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [filter, setFilter] = useState('');
+  const [aiSearchQuery, setAiSearchQuery] = useState('');
+  const [aiSearching, setAiSearching] = useState(false);
+  const [aiSearchResult, setAiSearchResult] = useState('');
   const [typeFilter, setTypeFilter] = useState('all'); // 全部、我发布的、我报名的
   const [paidFilter, setPaidFilter] = useState('all'); // all, free, paid
   const [showPaidDropdown, setShowPaidDropdown] = useState(false);
@@ -527,13 +530,92 @@ export default function ActivitiesPage() {
           </div>
         </div>
 
+        {/* AI 搜索 */}
+        <div className="max-w-7xl mx-auto px-4 pb-2">
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl p-4 border border-purple-200 dark:border-purple-700">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex-1 relative">
+                <textarea
+                  value={aiSearchQuery}
+                  onChange={e => setAiSearchQuery(e.target.value)}
+                  onKeyDown={async e => {
+                    if (e.key === 'Enter' && !e.shiftKey && aiSearchQuery.trim()) {
+                      e.preventDefault();
+                      setAiSearching(true);
+                      setAiSearchResult('');
+                      try {
+                        const list = activities.map(a => ({
+                          id: a.id, title: a.title, description: a.description,
+                          activity_type: a.activity_type, location: a.location,
+                          start_time: a.start_time, organizer_name: a.organizer_name_selected || a.organizer_name
+                        }));
+                        const res = await fetch('/api/ai', {
+                          method: 'POST', headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            action: 'match',
+                            prompt: `【严格限定】用户需求：${aiSearchQuery}
+【规则】只能从下方提供的活动列表中推荐。如果没有匹配的活动，请如实回答"未找到匹配活动"。
+返回格式：每行"活动名称 | 匹配度% | 匹配理由"`,
+                            context: `活动列表（共${list.length}个）：\n${list.map(a => `ID:${a.id} | ${a.title} | ${(a.description||'').replace(/<[^>]*>/g,'').slice(0,100)} | 类型:${a.activity_type||''} | 地点:${a.location||''} | 时间:${a.start_time||''} | 组织者:${a.organizer_name||''}`).join('\n')}`,
+                            content: '请严格依据以上列表进行匹配推荐，不得新增任何列表外的活动'
+                          })
+                        });
+                        const data = await res.json();
+                        setAiSearchResult(data.success ? data.result : 'AI 搜索失败，请稍后重试');
+                      } catch { setAiSearchResult('网络错误，请稍后重试'); }
+                      finally { setAiSearching(false); }
+                    }
+                  }}
+                  placeholder="输入需求，AI 搜索活动（Enter发送，Shift+Enter换行）..."
+                  className="w-full pl-4 pr-10 py-2.5 bg-white dark:bg-slate-700 border border-purple-200 dark:border-purple-600 rounded-lg text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none overflow-hidden min-h-[42px]"
+                  rows={1}
+                  onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 200) + 'px'; }}
+                />
+                {aiSearching && <Loader2 className="absolute right-3 top-3 w-4 h-4 animate-spin text-purple-500" />}
+              </div>
+              <button onClick={async () => {
+                if (!aiSearchQuery.trim()) return;
+                setAiSearching(true); setAiSearchResult('');
+                try {
+                  const list = activities.map(a => ({
+                    id: a.id, title: a.title, description: a.description,
+                    activity_type: a.activity_type, location: a.location,
+                    start_time: a.start_time, organizer_name: a.organizer_name_selected || a.organizer_name
+                  }));
+                  const res = await fetch('/api/ai', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      action: 'match',
+                      prompt: `【严格限定】用户需求：${aiSearchQuery}
+【规则】只能从下方提供的活动列表中推荐。如果没有匹配的活动，请如实回答"未找到匹配活动"。
+返回格式：每行"活动名称 | 匹配度% | 匹配理由"`,
+                      context: `活动列表（共${list.length}个）：\n${list.map(a => `ID:${a.id} | ${a.title} | ${(a.description||'').replace(/<[^>]*>/g,'').slice(0,100)} | 类型:${a.activity_type||''} | 地点:${a.location||''} | 时间:${a.start_time||''} | 组织者:${a.organizer_name||''}`).join('\n')}`,
+                      content: '请严格依据以上列表进行匹配推荐，不得新增任何列表外的活动'
+                    })
+                  });
+                  const data = await res.json();
+                  setAiSearchResult(data.success ? data.result : 'AI 搜索失败，请稍后重试');
+                } catch { setAiSearchResult('网络错误，请稍后重试'); }
+                finally { setAiSearching(false); }
+              }}
+                className="px-5 py-2.5 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-lg text-sm font-medium hover:from-purple-600 hover:to-pink-600 transition-all flex-shrink-0 whitespace-nowrap">
+                <Sparkles className="w-4 h-4 inline-block mr-1" />AI 搜索
+              </button>
+            </div>
+            {aiSearchResult && (
+              <div className="mt-3 p-3 bg-white dark:bg-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap border border-purple-100 dark:border-purple-800">
+                {aiSearchResult}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* 筛选 */}
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-center gap-4 mb-4">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <input type="text" placeholder="搜索活动..." className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800" />
-            </div>
             <select value={filter} onChange={e => { setFilter(e.target.value); fetchActivities(); }}
               className="px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800">
               <option value="">全部状态</option>
