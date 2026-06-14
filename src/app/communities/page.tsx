@@ -828,67 +828,13 @@ export default function CommunitiesPage() {
                     <Users2 className="w-7 h-7 text-blue-600" />
                   </div>
                 )}
-                <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-slate-900 dark:text-white">{community.name}</h3>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-slate-600 dark:text-slate-400">
-                        {getCategoryName(community.category)}
-                      </span>
-                      {community.industryName && (
-                        <span className="text-xs px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 rounded text-purple-700 dark:text-purple-400">
-                          {community.industryName}
-                        </span>
-                      )}
-                      {!community.isPublic && (
-                        <span className="text-xs px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 rounded text-amber-600 dark:text-amber-400">
-                          私密
-                        </span>
-                      )}
-                      {community.status === 'pending' && (
-                        <span className="text-xs px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 rounded text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                          <Clock className="w-3 h-3" />待审批
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <span className="inline-block px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded text-xs font-mono cursor-pointer hover:bg-amber-200 transition-colors mt-1"
-                    onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(getShortCommunityId(community.id)); }}
-                    title="点击复制共同体ID，用于记录中心查询">
-                    共同体ID: {getShortCommunityId(community.id)}
-                  </span>
-                  {community.summary && (
-                    <p className="text-sm text-slate-700 dark:text-slate-300 mt-2 line-clamp-2 font-medium">
-                      {community.summary}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-slate-900 dark:text-white truncate">{community.name}</h3>
+                  {(community.summary || community.description) && (
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">
+                      {(community.summary || community.description || '').replace(/<[^>]*>/g, '')}
                     </p>
                   )}
-                  {community.ownerName && (
-                    <p className="text-xs text-slate-400 mt-1">
-                      创建人：{community.ownerName}
-                    </p>
-                  )}
-                  {/* 成员状态 */}
-                  <div className="mt-2 flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                    {isCreatedByMe(community) ? (
-                      <span className="text-xs px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full">创建者</span>
-                    ) : joinedCommunities.includes(community.id) ? (
-                      <span className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full">正式成员</span>
-                    ) : pendingCommunities.includes(community.id) ? (
-                      <span className="text-xs px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full">待审批</span>
-                    ) : null}
-                  </div>
-
-                  {/* 成员信息行 */}
-                  <div className="flex items-center gap-3 text-sm text-slate-500 mt-2" onClick={e => e.stopPropagation()}>
-                    <div className="flex items-center gap-1">
-                      <Globe className="w-4 h-4 flex-shrink-0" />
-                      <span className="whitespace-nowrap">{community.memberList?.length || community.members}{t('communities.members')}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4 flex-shrink-0" />
-                      <span className="whitespace-nowrap">{community.createdAt}</span>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>

@@ -619,77 +619,14 @@ export default function ActivitiesPage() {
                       )
                     )}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(activity.status || 'upcoming')}`}>
-                          {getStatusLabel(activity.status || 'upcoming')}
-                        </span>
-                        {activity.activity_type && <span className="text-xs text-slate-500">{activity.activity_type}</span>}
-                      </div>
-                      <h3 className="font-semibold text-base text-slate-900 dark:text-white mb-1 line-clamp-1">{activity.title}</h3>
-                      <span className="inline-block px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded text-xs font-mono cursor-pointer hover:bg-amber-200 transition-colors mb-2"
-                        onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(getShortActivityId(activity.id)); }}
-                        title="点击复制活动ID，用于记录中心查询">
-                        活动ID: {getShortActivityId(activity.id)}
-                      </span>
-                      {activity.description && (
-                        <p className="text-sm text-slate-500 mb-3 line-clamp-2">{activity.description.replace(/<[^>]*>/g, '').trim()}</p>
+                      <h3 className="font-semibold text-slate-900 dark:text-white truncate">{activity.title}</h3>
+                      {(activity.description || activity.activity_type || activity.location) && (
+                        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">
+                          {(activity.description || activity.activity_type || activity.location || '').replace(/<[^>]*>/g, '').trim()}
+                        </p>
                       )}
-                      <div className="space-y-1.5 text-sm text-slate-500">
-                        {(activity.organizer_name_selected || activity.organizer_name) && (
-                          <div className="flex items-center gap-2"><User className="w-4 h-4" />{activity.organizer_name_selected || activity.organizer_name}</div>
-                        )}
-                        {activity.location && (
-                          <div className="flex items-center gap-2"><MapPin className="w-4 h-4" />{activity.location}</div>
-                        )}
-                        {activity.start_time && (
-                          <div className="flex items-center gap-2"><Clock className="w-4 h-4" />{fmtDate(activity.start_time)}</div>
-                        )}
-                        {activity.max_participants && (
-                          <div className="flex items-center gap-2"><Users className="w-4 h-4" />{activity.current_participants || 0} / {activity.max_participants} 人</div>
-                        )}
-                        {activity.is_paid && activity.price != null && (
-                          <div className="flex items-center gap-2 text-orange-600 font-medium">¥{Number(activity.price).toFixed(2)}</div>
-                        )}
-                      </div>
                     </div>
                   </div>
-                  {/* 操作按钮 */}
-                  {user && (
-                    <div className="flex gap-2 mt-4 pt-3 border-t border-slate-100 dark:border-slate-700" onClick={e => e.stopPropagation()}>
-                      {/* 我发布的：显示编辑和删除 */}
-                      {isMyPublished(activity) && (
-                        <>
-                          <button onClick={() => openEdit(activity)}
-                            className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm hover:bg-blue-100 transition-colors">
-                            <Edit className="w-4 h-4" />编辑
-                          </button>
-                          <button onClick={() => confirmDelete(activity)}
-                            disabled={deleting}
-                            className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg text-sm hover:bg-red-100 transition-colors disabled:opacity-50">
-                            <Trash2 className="w-4 h-4" />删除
-                          </button>
-                        </>
-                      )}
-                      {/* 我作为组织成员（但不是我发布的）：显示标识 */}
-                      {isOrganizerMember(activity) && !isMyPublished(activity) && (
-                        <span className="flex-1 text-center text-xs text-slate-400 py-2">组织成员</span>
-                      )}
-                      {/* 报名/取消报名：所有用户均可（含发布者），upcoming 状态 */}
-                      {activity.status === 'upcoming' && (
-                        isRegistered(activity) ? (
-                          <button onClick={() => handleCancelFromCard(activity)}
-                            className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-orange-50 text-orange-600 rounded-lg text-sm hover:bg-orange-100 transition-colors">
-                            <LogOut className="w-4 h-4" />取消报名
-                          </button>
-                        ) : (
-                          <button onClick={() => handleRegisterFromCard(activity)}
-                            className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-green-50 text-green-600 rounded-lg text-sm hover:bg-green-100 transition-colors">
-                            <CheckCircle className="w-4 h-4" />立即报名
-                          </button>
-                        )
-                      )}
-                    </div>
-                  )}
                 </motion.div>
               ))}
             </div>

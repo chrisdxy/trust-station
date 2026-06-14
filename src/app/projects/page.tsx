@@ -850,65 +850,14 @@ export default function ProjectsPage() {
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                    {/* 标题 */}
-                    <div className="flex items-center justify-between gap-2">
                       <h3 className="font-semibold text-slate-900 dark:text-white truncate">
                         {project.title}
                       </h3>
-                      <button onClick={e => { e.stopPropagation(); toggleFollow(project.id); }}
-                        className={`ml-2 p-1.5 rounded-lg transition-all flex-shrink-0 ${
-                          followedProjects.includes(project.id)
-                            ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-500'
-                            : 'text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20'
-                        }`}
-                        title={followedProjects.includes(project.id) ? '取消关注' : '关注项目'}
-                      >
-                        <Star className={`w-4 h-4 ${followedProjects.includes(project.id) ? 'fill-amber-500' : ''}`} />
-                      </button>
-                    </div>
-
-                    {/* 创建人 + 创建时间 */}
-                    <div className="flex items-center gap-3 text-xs text-slate-400 mb-2">
-                      <span className="flex items-center gap-1">
-                        <Users size={12} />
-                        {project.creatorName || '未知用户'}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Calendar size={12} />
-                        {safeDate(project.createdAt || project.date)}
-                      </span>
-                    </div>
-
-                    {/* 地点 */}
-                    {project.location && (
-                      <div className="flex items-center gap-1 text-xs text-slate-400 mb-2">
-                        <MapPin size={12} />
-                        {project.location}
-                      </div>
-                    )}
-
-                    {/* 简介 */}
-                    <div className="text-sm text-slate-600 dark:text-slate-400 line-clamp-3 mb-3">
-                      {(project.summary || '').replace(/<[^>]*>/g, '')}
-                    </div>
-
-                    {/* 项目ID + 类型标签 */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="inline-block px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded text-xs font-mono cursor-pointer hover:bg-amber-200 transition-colors"
-                        onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(getShortProjectId(project.id)).then(() => {}); }}
-                        title="点击复制项目ID，用于记录中心查询">
-                        ID: {getShortProjectId(project.id)}
-                      </span>
-                      {project.types && project.types.map((t: string) => (
-                        <span key={t} className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs rounded-full">
-                          {t}
-                        </span>
-                      ))}
-                      {project.isDueDiligence && (
-                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">尽调</span>
+                      {(project.summary || project.description || project.location) && (
+                        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">
+                          {(project.summary || project.description || project.location || '').replace(/<[^>]*>/g, '')}
+                        </p>
                       )}
-                    </div>
-
                     </div>
                   </div>
                     {/* 删除按钮 — 仅创建者可见 */}
