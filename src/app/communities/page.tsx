@@ -1533,22 +1533,56 @@ export default function CommunitiesPage() {
                 </div>
 
                 <div className="p-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
-                  {selectedCommunity && !isCreatedByMe(selectedCommunity) && (
-                    <div>
-                      {pendingCommunities.includes(selectedCommunity.id) ? (
-                        <div className="flex items-center gap-2 text-amber-600">
-                          <Clock className="w-5 h-5" />
-                          <span className="font-medium">待审批</span>
-                        </div>
-                      ) : joinedCommunities.includes(selectedCommunity.id) ? (
-                        <div className="flex items-center gap-2 text-green-600">
-                          <CheckCircle className="w-5 h-5" />
-                          <span className="font-medium">正式成员</span>
-                        </div>
-                      ) : null}
-                    </div>
-                  )}
-                  <div className="flex gap-3 ml-auto">
+                  {/* 状态信息 + 操作按钮 */}
+                  <div className="flex-1">
+                    {currentUser && selectedCommunity && !isCreatedByMe(selectedCommunity) ? (
+                      <>
+                        {pendingCommunities.includes(selectedCommunity.id) ? (
+                          <div className="flex items-center gap-2 text-amber-600">
+                            <Clock className="w-5 h-5" />
+                            <span className="font-medium">待审批</span>
+                            <span className="text-sm text-amber-500 ml-1">等待管理员审核</span>
+                          </div>
+                        ) : joinedCommunities.includes(selectedCommunity.id) ? (
+                          <div className="flex items-center gap-2 text-green-600">
+                            <CheckCircle className="w-5 h-5" />
+                            <span className="font-medium">正式成员</span>
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                if (!confirm('确定退出该共同体？')) return;
+                                await handleJoin(selectedCommunity.id);
+                                setShowDetailModal(false);
+                              }}
+                              className="ml-3 px-3 py-1 text-xs font-medium text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                            >
+                              退出
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setJoinTarget(selectedCommunity);
+                                setShowJoinModal(true);
+                              }}
+                              className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm"
+                            >
+                              <UserPlus className="w-4 h-4" />
+                              申请加入
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    ) : selectedCommunity && !currentUser && !isCreatedByMe(selectedCommunity) ? (
+                      <div className="flex items-center gap-2 text-slate-400 text-sm">
+                        <User className="w-4 h-4" />
+                        <span>登录后可申请加入此共同体</span>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="flex gap-3 flex-shrink-0 ml-4">
                     <button
                       onClick={() => setShowDetailModal(false)}
                       className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors"
