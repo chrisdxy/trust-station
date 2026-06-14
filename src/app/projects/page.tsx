@@ -832,31 +832,89 @@ export default function ProjectsPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
-                  className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow cursor-pointer"
+                  className="bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer group"
                   onClick={() => router.push(`/projects/${project.id}`)}
                 >
-                  <div className="flex items-start gap-4">
+                  {/* 封面图区域 */}
+                  <div className="relative h-36 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 overflow-hidden">
                     {project.coverImage ? (
-                      <img src={project.coverImage} alt={project.title} className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />
+                      <>
+                        <img
+                          src={project.coverImage}
+                          alt={project.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                      </>
                     ) : (
-                      <div className="w-14 h-14 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <Briefcase className="w-7 h-7 text-amber-600" />
+                      <div className="flex items-center justify-center h-full">
+                        <Briefcase className="w-12 h-12 text-slate-300 dark:text-slate-600" />
                       </div>
                     )}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-slate-900 dark:text-white truncate">
-                        {project.title}
-                      </h3>
-                      {(project.summary || project.description || project.location) && (
-                        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">
-                          {(project.summary || project.description || project.location || '').replace(/<[^>]*>/g, '')}
-                        </p>
+                    {/* 项目类型标签 */}
+                    {project.types && project.types.length > 0 && (
+                      <div className="absolute top-3 left-3 flex gap-1.5">
+                        {project.types.map((type, i) => (
+                          <span key={i} className="px-2 py-0.5 bg-white/90 dark:bg-slate-900/90 backdrop-blur text-xs font-medium text-slate-700 dark:text-slate-300 rounded-full shadow-sm">
+                            {type}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {/* 状态标签 */}
+                    {project.status === 'draft' && (
+                      <span className="absolute top-3 right-3 px-2 py-0.5 bg-amber-500/90 text-white text-xs rounded-full">
+                        草稿
+                      </span>
+                    )}
+                    {/* 标题在图片下方展示，不在图片上叠加 */}
+                  </div>
+
+                  {/* 内容区域 */}
+                  <div className="p-4">
+                    <h3 className="font-semibold text-slate-900 dark:text-white truncate group-hover:text-amber-500 transition-colors">
+                      {project.title}
+                    </h3>
+                    
+                    <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                      {project.location && (
+                        <span className="flex items-center gap-1">
+                          📍 {project.location}
+                        </span>
+                      )}
+                      {project.industry && (
+                        <>
+                          <span className="text-slate-300">·</span>
+                          <span>{project.industry}</span>
+                        </>
+                      )}
+                      {project.date && (
+                        <>
+                          <span className="text-slate-300">·</span>
+                          <span>{project.date}</span>
+                        </>
                       )}
                     </div>
-                  </div>
-                    {/* 删除按钮 — 仅创建者可见 */}
-                    {currentUserId && project.creatorId === currentUserId && (
-                      <div className="flex justify-end mt-3 pt-2 border-t border-slate-100 dark:border-slate-700">
+
+                    {(project.summary || project.description) && (
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 line-clamp-2 leading-relaxed">
+                        {(project.summary || project.description || '').replace(/<[^>]*>/g, '')}
+                      </p>
+                    )}
+
+                    {/* 创建者信息 */}
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
+                      <div className="flex items-center gap-2 text-xs text-slate-400">
+                        <div className="w-5 h-5 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center">
+                          <span className="text-[9px] font-medium text-amber-600 dark:text-amber-400">
+                            {(project.creatorName || '未')[0]}
+                          </span>
+                        </div>
+                        <span>{project.creatorName || '未知用户'}</span>
+                      </div>
+
+                      {/* 删除按钮 — 仅创建者可见 */}
+                      {currentUserId && project.creatorId === currentUserId && (
                         <button
                           onClick={e => {
                             e.stopPropagation();
@@ -871,14 +929,14 @@ export default function ProjectsPage() {
                               })
                               .catch(() => alert('删除失败'));
                           }}
-                          className="flex items-center gap-1 px-2 py-1 text-xs text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors"
-                          title="删除项目"
+                          className="flex items-center gap-1 px-2 py-1 text-xs text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                         >
                           <Trash2 className="w-3 h-3" />
                           删除
                         </button>
-                      </div>
-                    )}
+                      )}
+                    </div>
+                  </div>
                 </motion.div>
               ))}
             </div>
