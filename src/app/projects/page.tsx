@@ -744,11 +744,11 @@ export default function ProjectsPage() {
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 项目类型
               </label>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
                 {typeOptions.map((opt: string) => (
                   <label
                     key={opt}
-                    className={`px-3 py-1.5 rounded-lg text-sm cursor-pointer transition-colors ${
+                    className={`px-1.5 py-1.5 rounded-lg text-xs text-center cursor-pointer transition-colors ${
                       selectedTypes.includes(opt)
                         ? 'bg-amber-500 text-white'
                         : 'bg-white dark:bg-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-500 border border-slate-200 dark:border-slate-500'
