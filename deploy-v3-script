@@ -63,7 +63,7 @@ header "[3/10] 拉取代码"
 if [ -d ".git" ]; then git stash 2>/dev/null || true; git pull 2>&1; else warn "非 Git 仓库"; fi
 
 header "[4/10] 安装依赖"
-npm install 2>&1 || { warn "npm install 失败，清理重试..."; npm cache clean --force 2>/dev/null; rm -rf node_modules package-lock.json; npm install 2>&1; } || { error "npm install 重试失败"; exit 1; }
+npm install --no-audit --no-fund 2>&1 || { warn "npm install 失败，彻底清理重试..."; rm -rf node_modules package-lock.json 2>/dev/null; npm install --no-audit --no-fund 2>&1; } || { error "npm install 重试失败"; exit 1; }
 warn "跳过 npm audit fix"
 
 header "[5/10] 构建"
