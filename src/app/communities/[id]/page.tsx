@@ -24,6 +24,17 @@ const categoryLabels: Record<string, string> = {
 
 const getShortId = (id: string) => id.length > 8 ? id.slice(0, 8) : id;
 
+const renderDescription = (text: string) => {
+  if (!text || typeof text !== 'string') return '';
+  // 转换 Markdown 图片: ![alt](url) → <img src="url" alt="alt" />
+  let html = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="max-w-full rounded-xl my-2" />');
+  // 转换 Markdown 链接: [text](url) → <a href="url">text</a>
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">$1</a>');
+  // 转换换行
+  html = html.replace(/\n/g, '<br/>');
+  return html;
+};
+
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const c = await getCommunity(id);
@@ -103,7 +114,7 @@ export default async function CommunityDetailPage({ params }: { params: Promise<
         {c.description && (
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 mb-6">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">共同体详情</h2>
-            <div className="text-slate-700 dark:text-slate-300 leading-relaxed prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: c.description }} />
+            <div className="text-slate-700 dark:text-slate-300 leading-relaxed prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: renderDescription(c.description) }} />
           </div>
         )}
 
