@@ -55,9 +55,26 @@ cp "$PM2_CONF" .env .next/standalone/ 2>/dev/null || true
 header "[7/10] 零停机切换"
 cd "$APP_DIR/.next/standalone"
 if [ "$OLD_RUNNING" = true ]; then
-  log "滚动重启（逐个实例切换，零停机）..."
-  pm2 reload "$PM2_CONF" 2>&1 || { warn "reload 失败，直接启动"; pm2 start "$PM2_CONF" 2>&1 || true; }
-  sleep 3
+  log "启动新实例（旧版继续服务）..."
+  pm2 start "$PM2_CONF" --name "zhengdao-new" 2>&1
+  sleep 4
+  # 验证新实例
+  NEW_OK=false
+  for i in 1 2 3; do
+    if curl -s -o /dev/null -w "%{http_code}" https://myfriends.vip --max-time 5 2>/dev/null | grep -q "200"; then
+      NEW_OK=true; break
+    fi
+    sleep 2
+  done
+  if [ "$NEW_OK" = true ]; then
+    log "新实例验证通过，停止旧版..."
+    pm2 delete zhengdao 2>/dev/null || true
+    pm2 rename zhengdao-new zhengdao 2>/dev/null || true
+    log "切换完成"
+  else
+    warn "新实例验证失败，回滚中..."
+    pm2 delete zhengdao-new 2>/dev/null || true
+  fi
 else
   pm2 start "$PM2_CONF" 2>&1; sleep 3
 fi
