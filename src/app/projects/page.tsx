@@ -578,9 +578,6 @@ export default function ProjectsPage() {
           {/* AI 智能匹配 */}
           <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-4 border border-indigo-200 dark:border-indigo-700">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-4 h-4 text-white" />
-              </div>
               <div className="flex-1 relative">
                 <textarea
                   value={aiSearchQuery}
@@ -618,7 +615,7 @@ export default function ProjectsPage() {
                     }
                   }}
                   placeholder="输入需求，AI 智能匹配项目（Shift+Enter换行）..."
-                  className="w-full pl-4 pr-10 py-2.5 bg-white dark:bg-slate-700 border border-indigo-200 dark:border-indigo-600 rounded-xl text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none overflow-hidden min-h-[42px]"
+                  className="w-full pl-4 pr-10 py-2.5 bg-white dark:bg-slate-700 border border-indigo-200 dark:border-indigo-600 rounded-lg text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none overflow-hidden min-h-[42px]"
                   rows={1}
                   onInput={e => {
                     const el = e.currentTarget;
