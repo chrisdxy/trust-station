@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const c = await getCommunity(id);
   const title = c?.name || '共同体详情 - 正道驿站';
   const desc = (c?.summary || c?.description || '').replace(/<[^>]*>/g, '').slice(0, 200) || '全球商业信任共建社区';
-  const img = c?.coverImage ? (c.coverImage.startsWith('http') ? c.coverImage : `https://myfriends.vip${c.coverImage}`) : 'https://myfriends.vip/uploads/logo.jpg';
+  const img = c?.cover_image ? (c.cover_image.startsWith('http') ? c.cover_image : `https://myfriends.vip${c.cover_image}`) : 'https://myfriends.vip/uploads/logo.jpg';
   return { title, description: desc, openGraph: { title, description: desc, images: [img] } };
 }
 
@@ -46,17 +46,17 @@ export default async function CommunityDetailPage({ params }: { params: Promise<
         </Link>
 
         {/* 封面图 */}
-        {c.coverImage && (
+        {c.cover_image && (
           <div className="rounded-2xl overflow-hidden mb-6 shadow-md">
-            <img src={c.coverImage} alt={c.name} className="w-full h-64 object-cover" />
+            <img src={c.cover_image} alt={c.name} className="w-full h-64 object-cover" />
           </div>
         )}
 
         {/* 基本信息 */}
         <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 mb-6">
           <div className="flex items-start gap-4">
-            {c.coverImage ? (
-              <img src={c.coverImage} alt={c.name} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
+            {c.cover_image ? (
+              <img src={c.cover_image} alt={c.name} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
             ) : (
               <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
                 <svg className="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
@@ -73,12 +73,12 @@ export default async function CommunityDetailPage({ params }: { params: Promise<
                     {categoryLabels[c.category] || c.category}
                   </span>
                 )}
-                {c.industryName && (
+                {c.industry_name && (
                   <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 rounded text-xs text-purple-700 dark:text-purple-400">
-                    {c.industryName}
+                    {c.industry_name}
                   </span>
                 )}
-                {!c.isPublic && (
+                {!c.is_public && (
                   <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 rounded text-xs text-amber-600 dark:text-amber-400">
                     私密
                   </span>
@@ -89,8 +89,8 @@ export default async function CommunityDetailPage({ params }: { params: Promise<
 
           {/* 元信息 */}
           <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
-            {c.ownerName && <span>创建人：{c.ownerName}</span>}
-            <span>成员：{c.memberList?.length || c.members || 0} 人</span>
+            {c.owner_name && <span>创建人：{c.owner_name}</span>}
+            <span>成员：{c.member_list?.length || c.member_count || 0} 人</span>
           </div>
 
           {/* 摘要 */}
@@ -120,12 +120,12 @@ export default async function CommunityDetailPage({ params }: { params: Promise<
         )}
 
         {/* 社群二维码 */}
-        {c.qrCode && (
+        {c.qr_code && (
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 mb-6">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">社群二维码</h2>
             <div className="flex justify-center">
               <img
-                src={c.qrCode.startsWith('http') ? c.qrCode : `https://myfriends.vip${c.qrCode}`}
+                src={c.qr_code.startsWith('http') ? c.qr_code : `https://myfriends.vip${c.qr_code}`}
                 alt="社群二维码"
                 className="w-48 h-48 object-contain rounded-xl border border-slate-200 dark:border-slate-600"
               />
