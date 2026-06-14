@@ -422,7 +422,6 @@ export default function ProjectsPage() {
             description: formData.description,
             summary: formData.summary || '',
             coverImage: formData.coverImage,
-            images: formData.images,
             projectTypes: formData.types,
             industry: formData.industry,
             location: formData.location
