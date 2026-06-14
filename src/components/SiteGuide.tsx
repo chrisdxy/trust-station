@@ -130,7 +130,11 @@ const steps: Step[] = [
         { text: 'AI 写简介 → 个人名片/共同体/活动/项目描述一键生成', highlight: '✍️' },
         { text: 'AI 风险检测 → 发布项目时检测描述中的潜在风险', highlight: '🛡️' },
         { text: 'AI 摘要分析 → 协调中心沟通记录自动提取争议焦点', highlight: '📋' },
-        { text: 'AI 信任履历 → 记录中心分析留痕数据生成时间线报告', highlight: '📈' }
+        { text: 'AI 信任履历 → 记录中心分析留痕数据生成时间线报告', highlight: '📈' },
+        { text: 'AI 智能搜索 → 全局 AI 搜索，一句话直达精准信息与事项', highlight: '🔍' },
+        { text: 'AI 工具集 → 精选优质 AI 工具导航，效率工具一站直达', highlight: '🧰' },
+        { text: 'AI 对话教练 → 智能对话助手，解答疑问、提供协作指导', highlight: '💬' },
+        { text: 'AI 关联图谱 → 自动分析事项关联，可视化呈现认知网络', highlight: '🔗' }
       ]
     }
   }
