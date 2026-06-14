@@ -776,11 +776,8 @@ export default function CommunitiesPage() {
 
         {/* AI 搜索 */}
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-4 border border-blue-200 dark:border-blue-700 mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
-            <div className="flex-1 relative">
+            <div className="flex items-center gap-3">
+              <div className="flex-1 relative">
               <textarea
                 value={aiSearchQuery}
                 onChange={e => setAiSearchQuery(e.target.value)}

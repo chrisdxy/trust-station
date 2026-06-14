@@ -534,9 +534,6 @@ export default function ActivitiesPage() {
         <div className="max-w-7xl mx-auto px-4 pb-2">
           <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl p-4 border border-purple-200 dark:border-purple-700">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-4 h-4 text-white" />
-              </div>
               <div className="flex-1 relative">
                 <textarea
                   value={aiSearchQuery}
