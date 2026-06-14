@@ -55,6 +55,7 @@ interface Community {
 }
 
 export default function CommunitiesPage() {
+  const router = useRouter();
   const { t } = useLanguage();
   const { user: currentUser, isAuthenticated, loading: authLoading } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
